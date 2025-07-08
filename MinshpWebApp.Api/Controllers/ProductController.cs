@@ -24,7 +24,7 @@ namespace MinshpWebApp.Api.Controllers
 
         [HttpGet("/products")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<ProductVIewModel>), Description = "list of products")]
-        [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
+        [SwaggerResponse((int)HttpStatusCode.publicServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> GetProductsAsync()
         {
             var result = await _productViewModelBuilder.GetProductsAsync();
@@ -35,7 +35,7 @@ namespace MinshpWebApp.Api.Controllers
 
         [HttpPut("/product")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "modification of a product")]
-        [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
+        [SwaggerResponse((int)HttpStatusCode.publicServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> PutProductAsync([FromBody] ProductRequest model)
         {
             var result = await _productViewModelBuilder.UpdateProductsAsync(model);
@@ -45,7 +45,7 @@ namespace MinshpWebApp.Api.Controllers
 
         [HttpPost("/product")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "add a product")]
-        [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
+        [SwaggerResponse((int)HttpStatusCode.publicServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> PostProductAsync([FromBody] ProductRequest model)
         {
             var result = await _productViewModelBuilder.AddProductsAsync(model);
@@ -55,7 +55,7 @@ namespace MinshpWebApp.Api.Controllers
 
         [HttpDelete("/product/{id}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "Delete a product")]
-        [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
+        [SwaggerResponse((int)HttpStatusCode.publicServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> DeleteProductAsync([FromRoute] int id)
         {
             var result = await _productViewModelBuilder.DeleteProductsAsync(id);

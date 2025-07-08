@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Video = MinshpWebApp.Domain.Models.Video;
 
 namespace MinshpWebApp.Dal.Repositories
 {
@@ -26,7 +28,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = p.Id,
                 Url = p.Url,
-                Id_product = p.Id_product,
+                IdProduct = p.Id_product,
             }).ToListAsync();
 
             return VideoEntities;
@@ -42,7 +44,7 @@ namespace MinshpWebApp.Dal.Repositories
 
             // On met à jour ses propriétés
             if (model.Url != null) VideoToUpdate.Url = model.Url;
-            if (model.Id_product != null) VideoToUpdate.Id_product = model.Id_product;
+            if (model.IdProduct != null) VideoToUpdate.Id_product = model.IdProduct;
 
             await _context.SaveChangesAsync();
 
@@ -51,7 +53,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                Id_product = model.Id_product,
+                IdProduct = model.IdProduct,
             };
         }
 
@@ -72,7 +74,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                Id_product = model.IdProduct
+                IdProduct = model.IdProduct
             };
         }
 

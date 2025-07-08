@@ -1,15 +1,17 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Domain.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Feature = MinshpWebApp.Domain.Models.Feature;
 
 namespace MinshpWebApp.Dal.Repositories
 {
-    public class FeatureRepository
+    public class FeatureRepository : IFeatureRepository
     {
         private MinshpDatabaseContext _context { get; set; }
         private readonly IMapper _mapper;

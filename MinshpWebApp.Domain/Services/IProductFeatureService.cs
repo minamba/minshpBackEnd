@@ -1,13 +1,14 @@
-﻿using MinshpWebApp.Domain.Models;
+﻿using MinshpWebApp.Domain.Dtos;
+using MinshpWebApp.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MinshpWebApp.Domain.Repositories
+namespace MinshpWebApp.Domain.Services
 {
-    public interface IProductFeatureRepository
+    public interface IProductFeatureService
     {
         Task<IEnumerable<ProductFeature>> GetProductFeaturesAsync();
         Task<ProductFeature> UpdateProductFeaturesAsync(ProductFeature model);

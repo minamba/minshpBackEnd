@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Metadata;
+using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Domain.Models;
+using MinshpWebApp.Domain.Repositories;
+using Product = MinshpWebApp.Domain.Models.Product;
 using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
@@ -10,7 +14,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
-using Product = MinshpWebApp.Domain.Models.Product;
 
 namespace MinshpWebApp.Dal.Repositories
 {

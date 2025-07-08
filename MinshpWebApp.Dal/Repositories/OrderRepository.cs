@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Order = MinshpWebApp.Domain.Models.Order;
 
 namespace MinshpWebApp.Dal.Repositories
 {
@@ -30,7 +31,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Quantity = p.Quantity,
                 Status = p.Status,
                 IdCustomer = p.IdCustomer,
-                Id_product = p.Id_product,
+                IdProduct = p.Id_product,
             }).ToListAsync();
 
             return OrderEntities;
@@ -50,7 +51,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Quantity != null) OrderToUpdate.Quantity = model.Quantity;
             if (model.Status != null) OrderToUpdate.Status = model.Status;
             if (model.IdCustomer != null) OrderToUpdate.IdCustomer = model.IdCustomer;
-            if (model.Id_product != null) OrderToUpdate.Id_product = model.Id_product;
+            if (model.IdProduct != null) OrderToUpdate.Id_product = model.IdProduct;
 
             await _context.SaveChangesAsync();
 
@@ -63,7 +64,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Quantity = model.Quantity,
                 Status = model.Status,
                 IdCustomer = model.IdCustomer,
-                Id_product = model.Id_product,
+                IdProduct = model.IdProduct,
             };
         }
 
@@ -92,7 +93,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Quantity = model.Quantity,
                 Status = model.Status,
                 IdCustomer = model.IdCustomer,
-                Id_product = model.IdProduct,
+                IdProduct = model.IdProduct,
             };
         }
 
