@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
+using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
 
 namespace MinshpWebApp.Api.Builders.impl
@@ -43,5 +45,19 @@ namespace MinshpWebApp.Api.Builders.impl
             return productVmList;
         }
 
-     }
+        public async Task<Product> UpdateProductsAsync(ProductRequest model)
+        {
+            return await _productService.UpdateProductsAsync(_mapper.Map<Product>(model));
+        }
+
+        public async Task<Product> AddProductsAsync(ProductRequest model)
+        {
+            return await _productService.AddProductsAsync(_mapper.Map<Product>(model));
+        }
+
+        public async Task<bool> DeleteProductsAsync(int idProduct)
+        {
+            return await _productService.DeleteProductsAsync(idProduct);
+        }
+    }
 }

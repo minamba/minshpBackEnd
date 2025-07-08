@@ -17,7 +17,7 @@ public partial class Order
 
     public int? IdCustomer { get; set; }
 
-    public int? IdProduct { get; set; }
+    public int? Id_product { get; set; }
 
     public virtual Customer? IdCustomerNavigation { get; set; }
 

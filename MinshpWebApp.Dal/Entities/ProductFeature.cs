@@ -9,7 +9,7 @@ public partial class ProductFeature
 
     public int? IdProduct { get; set; }
 
-    public int? IdFeature { get; set; }
+    public int? Id_feature { get; set; }
 
     public virtual Feature? IdFeatureNavigation { get; set; }
 

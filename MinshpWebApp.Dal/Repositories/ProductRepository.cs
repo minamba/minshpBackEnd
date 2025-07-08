@@ -17,7 +17,6 @@ namespace MinshpWebApp.Dal.Repositories
     public class ProductRepository : IProductRepository
     {
         private MinshpDatabaseContext _context { get; set; }
-        private readonly IMapper _mapper;
 
         public ProductRepository()
         {

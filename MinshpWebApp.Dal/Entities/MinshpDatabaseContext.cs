@@ -15,6 +15,8 @@ public partial class MinshpDatabaseContext : DbContext
     {
     }
 
+    public virtual DbSet<Category> Categories { get; set; }
+
     public virtual DbSet<Customer> Customers { get; set; }
 
     public virtual DbSet<Feature> Features { get; set; }
@@ -33,10 +35,15 @@ public partial class MinshpDatabaseContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=.\\SQLExpress;Database=MINSHP_Database;Trusted_Connection=True; TrustServerCertificate=true");
+        => optionsBuilder.UseSqlServer("Server=.\\SQLExpress;Database=MINSHP_Database;Trusted_Connection=True; TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.ToTable("Category");
+        });
+
         modelBuilder.Entity<Customer>(entity =>
         {
             entity.ToTable("Customer");
@@ -60,10 +67,10 @@ public partial class MinshpDatabaseContext : DbContext
         {
             entity.ToTable("Image");
 
-            entity.Property(e => e.IdProduct).HasColumnName("Id_product");
+            entity.Property(e => e.Id_product).HasColumnName("Id_product");
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Images)
-                .HasForeignKey(d => d.IdProduct)
+                .HasForeignKey(d => d.Id_product)
                 .HasConstraintName("FK_Image_Product");
         });
 
@@ -79,7 +86,7 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasConstraintName("FK_Order_Customer");
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.IdProduct)
+                .HasForeignKey(d => d.Id_product)
                 .HasConstraintName("FK_Order_Product");
         });
 
@@ -87,18 +94,23 @@ public partial class MinshpDatabaseContext : DbContext
         {
             entity.ToTable("Product");
 
+            entity.Property(e => e.Id_Category).HasColumnName("Id_Category");
             entity.Property(e => e.Price).HasColumnType("decimal(18, 0)");
+
+            entity.HasOne(d => d.IdCategoryNavigation).WithMany(p => p.Products)
+                .HasForeignKey(d => d.Id_Category)
+                .HasConstraintName("FK_Product_Category");
         });
 
         modelBuilder.Entity<ProductFeature>(entity =>
         {
             entity.ToTable("Product_feature");
 
-            entity.Property(e => e.IdFeature).HasColumnName("Id_feature");
+            entity.Property(e => e.Id_feature).HasColumnName("Id_feature");
             entity.Property(e => e.IdProduct).HasColumnName("Id_product");
 
             entity.HasOne(d => d.IdFeatureNavigation).WithMany(p => p.ProductFeatures)
-                .HasForeignKey(d => d.IdFeature)
+                .HasForeignKey(d => d.Id_feature)
                 .HasConstraintName("FK_Product_feature_Feature");
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.ProductFeatures)
@@ -111,11 +123,11 @@ public partial class MinshpDatabaseContext : DbContext
             entity.ToTable("Promotion");
 
             entity.Property(e => e.EndDate).HasColumnType("datetime");
-            entity.Property(e => e.IdProduct).HasColumnName("Id_product");
+            entity.Property(e => e.Id_product).HasColumnName("Id_product");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Promotions)
-                .HasForeignKey(d => d.IdProduct)
+                .HasForeignKey(d => d.Id_product)
                 .HasConstraintName("FK_Promotion_Product");
         });
 
@@ -123,10 +135,10 @@ public partial class MinshpDatabaseContext : DbContext
         {
             entity.ToTable("Video");
 
-            entity.Property(e => e.IdProduct).HasColumnName("Id_product");
+            entity.Property(e => e.Id_product).HasColumnName("Id_product");
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Videos)
-                .HasForeignKey(d => d.IdProduct)
+                .HasForeignKey(d => d.Id_product)
                 .HasConstraintName("FK_Video_Product");
         });
 

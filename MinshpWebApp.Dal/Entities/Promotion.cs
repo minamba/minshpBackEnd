@@ -13,7 +13,7 @@ public partial class Promotion
 
     public DateTime? EndDate { get; set; }
 
-    public int? IdProduct { get; set; }
+    public int? Id_product { get; set; }
 
     public virtual Product? IdProductNavigation { get; set; }
 }
