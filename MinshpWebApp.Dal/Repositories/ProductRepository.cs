@@ -35,6 +35,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = p.Name,
                 Description = p.Description,
                 IdCategory = p.Id_Category,
+                Price = p.Price
             }).ToListAsync();
 
             return productEntities;

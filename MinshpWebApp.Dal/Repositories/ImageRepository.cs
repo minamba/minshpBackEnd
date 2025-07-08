@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Image = MinshpWebApp.Domain.Models.Image;
 
 namespace MinshpWebApp.Dal.Repositories
 {
@@ -26,7 +27,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = p.Id,
                 Url = p.Url,
-                Id_product = p.Id_product,
+                IdProduct = p.Id_product,
             }).ToListAsync();
 
             return ImageEntities;
@@ -42,7 +43,7 @@ namespace MinshpWebApp.Dal.Repositories
 
             // On met à jour ses propriétés
             if (model.Url != null) ImageToUpdate.Url = model.Url;
-            if (model.Id_product != null) ImageToUpdate.Id_product = model.Id_product;
+            if (model.IdProduct != null) ImageToUpdate.Id_product = model.IdProduct;
 
             await _context.SaveChangesAsync();
 
@@ -51,7 +52,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                Id_product = model.Id_product,
+                IdProduct = model.IdProduct,
             };
         }
 
@@ -72,7 +73,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                Id_product = model.IdProduct
+                IdProduct = model.IdProduct
             };
         }
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MinshpWebApp.Domain.Dtos
 {
-    public class FeatureDtos
+    public class FeatureDto
     {
         public int Id { get; set; }
 

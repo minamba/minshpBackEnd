@@ -14,6 +14,7 @@ namespace MinshpWebApp.Domain.Mapper
                .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
                .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
                .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
+               .ForMember(x => x.Price, dest => dest.MapFrom(x => x.Price))
                .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
 
@@ -47,13 +48,6 @@ namespace MinshpWebApp.Domain.Mapper
                 .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
                 .ForMember(x => x.IdFeature, dest => dest.MapFrom(x => x.IdFeature))
                 .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
-
-
-            CreateMap<ProductFeature, ProductFeatureDto>()
-                .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-                .ForMember(x => x.IdFeature, dest => dest.MapFrom(x => x.IdFeature))
-                .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
-
 
         }
     }

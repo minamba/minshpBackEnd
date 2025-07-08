@@ -21,14 +21,39 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 //scoped repositories
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IImageRepository, ImageRepository>();
+builder.Services.AddScoped<IVideoRepository, VideoRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
+builder.Services.AddScoped<IFeatureRepository, FeatureRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IProductFeatureRepository, ProductFeatureRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 
 //scoped services
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IVideoService, VideoService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<IFeatureService, FeatureService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IProductFeatureService, ProductFeatureService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+
 
 
 //scoped builders
 builder.Services.AddScoped<IProductViewModelBuilder, ProductViewModelBuilder>();
+builder.Services.AddScoped<IImageViewModelBuilder, ImageViewModelBuilder>();
+builder.Services.AddScoped<IVideoViewModelBuilder, VideoViewModelBuilder>();
+builder.Services.AddScoped<ICategoryViewModelBuilder, CategoryViewModelBuilder>();
+builder.Services.AddScoped<IPromotionViewModelBuilder, PromotionViewModelBuilder>();
+builder.Services.AddScoped<IFeatureViewModelBuilder, FeatureViewModelBuilder>();
+builder.Services.AddScoped<ICustomerViewModelBuilder, CustomerViewModelBuilder>();
+builder.Services.AddScoped<IOrderViewModelBuilder, OrderViewModelBuilder>();
+
 
 var app = builder.Build();
 
