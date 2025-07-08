@@ -1,0 +1,18 @@
+﻿namespace MinshpWebApp.Api.ViewModels
+{
+    public class ProductVIewModel
+    {
+        public int Id { get; set; }
+
+        public string? Name { get; set; }
+
+        public string? Description { get; set; }
+
+        public decimal? Price { get; set; }
+        public string? Category { get; set; }
+        public IEnumerable<PromotionViewModel>? Promotions { get; set; }
+        public IEnumerable<FeatureViewModel>? Features { get; set; }
+        public IEnumerable<VideoViewModel>? Videos { get; set; }
+        public IEnumerable<ImageViewModel>? Images { get; set; }
+    }
+}
