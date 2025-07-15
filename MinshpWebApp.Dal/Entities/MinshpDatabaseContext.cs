@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
 
 namespace MinshpWebApp.Dal.Entities;
 
@@ -30,6 +30,8 @@ public partial class MinshpDatabaseContext : DbContext
     public virtual DbSet<ProductFeature> ProductFeatures { get; set; }
 
     public virtual DbSet<Promotion> Promotions { get; set; }
+
+    public virtual DbSet<Stock> Stocks { get; set; }
 
     public virtual DbSet<Video> Videos { get; set; }
 
@@ -129,6 +131,18 @@ public partial class MinshpDatabaseContext : DbContext
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Promotions)
                 .HasForeignKey(d => d.Id_product)
                 .HasConstraintName("FK_Promotion_Product");
+        });
+
+
+        modelBuilder.Entity<Stock>(entity =>
+        {
+            entity.ToTable("Stock");
+
+            entity.Property(e => e.IdProduct).HasColumnName("Id_product");
+
+            entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Stocks)
+                .HasForeignKey(d => d.IdProduct)
+                .HasConstraintName("FK_Stock_Product");
         });
 
         modelBuilder.Entity<Video>(entity =>

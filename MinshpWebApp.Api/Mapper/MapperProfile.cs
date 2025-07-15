@@ -98,6 +98,20 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description));
 
+
+            CreateMap<Stock, StockViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity));
+
+
+            CreateMap<Stock, StockViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity));
+
+            CreateMap<StockRequest, Stock>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity))
+               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
         }
     }
 }

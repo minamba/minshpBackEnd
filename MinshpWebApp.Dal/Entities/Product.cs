@@ -25,5 +25,7 @@ public partial class Product
 
     public virtual ICollection<Promotion> Promotions { get; set; } = new List<Promotion>();
 
+    public virtual ICollection<Stock> Stocks { get; set; } = new List<Stock>();
+
     public virtual ICollection<Video> Videos { get; set; } = new List<Video>();
 }

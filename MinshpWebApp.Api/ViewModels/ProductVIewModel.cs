@@ -14,5 +14,6 @@
         public IEnumerable<FeatureViewModel>? Features { get; set; }
         public IEnumerable<VideoViewModel>? Videos { get; set; }
         public IEnumerable<ImageViewModel>? Images { get; set; }
+        public StockViewModel? Stocks { get; set; }
     }
 }

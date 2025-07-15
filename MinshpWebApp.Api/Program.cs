@@ -29,6 +29,7 @@ builder.Services.AddScoped<IFeatureRepository, FeatureRepository>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IProductFeatureRepository, ProductFeatureRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IStockRepository, StockRepository>();
 
 
 //scoped services
@@ -41,6 +42,7 @@ builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IProductFeatureService, ProductFeatureService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IStockService, StockService>();
 
 
 
@@ -53,6 +55,7 @@ builder.Services.AddScoped<IPromotionViewModelBuilder, PromotionViewModelBuilder
 builder.Services.AddScoped<IFeatureViewModelBuilder, FeatureViewModelBuilder>();
 builder.Services.AddScoped<ICustomerViewModelBuilder, CustomerViewModelBuilder>();
 builder.Services.AddScoped<IOrderViewModelBuilder, OrderViewModelBuilder>();
+builder.Services.AddScoped<IStockViewModelBuilder, StockViewModelBuilder>();
 
 
 var app = builder.Build();

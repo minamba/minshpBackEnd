@@ -17,9 +17,10 @@ namespace MinshpWebApp.Api.Builders.impl
         private IImageService _imageService;
         private IPromotionService _promotionService;
         private IVideoService _videoService;
+        private IStockService _stockService;
 
 
-        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IMapper mapper)
+        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, IMapper mapper)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -28,6 +29,7 @@ namespace MinshpWebApp.Api.Builders.impl
             _promotionService = promotionService;
             _videoService = videoService;
             _productFeature = productFeature;
+            _stockService = stockService;
             _mapper = mapper;
                
         }
@@ -42,6 +44,7 @@ namespace MinshpWebApp.Api.Builders.impl
             var features = await _featureService.GetFeaturesAsync();
             var categories = await _categoryService.GetCategoriesAsync();
             var featuresProduct = await _productFeature.GetProductFeaturesAsync();
+            var stocks = await _stockService.GetStocksAsync();
 
             var productVmList = new List<ProductVIewModel>();
 
@@ -67,21 +70,26 @@ namespace MinshpWebApp.Api.Builders.impl
                 var promotionsForProduct = promotions.Where(i => i.IdProduct == p.Id).ToList();
                 var promotionList = _mapper.Map<IEnumerable<PromotionViewModel>>(promotionsForProduct);
 
+                //get stocks
+                var stocksForProduct = stocks.Where(i => i.IdProduct == p.Id).FirstOrDefault();
+                var stockList = _mapper.Map<StockViewModel>(stocksForProduct);
+
                 //GetHashCode videos
                 var videosForProduct = videos.Where(i => i.IdProduct == p.Id).ToList();
                 var videosList = _mapper.Map<IEnumerable<VideoViewModel>>(videosForProduct);
 
                 var productVm = new ProductVIewModel()
                 {
-                     Id = p.Id,
-                     Name = p.Name,
-                     Description = p.Description,
-                     Price = p.Price,
-                     Category = categoryName,
-                     Features = featuresList,
-                     Images = imageList,
-                     Promotions = promotionList,
-                     Videos = videosList
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    Price = p.Price,
+                    Category = categoryName,
+                    Features = featuresList,
+                    Images = imageList,
+                    Promotions = promotionList,
+                    Videos = videosList,
+                    Stocks = stockList
                 };
 
                 productVmList.Add(productVm);
