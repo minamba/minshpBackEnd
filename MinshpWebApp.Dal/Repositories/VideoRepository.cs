@@ -29,6 +29,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = p.Id,
                 Url = p.Url,
                 IdProduct = p.Id_product,
+                Description = p.Description
             }).ToListAsync();
 
             return VideoEntities;
@@ -45,6 +46,7 @@ namespace MinshpWebApp.Dal.Repositories
             // On met à jour ses propriétés
             if (model.Url != null) VideoToUpdate.Url = model.Url;
             if (model.IdProduct != null) VideoToUpdate.Id_product = model.IdProduct;
+            if (model.Description != null) VideoToUpdate.Description = model.Description;
 
             await _context.SaveChangesAsync();
 
@@ -54,6 +56,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 Url = model.Url,
                 IdProduct = model.IdProduct,
+                Description = model.Description
             };
         }
 
@@ -64,7 +67,8 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                Id_product = model.IdProduct
+                Id_product = model.IdProduct,
+                Description = model.Description
             };
 
             _context.Videos.Add(newVideo);
@@ -74,7 +78,8 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                IdProduct = model.IdProduct
+                IdProduct = model.IdProduct,
+                Description = model.Description
             };
         }
 

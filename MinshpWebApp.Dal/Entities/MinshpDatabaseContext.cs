@@ -60,9 +60,17 @@ public partial class MinshpDatabaseContext : DbContext
             entity.Property(e => e.PhoneNumber).HasColumnName("Phone_number");
         });
 
+
         modelBuilder.Entity<Feature>(entity =>
         {
             entity.ToTable("Feature");
+
+            entity.Property(e => e.IdCategory).HasColumnName("Id_category");
+
+            entity.HasOne(d => d.IdCategoryNavigation).WithMany(p => p.Features)
+                .HasForeignKey(d => d.IdCategory)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Feature_Category");
         });
 
         modelBuilder.Entity<Image>(entity =>
@@ -70,10 +78,6 @@ public partial class MinshpDatabaseContext : DbContext
             entity.ToTable("Image");
 
             entity.Property(e => e.Id_product).HasColumnName("Id_product");
-
-            entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Images)
-                .HasForeignKey(d => d.Id_product)
-                .HasConstraintName("FK_Image_Product");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -87,9 +91,6 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasForeignKey(d => d.IdCustomer)
                 .HasConstraintName("FK_Order_Customer");
 
-            entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.Id_product)
-                .HasConstraintName("FK_Order_Product");
         });
 
         modelBuilder.Entity<Product>(entity =>
@@ -112,11 +113,13 @@ public partial class MinshpDatabaseContext : DbContext
             entity.Property(e => e.IdProduct).HasColumnName("Id_product");
 
             entity.HasOne(d => d.IdFeatureNavigation).WithMany(p => p.ProductFeatures)
-                .HasForeignKey(d => d.Id_feature)
-                .HasConstraintName("FK_Product_feature_Feature");
+               .HasForeignKey(d => d.Id_feature)
+               .OnDelete(DeleteBehavior.Cascade)
+               .HasConstraintName("FK_Product_feature_Feature");
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.ProductFeatures)
                 .HasForeignKey(d => d.IdProduct)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Product_feature_Product");
         });
 
@@ -124,12 +127,16 @@ public partial class MinshpDatabaseContext : DbContext
         {
             entity.ToTable("Promotion");
 
+            entity.Property(e => e.DateCreation)
+                .HasColumnType("datetime")
+                .HasColumnName("Date_creation");
             entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.Id_product).HasColumnName("Id_product");
             entity.Property(e => e.StartDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Promotions)
                 .HasForeignKey(d => d.Id_product)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Promotion_Product");
         });
 
@@ -142,6 +149,7 @@ public partial class MinshpDatabaseContext : DbContext
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Stocks)
                 .HasForeignKey(d => d.IdProduct)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Stock_Product");
         });
 
@@ -153,6 +161,7 @@ public partial class MinshpDatabaseContext : DbContext
 
             entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.Videos)
                 .HasForeignKey(d => d.Id_product)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Video_Product");
         });
 

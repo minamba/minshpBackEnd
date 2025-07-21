@@ -10,6 +10,7 @@
 
         public DateTime? EndDate { get; set; }
 
-        public int? Id_product { get; set; }
+        public int? IdProduct { get; set; }
+        public DateTime? DateCreation { get; set; }
     }
 }

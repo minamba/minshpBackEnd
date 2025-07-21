@@ -27,6 +27,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = p.Id,
                 Description = p.Description,
+                IdCategory = p.IdCategory,
             }).ToListAsync();
 
             return FeatureEntities;
@@ -42,6 +43,7 @@ namespace MinshpWebApp.Dal.Repositories
 
             // On met à jour ses propriétés
             if (model.Description != null) FeatureToUpdate.Description = model.Description;
+            if (model.IdCategory != null) FeatureToUpdate.IdCategory = model.IdCategory;
 
             await _context.SaveChangesAsync();
 
@@ -50,6 +52,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Description = model.Description,
+                IdCategory = model.IdCategory,
             };
         }
 
@@ -60,6 +63,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Description = model.Description,
+                IdCategory = model.IdCategory,
             };
 
             _context.Features.Add(newFeature);
@@ -69,6 +73,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Description = model.Description,
+                IdCategory = model.IdCategory,
             };
         }
 

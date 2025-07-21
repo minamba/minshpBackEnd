@@ -12,6 +12,4 @@ public partial class Image
     public string? Description { get; set; }
 
     public int? Id_product { get; set; }
-
-    public virtual Product? IdProductNavigation { get; set; }
 }

@@ -28,6 +28,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = p.Id,
                 StartDate = p.StartDate,
                 EndDate = p.EndDate,
+                DateCreation = p.DateCreation,
                 Purcentage = p.Purcentage,
                 IdProduct = p.Id_product,
             }).ToListAsync();
@@ -48,6 +49,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.EndDate != null) PromotionToUpdate.EndDate = model.EndDate;
             if (model.Purcentage != null) PromotionToUpdate.Purcentage = model.Purcentage;
             if (model.IdProduct != null) PromotionToUpdate.Id_product = model.IdProduct;
+            if (model.DateCreation != null) PromotionToUpdate.DateCreation = model.DateCreation;
 
             await _context.SaveChangesAsync();
 
@@ -71,7 +73,8 @@ namespace MinshpWebApp.Dal.Repositories
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
                 Purcentage = model.Purcentage,
-                Id_product = model.IdProduct
+                Id_product = model.IdProduct,
+                DateCreation = DateTime.Now
             };
 
             _context.Promotions.Add(newPromotion);
@@ -83,7 +86,8 @@ namespace MinshpWebApp.Dal.Repositories
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
                 Purcentage = model.Purcentage,
-                IdProduct = model.IdProduct
+                IdProduct = model.IdProduct,
+                DateCreation = DateTime.Now
             };
         }
 

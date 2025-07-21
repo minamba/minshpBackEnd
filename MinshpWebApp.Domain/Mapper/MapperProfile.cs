@@ -15,6 +15,7 @@ namespace MinshpWebApp.Domain.Mapper
                .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
                .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
                .ForMember(x => x.Price, dest => dest.MapFrom(x => x.Price))
+               .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
                .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
 

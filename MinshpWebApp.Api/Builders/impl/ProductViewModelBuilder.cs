@@ -4,6 +4,7 @@ using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
 using MinshpWebApp.Domain.Services.impl;
+using System.Linq;
 
 namespace MinshpWebApp.Api.Builders.impl
 {
@@ -85,6 +86,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     Description = p.Description,
                     Price = p.Price,
                     Category = categoryName,
+                    Main = p.Main,
                     Features = featuresList,
                     Images = imageList,
                     Promotions = promotionList,
@@ -100,6 +102,23 @@ namespace MinshpWebApp.Api.Builders.impl
 
         public async Task<Product> UpdateProductsAsync(ProductRequest model)
         {
+
+            var currentProduct =  (await _productService.GetProductsAsync()).Where(p => p.Id == model.Id).FirstOrDefault();
+
+            if (currentProduct.Main !=  model.Main == true)
+            {
+                var products = await _productService.GetProductsAsync();
+
+                foreach (var item in products)
+                {
+                    if (item.Id != model.Id)
+                    {
+                        item.Main = false;
+                        _productService.UpdateProductsAsync(_mapper.Map<Product>(item));
+                    }
+                }
+            }
+
             return await _productService.UpdateProductsAsync(_mapper.Map<Product>(model));
         }
 

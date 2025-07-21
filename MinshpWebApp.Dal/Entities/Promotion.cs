@@ -15,5 +15,7 @@ public partial class Promotion
 
     public int? Id_product { get; set; }
 
+    public DateTime? DateCreation { get; set; }
+
     public virtual Product? IdProductNavigation { get; set; }
 }

@@ -15,11 +15,9 @@ public partial class Product
 
     public int? Id_Category { get; set; }
 
+    public bool? Main { get; set; }
+
     public virtual Category? IdCategoryNavigation { get; set; }
-
-    public virtual ICollection<Image> Images { get; set; } = new List<Image>();
-
-    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
     public virtual ICollection<ProductFeature> ProductFeatures { get; set; } = new List<ProductFeature>();
 

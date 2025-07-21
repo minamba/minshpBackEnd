@@ -15,4 +15,6 @@ public partial class Promotion
 
     public int? IdProduct { get; set; }
 
+    public DateTime? DateCreation { get; set; }
+
 }

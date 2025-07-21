@@ -35,7 +35,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = p.Name,
                 Description = p.Description,
                 IdCategory = p.Id_Category,
-                Price = p.Price
+                Price = p.Price,
+                Main = p.Main
             }).ToListAsync();
 
             return productEntities;
@@ -45,6 +46,7 @@ namespace MinshpWebApp.Dal.Repositories
         public async Task<Product> UpdateProductsAsync(Product model)
         {
             var ProductToUpdate = await _context.Products.FirstOrDefaultAsync(u => u.Id == model.Id  );
+            var StockToUpdate = await _context.Stocks.FirstOrDefaultAsync(s => s.IdProduct == model.Id);
 
             if (ProductToUpdate == null)
                 return null; // ou throw une exception
@@ -53,7 +55,13 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Description != null) ProductToUpdate.Description = model.Description;
             if (model.Price != null) ProductToUpdate.Price = model.Price;
             if (model.Name != null) ProductToUpdate.Name = model.Name;
+            if (model.Main != null) ProductToUpdate.Main = model.Main;
             if (model.IdCategory != null) ProductToUpdate.Id_Category = model.IdCategory;
+
+            await _context.SaveChangesAsync();
+
+
+            if (model.Stock != null) StockToUpdate.Quantity = model.Stock;
 
             await _context.SaveChangesAsync();
 
@@ -65,6 +73,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Description = model.Description,
                 Price = model.Price,
                 IdCategory= model.IdCategory,
+                Stock = model.Stock,
+                Main = model.Main
             };
         }
 
@@ -83,9 +93,22 @@ namespace MinshpWebApp.Dal.Repositories
             _context.Products.Add(newProduct);
             _context.SaveChanges();
 
+
+            //insertion dans la table stock 
+            var newStock = new Dal.Entities.Stock
+            {
+                IdProduct = newProduct.Id, 
+                Quantity = model.Stock
+            };
+
+            // 4️⃣ Ajouter à la base
+            _context.Stocks.Add(newStock);
+            await _context.SaveChangesAsync();
+
+
             return new Product() 
             {
-                Id = model.Id,
+                Id = newStock.Id,
                 Name = model.Name,
                 Description = model.Description,
                 Price = model.Price,

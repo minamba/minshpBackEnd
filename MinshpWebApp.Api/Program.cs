@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.Features;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Builders.impl;
 using MinshpWebApp.Dal.Entities;
@@ -56,6 +57,17 @@ builder.Services.AddScoped<IFeatureViewModelBuilder, FeatureViewModelBuilder>();
 builder.Services.AddScoped<ICustomerViewModelBuilder, CustomerViewModelBuilder>();
 builder.Services.AddScoped<IOrderViewModelBuilder, OrderViewModelBuilder>();
 builder.Services.AddScoped<IStockViewModelBuilder, StockViewModelBuilder>();
+builder.Services.AddScoped<IProductFeatureViewModelBuilder, ProductFeatureViewModelBuilder>();
+
+
+builder.Services.AddHttpClient();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 1024 * 1024 * 900; // 900 Mo
+});
+
+
 
 
 var app = builder.Build();
@@ -66,6 +78,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+
+app.UseStaticFiles(); // pour wwwroot si besoin
+
+app.UseCors(builder =>
+    builder.WithOrigins("http://localhost:3000")
+           .AllowAnyHeader()
+           .AllowAnyMethod()
+);
 
 app.UseHttpsRedirection();
 

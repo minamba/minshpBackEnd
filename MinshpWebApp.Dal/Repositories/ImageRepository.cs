@@ -27,6 +27,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = p.Id,
                 Url = p.Url,
+                Description = p.Description,
                 IdProduct = p.Id_product,
             }).ToListAsync();
 
@@ -63,7 +64,8 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                Id_product = model.IdProduct
+                Id_product = model.IdProduct,
+                Description = model.Description
             };
 
             _context.Images.Add(newImage);
@@ -73,7 +75,8 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
-                IdProduct = model.IdProduct
+                IdProduct = model.IdProduct,
+                Description = model.Description
             };
         }
 

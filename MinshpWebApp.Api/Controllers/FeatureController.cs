@@ -8,7 +8,7 @@ using System.Net;
 namespace MinshpWebApp.Api.Controllers
 {
     [ApiController]
-    [Route("features")]
+    [Route("Features")]
     public class FeatureController : Controller
     {
         IFeatureViewModelBuilder _featureViewModelBuilder;
@@ -19,7 +19,7 @@ namespace MinshpWebApp.Api.Controllers
         }
 
 
-        [HttpGet("/feature")]
+        [HttpGet("/features")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<FeatureViewModel>), Description = "list of features")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> GetFeaturesAsync()

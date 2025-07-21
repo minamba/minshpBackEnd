@@ -10,6 +10,7 @@
 
         public decimal? Price { get; set; }
         public string? Category { get; set; }
+        public bool ? Main { get; set; }
         public IEnumerable<PromotionViewModel>? Promotions { get; set; }
         public IEnumerable<FeatureViewModel>? Features { get; set; }
         public IEnumerable<VideoViewModel>? Videos { get; set; }

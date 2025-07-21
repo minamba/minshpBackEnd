@@ -21,4 +21,13 @@
     <ProjectReference Include="..\MinshpWebApp.Domain\MinshpWebApp.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\videos\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Builders\IProductFeatureViewModelBuilder.cs" />
+  </ItemGroup>
+
 </Project>
