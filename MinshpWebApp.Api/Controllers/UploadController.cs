@@ -91,17 +91,17 @@ namespace MinshpWebApp.Api.Controllers
             {
 
                 if (requestType == add)
-                    _imageViewModelBuilder.AddImagesAsync(new ImageRequest { Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct });
+                    _imageViewModelBuilder.AddImagesAsync(new ImageRequest { Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct, Position = request.Position });
                 else
-                    _imageViewModelBuilder.UpdateImagesAsync(new ImageRequest { Id = request.Id, Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct });
+                    _imageViewModelBuilder.UpdateImagesAsync(new ImageRequest { Id = request.Id, Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct, Position = request.Position });
 
             }
             else
             {
                 if (requestType == add)
-                    _videoViewModelBuilder.AddVideoAsync(new VideoRequest { Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct });
+                    _videoViewModelBuilder.AddVideoAsync(new VideoRequest { Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct, Position = request.Position });
                 else
-                    _videoViewModelBuilder.UpdateVideoAsync(new VideoRequest { Id = request.Id, Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct });
+                    _videoViewModelBuilder.UpdateVideoAsync(new VideoRequest { Id = request.Id, Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct, Position = request.Position });
             }
 
 

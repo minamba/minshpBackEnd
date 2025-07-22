@@ -87,6 +87,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = model.Name,
                 Description = model.Description,
                 Price = model.Price,
+                Id_Category = model.IdCategory
 
             };
 

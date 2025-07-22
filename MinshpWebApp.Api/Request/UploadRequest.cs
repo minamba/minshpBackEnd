@@ -11,5 +11,7 @@
         public string? Description { get; set; }
 
         public string? TypeUpload { get; set; }
+
+        public int? Position { get; set; }
     }
 }

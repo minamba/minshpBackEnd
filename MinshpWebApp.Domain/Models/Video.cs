@@ -15,4 +15,6 @@ public partial class Video
 
     public int? IdProduct { get; set; }
 
+    public int? Position { get; set; }
+
 }

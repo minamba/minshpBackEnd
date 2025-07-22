@@ -16,5 +16,7 @@ public partial class Video
 
     public int? Id_product { get; set; }
 
+    public int? Position { get; set; }
+
     public virtual Product? IdProductNavigation { get; set; }
 }

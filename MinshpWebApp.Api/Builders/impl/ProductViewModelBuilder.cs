@@ -103,18 +103,16 @@ namespace MinshpWebApp.Api.Builders.impl
         public async Task<Product> UpdateProductsAsync(ProductRequest model)
         {
 
-            var currentProduct =  (await _productService.GetProductsAsync()).Where(p => p.Id == model.Id).FirstOrDefault();
+            var products = (await _productService.GetProductsAsync()).ToList();
 
-            if (currentProduct.Main !=  model.Main == true)
+            if (model.Main == true)
             {
-                var products = await _productService.GetProductsAsync();
-
                 foreach (var item in products)
                 {
                     if (item.Id != model.Id)
                     {
                         item.Main = false;
-                        _productService.UpdateProductsAsync(_mapper.Map<Product>(item));
+                        await _productService.UpdateProductsAsync(_mapper.Map<Product>(item));
                     }
                 }
             }

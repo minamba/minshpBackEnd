@@ -14,4 +14,6 @@ public partial class Image
     public string? Title { get; set; }
 
     public int? Id_product { get; set; }
+
+    public int? Position { get; set; }
 }

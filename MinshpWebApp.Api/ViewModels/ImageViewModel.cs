@@ -11,5 +11,7 @@
         public string? Title { get; set; }
 
         public int? IdProduct { get; set; }
+
+        public int? Position { get; set; }
     }
 }
