@@ -40,6 +40,7 @@ namespace MinshpWebApp.Api.Controllers
             string folder = null;
             string requestType = null;
             string fName = null;
+            string fileUrl = null;
 
 
             if (!Enum.TryParse<MediasType>(request.Type, true, out var mediaType))
@@ -74,11 +75,17 @@ namespace MinshpWebApp.Api.Controllers
             };
 
             if (request.File != null)
+            {
                 fName = Path.GetFileName(request.File.FileName);
+                fileUrl = $"{Request.Scheme}://{Request.Host}/{folder}/{fName}";
+                
+            }
+      
+               
 
             // URL d'accès si exposée
 
-            var fileUrl = $"{Request.Scheme}://{Request.Host}/{folder}/{fName}";
+
 
             if (folder == images)
             {
@@ -94,7 +101,7 @@ namespace MinshpWebApp.Api.Controllers
                 if (requestType == add)
                     _videoViewModelBuilder.AddVideoAsync(new VideoRequest { Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct });
                 else
-                    _videoViewModelBuilder.UpdateVideoAsync(new VideoRequest {Id=request.Id, Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct });
+                    _videoViewModelBuilder.UpdateVideoAsync(new VideoRequest { Id = request.Id, Description = request.Description, Url = fileUrl, IdProduct = request.IdProduct });
             }
 
 

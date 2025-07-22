@@ -28,6 +28,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = p.Id,
                 Url = p.Url,
                 Description = p.Description,
+                Title = p.Title,
                 IdProduct = p.Id_product,
             }).ToListAsync();
 
@@ -44,6 +45,8 @@ namespace MinshpWebApp.Dal.Repositories
 
             // On met à jour ses propriétés
             if (model.Url != null) ImageToUpdate.Url = model.Url;
+            if (model.Description != null) ImageToUpdate.Description = model.Description;
+            if (model.Title != null) ImageToUpdate.Title = model.Title;
             if (model.IdProduct != null) ImageToUpdate.Id_product = model.IdProduct;
 
             await _context.SaveChangesAsync();
@@ -53,6 +56,8 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Url = model.Url,
+                Description = model.Description,
+                Title = model.Title,
                 IdProduct = model.IdProduct,
             };
         }
@@ -65,7 +70,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 Url = model.Url,
                 Id_product = model.IdProduct,
-                Description = model.Description
+                Description = model.Description,
+                Title = model.Title,
             };
 
             _context.Images.Add(newImage);
@@ -76,7 +82,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 Url = model.Url,
                 IdProduct = model.IdProduct,
-                Description = model.Description
+                Description = model.Description,
+                Title = model.Title,
             };
         }
 

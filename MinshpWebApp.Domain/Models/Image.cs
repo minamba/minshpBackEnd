@@ -11,5 +11,8 @@ public partial class Image
 
     public string? Description { get; set; }
 
+    public string? Title { get; set; }
+
+
     public int? IdProduct { get; set; }
 }
