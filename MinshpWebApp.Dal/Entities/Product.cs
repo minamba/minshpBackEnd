@@ -17,6 +17,14 @@ public partial class Product
 
     public bool? Main { get; set; }
 
+    public DateTime? CreationDate { get; set; }
+
+    public DateTime? ModificationDate { get; set; }
+
+    public string? Brand { get; set; }
+
+    public string? Model { get; set; }
+
     public virtual Category? IdCategoryNavigation { get; set; }
 
     public virtual ICollection<ProductFeature> ProductFeatures { get; set; } = new List<ProductFeature>();

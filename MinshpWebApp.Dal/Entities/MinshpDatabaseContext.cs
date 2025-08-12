@@ -21,6 +21,8 @@ public partial class MinshpDatabaseContext : DbContext
 
     public virtual DbSet<Feature> Features { get; set; }
 
+    public virtual DbSet<FeatureCategory> FeatureCategories { get; set; }
+
     public virtual DbSet<Image> Images { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
@@ -66,6 +68,7 @@ public partial class MinshpDatabaseContext : DbContext
             entity.ToTable("Feature");
 
             entity.Property(e => e.IdCategory).HasColumnName("Id_category");
+            entity.Property(e => e.IdFeatureCategory).HasColumnName("Id_feature_category");
 
             entity.HasOne(d => d.IdCategoryNavigation).WithMany(p => p.Features)
                 .HasForeignKey(d => d.IdCategory)
@@ -73,11 +76,17 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasConstraintName("FK_Feature_Category");
         });
 
+        modelBuilder.Entity<FeatureCategory>(entity =>
+        {
+            entity.ToTable("Feature_category");
+        });
+
         modelBuilder.Entity<Image>(entity =>
         {
             entity.ToTable("Image");
 
             entity.Property(e => e.Id_product).HasColumnName("Id_product");
+            entity.Property(e => e.IdCategory).HasColumnName("Id_category");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -98,6 +107,12 @@ public partial class MinshpDatabaseContext : DbContext
             entity.ToTable("Product");
 
             entity.Property(e => e.Id_Category).HasColumnName("Id_Category");
+            entity.Property(e => e.CreationDate)
+                .HasColumnType("datetime")
+                .HasColumnName("Creation_Date");
+            entity.Property(e => e.ModificationDate)
+                .HasColumnType("datetime")
+                .HasColumnName("Modification_Date");
             entity.Property(e => e.Price).HasColumnType("decimal(18, 0)");
 
             entity.HasOne(d => d.IdCategoryNavigation).WithMany(p => p.Products)

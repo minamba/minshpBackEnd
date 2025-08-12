@@ -7,5 +7,6 @@
         public string? Description { get; set; }
 
         public int? IdCategory { get; set; }
+        public int? IdFeatureCategory { get; set; }
     }
 }

@@ -16,4 +16,5 @@ public partial class Image
     public int? Id_product { get; set; }
 
     public int? Position { get; set; }
+    public int? IdCategory { get; set; }
 }

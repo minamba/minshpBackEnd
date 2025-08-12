@@ -11,6 +11,7 @@ public partial class Feature
 
     public int? IdCategory { get; set; }
 
+    public int? IdFeatureCategory { get; set; }
     public virtual Category? IdCategoryNavigation { get; set; }
 
     public virtual ICollection<ProductFeature> ProductFeatures { get; set; } = new List<ProductFeature>();

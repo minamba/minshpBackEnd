@@ -29,14 +29,21 @@ namespace MinshpWebApp.Dal.Repositories
 
         public async Task<IEnumerable<Product>> GetProductsAsync()
         {
-            var productEntities = await _context.Products.Select(p => new Product
+            var productEntities = await _context.Products
+                .OrderByDescending(p => p.CreationDate)
+                .Select(p => new Product
             {
                 Id = p.Id,
                 Name = p.Name,
                 Description = p.Description,
                 IdCategory = p.Id_Category,
                 Price = p.Price,
-                Main = p.Main
+                Main = p.Main,
+                Brand = p.Brand,
+                Model = p.Model,
+                CreationDate = p.CreationDate,
+                ModificationDate = p.ModificationDate,
+                
             }).ToListAsync();
 
             return productEntities;
@@ -57,6 +64,9 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Name != null) ProductToUpdate.Name = model.Name;
             if (model.Main != null) ProductToUpdate.Main = model.Main;
             if (model.IdCategory != null) ProductToUpdate.Id_Category = model.IdCategory;
+            if (model.Brand != null) ProductToUpdate.Brand = model.Brand;
+            if (model.Model != null) ProductToUpdate.Model = model.Model;
+            if (model.ModificationDate != null) ProductToUpdate.ModificationDate = model.ModificationDate;
 
             await _context.SaveChangesAsync();
 
@@ -74,7 +84,11 @@ namespace MinshpWebApp.Dal.Repositories
                 Price = model.Price,
                 IdCategory= model.IdCategory,
                 Stock = model.Stock,
-                Main = model.Main
+                Main = model.Main,
+                Brand = model.Brand,
+                Model = model.Model,
+                ModificationDate = model.ModificationDate,
+                CreationDate = model.CreationDate,
             };
         }
 
@@ -87,8 +101,10 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = model.Name,
                 Description = model.Description,
                 Price = model.Price,
-                Id_Category = model.IdCategory
-
+                Id_Category = model.IdCategory,
+                Brand = model.Brand,
+                Model = model.Model,
+                CreationDate= DateTime.Now,
             };
 
             _context.Products.Add(newProduct);
@@ -114,6 +130,10 @@ namespace MinshpWebApp.Dal.Repositories
                 Description = model.Description,
                 Price = model.Price,
                 IdCategory = model.IdCategory,
+                Brand = newProduct.Brand,
+                Model = model.Model,
+                CreationDate= DateTime.Now,
+                ModificationDate= null,
             };
         }
 

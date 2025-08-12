@@ -20,4 +20,11 @@ public partial class Product
     public bool? Main { get; set; }
 
     public string? Url { get; set; }
+
+    public DateTime? CreationDate { get; set; }
+
+    public DateTime? ModificationDate { get; set; }
+    public string? Brand { get; set; }
+
+    public string? Model { get; set; }
 }

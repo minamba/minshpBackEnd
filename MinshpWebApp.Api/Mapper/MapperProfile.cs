@@ -17,6 +17,10 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Stock, dest => dest.MapFrom(x => x.Stock))
               .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
+              .ForMember(x => x.Model, dest => dest.MapFrom(x => x.Model))
+              .ForMember(x => x.Brand, dest => dest.MapFrom(x => x.Brand))
+              .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
+              .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
             CreateMap<ProductDto, Product>()
@@ -25,6 +29,10 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Stock, dest => dest.MapFrom(x => x.Stock))
               .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
+              .ForMember(x => x.Model, dest => dest.MapFrom(x => x.Model))
+              .ForMember(x => x.Brand, dest => dest.MapFrom(x => x.Brand))
+              .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
+              .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
             CreateMap<PromotionRequest, Promotion>()
@@ -56,7 +64,8 @@ namespace MinshpWebApp.Api.Mapper
 
             CreateMap<FeatureRequest, Feature>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-              .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description));
+              .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
+              .ForMember(x => x.IdFeatureCategory, dest => dest.MapFrom(x => x.IdFeatureCategory));
 
 
             CreateMap<ImageRequest, Image>()
@@ -65,6 +74,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
+              .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory))
               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
 
 
@@ -74,6 +84,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct))
               .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
+              .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description));
 
             CreateMap<VideoRequest, Video>()
@@ -118,6 +129,7 @@ namespace MinshpWebApp.Api.Mapper
             CreateMap<Feature,FeatureViewModel>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory))
+              .ForMember(x => x.IdFeatureCategory, dest => dest.MapFrom(x => x.IdFeatureCategory))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description));
 
 
@@ -148,6 +160,16 @@ namespace MinshpWebApp.Api.Mapper
                .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
                .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct))
                .ForMember(x => x.IdFeature, dest => dest.MapFrom(x => x.IdFeature));
+
+
+            CreateMap<FeatureCategoryRequest, FeatureCategory>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
+
+
+            CreateMap<FeatureCategory, FeatureCategoryViewModel>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
         }
     }
 }

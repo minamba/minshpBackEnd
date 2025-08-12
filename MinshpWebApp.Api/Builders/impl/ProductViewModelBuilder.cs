@@ -87,6 +87,10 @@ namespace MinshpWebApp.Api.Builders.impl
                     Price = p.Price,
                     Category = categoryName,
                     Main = p.Main,
+                    Brand = p.Brand,
+                    Model = p.Model,
+                    CreationDate = p.CreationDate,
+                    ModificationDate = p.ModificationDate,
                     Features = featuresList,
                     Images = imageList,
                     Promotions = promotionList,
@@ -102,7 +106,7 @@ namespace MinshpWebApp.Api.Builders.impl
 
         public async Task<Product> UpdateProductsAsync(ProductRequest model)
         {
-
+            model.ModificationDate = DateTime.Now;
             var products = (await _productService.GetProductsAsync()).ToList();
 
             if (model.Main == true)
