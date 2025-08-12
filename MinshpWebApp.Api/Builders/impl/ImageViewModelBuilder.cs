@@ -38,7 +38,15 @@ namespace MinshpWebApp.Api.Builders.impl
 
         public async Task<Image> UpdateImagesAsync(ImageRequest model)
         {
+
+            var imageToGetForResetOldImage = (await _imageService.GetImagesAsync()).FirstOrDefault(c => c.IdCategory == model.IdCategory);
+            imageToGetForResetOldImage.IdCategory = null;
+            await _imageService.UpdateImagesAsync(imageToGetForResetOldImage);
+
+
             var image = _mapper.Map<Image>(model);
+
+
 
             return await _imageService.UpdateImagesAsync(image);
         }

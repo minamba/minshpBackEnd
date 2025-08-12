@@ -51,9 +51,12 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Title != null) ImageToUpdate.Title = model.Title;
             if (model.IdProduct != null) ImageToUpdate.Id_product = model.IdProduct;
             if (model.Position != null) ImageToUpdate.Position = model.Position;
-            if (model.IdCategory != null) ImageToUpdate.IdCategory = model.IdCategory;
+            if (model.IdCategory != null)
+                ImageToUpdate.IdCategory = model.IdCategory;
+            else
+                ImageToUpdate.IdCategory = null;
 
-            await _context.SaveChangesAsync();
+               await _context.SaveChangesAsync();
 
 
             return new Image()
