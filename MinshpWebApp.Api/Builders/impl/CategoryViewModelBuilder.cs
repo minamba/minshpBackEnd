@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
+using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
+using Category = MinshpWebApp.Domain.Models.Category;
 
 namespace MinshpWebApp.Api.Builders.impl
 {
@@ -10,12 +12,14 @@ namespace MinshpWebApp.Api.Builders.impl
     {
         private IMapper _mapper;
         private ICategoryService _categoryService;
+        private ITaxeService _taxeService;
 
 
-        public CategoryViewModelBuilder(ICategoryService categoryService, IMapper mapper)
+        public CategoryViewModelBuilder(ICategoryService categoryService, ITaxeService taxeService, IMapper mapper)
         {
             _mapper = mapper;
             _categoryService = categoryService;
+            _taxeService = taxeService;
         }
 
         public async Task<Category> AddCategorysAsync(CategoryRequest model)
@@ -33,12 +37,43 @@ namespace MinshpWebApp.Api.Builders.impl
         {
             var result = await _categoryService.GetCategoriesAsync();
 
-            return  _mapper.Map<IEnumerable<CategoryViewModel>>(result);
+            var list =  _mapper.Map<IEnumerable<CategoryViewModel>>(result);
+
+            foreach (var item in list) { 
+            
+                item.TaxeName = await GetTaxeName(item.TaxeId);
+            
+            }
+
+            return list;
         }
 
-        public async Task<Category> UpdateCategorysAsync(CategoryRequest model)
+        public async Task<Domain.Models.Category> UpdateCategorysAsync(CategoryRequest model)
         {
             return await _categoryService.UpdateCategorysAsync(_mapper.Map<Category>(model));
+        }
+
+
+        private async Task<List<string>> GetTaxeName(string idsTaxe)
+        {
+            string txs = idsTaxe;
+
+            List<string> taxes = txs.Split(',')
+                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                      .ToList();
+
+            List<string> finalTaxesNames = new List<string>();
+
+            foreach (var t in taxes)
+            {
+                var number = int.Parse(t);
+                var tax = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == number);
+
+                //tax.Name = tax.Name.Split(':')[0].Trim();
+                finalTaxesNames.Add(tax.Name +", ");
+            }
+          
+            return finalTaxesNames;
         }
     }
 }

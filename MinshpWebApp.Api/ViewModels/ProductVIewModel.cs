@@ -9,11 +9,15 @@
         public string? Description { get; set; }
 
         public decimal? Price { get; set; }
+        public decimal? PriceTtc { get; set; }
+        public decimal? PriceTtcPromoted { get; set; }
+        public string? TaxWithoutTvaAmount { get; set; } // montant de la taxe hors TVA. en general on additionne la TVA + la taxe supplémentaire
         public string? Category { get; set; }
         public bool ? Main { get; set; }
         public string? Brand { get; set; }
 
         public string? Model { get; set; }
+        public string ? StockStatus { get; set; }
         public DateTime? CreationDate { get; set; }
 
         public DateTime? ModificationDate { get; set; }

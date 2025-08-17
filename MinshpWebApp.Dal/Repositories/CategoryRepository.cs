@@ -27,6 +27,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = p.Id,
                 Name = p.Name,
+                IdTaxe = p.IdTaxe,
             }).ToListAsync();
 
             return CategoryEntities;
@@ -42,6 +43,7 @@ namespace MinshpWebApp.Dal.Repositories
 
             // On met à jour ses propriétés
             if (model.Name != null) CategoryToUpdate.Name = model.Name;
+            if (model.IdTaxe != null) CategoryToUpdate.IdTaxe = model.IdTaxe;
 
             await _context.SaveChangesAsync();
 
@@ -50,6 +52,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Name = model.Name,
+                IdTaxe = model.IdTaxe,
             };
         }
 
@@ -60,6 +63,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Name = model.Name,
+                IdTaxe = model.IdTaxe,
             };
 
             _context.Categories.Add(newCategory);
@@ -69,6 +73,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Name = model.Name,
+                IdTaxe = model.IdTaxe,
             };
         }
 

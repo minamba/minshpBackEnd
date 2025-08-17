@@ -32,6 +32,7 @@ builder.Services.AddScoped<IProductFeatureRepository, ProductFeatureRepository>(
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<IFeatureCategoryRepository, FeatureCategoryRepository>();
+builder.Services.AddScoped<ITaxeRepository, TaxeRepository>();
 
 
 //scoped services
@@ -46,6 +47,7 @@ builder.Services.AddScoped<IProductFeatureService, ProductFeatureService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IFeatureCategoryService, FeatureCategoryService>();
+builder.Services.AddScoped<ITaxeService, TaxeService>();
 
 
 
@@ -61,6 +63,7 @@ builder.Services.AddScoped<IOrderViewModelBuilder, OrderViewModelBuilder>();
 builder.Services.AddScoped<IStockViewModelBuilder, StockViewModelBuilder>();
 builder.Services.AddScoped<IProductFeatureViewModelBuilder, ProductFeatureViewModelBuilder>();
 builder.Services.AddScoped<IFeatureCategoryViewModelBuilder, FeatureCategoryViewModelBuilder>();
+builder.Services.AddScoped<ITaxeViewModelBuilder, TaxeViewModelBuilder>();
 
 
 builder.Services.AddHttpClient();

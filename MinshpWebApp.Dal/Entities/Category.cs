@@ -9,6 +9,8 @@ public partial class Category
 
     public string? Name { get; set; }
 
+    public string? IdTaxe { get; set; }
+
     public virtual ICollection<Feature> Features { get; set; } = new List<Feature>();
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();

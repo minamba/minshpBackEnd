@@ -1,10 +1,15 @@
 ﻿using AutoMapper;
+using Azure;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
+using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Domain.Dtos;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
 using MinshpWebApp.Domain.Services.impl;
 using System.Linq;
+using Product = MinshpWebApp.Domain.Models.Product;
+using Taxe = MinshpWebApp.Domain.Models.Taxe;
 
 namespace MinshpWebApp.Api.Builders.impl
 {
@@ -19,9 +24,13 @@ namespace MinshpWebApp.Api.Builders.impl
         private IPromotionService _promotionService;
         private IVideoService _videoService;
         private IStockService _stockService;
+        private ITaxeService _taxeService;
 
+        const string soonOutOfStock = "Bientôt en rupture";
+        const string inStock = "En stock";
+        const string outOfStock = "En rupture";
 
-        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, IMapper mapper)
+        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, ITaxeService taxeService, IMapper mapper)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -31,6 +40,7 @@ namespace MinshpWebApp.Api.Builders.impl
             _videoService = videoService;
             _productFeature = productFeature;
             _stockService = stockService;
+            _taxeService = taxeService;
             _mapper = mapper;
                
         }
@@ -85,10 +95,14 @@ namespace MinshpWebApp.Api.Builders.impl
                     Name = p.Name,
                     Description = p.Description,
                     Price = p.Price,
+                    PriceTtc = await GetPriceTtc(p.IdCategory,p.Price),
+                    PriceTtcPromoted = await GetPriceTtcPromoted(await GetPriceTtc(p.IdCategory, p.Price), promotionList),
+                    TaxWithoutTvaAmount = await GetTaxeAmountWithoutTVA(p.IdCategory), 
                     Category = categoryName,
                     Main = p.Main,
                     Brand = p.Brand,
                     Model = p.Model,
+                    StockStatus = await GetStockStatus(stockList),
                     CreationDate = p.CreationDate,
                     ModificationDate = p.ModificationDate,
                     Features = featuresList,
@@ -133,5 +147,96 @@ namespace MinshpWebApp.Api.Builders.impl
         {
             return await _productService.DeleteProductsAsync(idProduct);
         }
+
+
+        private async Task<decimal?> GetPriceTtc(int? idCategory,decimal? price)
+        {
+            decimal? priceTtc = 0;
+            var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
+
+            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
+                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                      .ToList();
+
+            List<Taxe> taxesList = new List<Taxe>();
+
+            foreach (var t in taxes) 
+            {
+                var idTaxe = int.Parse(t);
+                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+
+                taxesList.Add(getTaxe);
+            }
+
+            foreach (var t in taxesList) 
+            {
+                if (t.Purcentage != null)
+                    priceTtc = (price * (t.Purcentage / 100m)) + price;
+
+                if (t.Amount != null)
+                    priceTtc += t.Amount;
+
+            }
+
+            return priceTtc;
+
+        }
+
+        private async Task<decimal?> GetPriceTtcPromoted(decimal? priceTtc, IEnumerable<PromotionViewModel> promotionList)
+        {
+            if (promotionList.ToList().Count>0)
+            {
+                var getPromotion = promotionList.ToList()[0];
+                var purcentage = getPromotion.Purcentage;
+
+                var promotedPrice = priceTtc - (priceTtc * (purcentage / 100m));
+
+                return promotedPrice;
+            }
+
+            return null;
+        }
+
+        private async Task<string?> GetTaxeAmountWithoutTVA(int? idCategory) 
+        {
+            string taxeEcoParticipation = null;
+            var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
+
+            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
+                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                      .ToList();
+
+            foreach (var t in taxes)
+            {
+                var idTaxe = int.Parse(t);
+                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+
+                if(!getTaxe.Name.ToLower().Contains("tva"))
+                {
+                    if(getTaxe.Name.ToLower().Contains("éco-participation"))
+                    {
+                        taxeEcoParticipation = "dont " + getTaxe.Name.Split(":")[0] + getTaxe.Amount.ToString() + "€";
+                    }
+                }
+            }
+
+            return taxeEcoParticipation;
+        }
+
+        private async Task<string?> GetStockStatus(StockViewModel stockList)
+        {
+            var result = stockList.Quantity switch
+            {
+                0 => outOfStock,
+                <= 5 => "Plus que " + stockList.Quantity + " produits en stock",
+                <= 10 => soonOutOfStock,
+                > 10 => inStock,
+                _ => "En rupture"
+            };
+
+            return result;
+        }
     }
+
+
 }

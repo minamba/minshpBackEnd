@@ -55,10 +55,12 @@ namespace MinshpWebApp.Api.Mapper
 
             CreateMap<CategoryRequest, Category>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
             CreateMap<Category, CategoryViewModel>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.TaxeId, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
 
@@ -170,6 +172,23 @@ namespace MinshpWebApp.Api.Mapper
             CreateMap<FeatureCategory, FeatureCategoryViewModel>()
                .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
                .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
+
+
+
+            CreateMap<TaxeRequest, Taxe>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.Purcentage, dest => dest.MapFrom(x => x.Purcentage))
+              .ForMember(x => x.Amount, dest => dest.MapFrom(x => x.Amount));
+
+
+            CreateMap<Taxe, TaxeViewModel>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+               .ForMember(x => x.Purcentage, dest => dest.MapFrom(x => x.Purcentage))
+               .ForMember(x => x.Amount, dest => dest.MapFrom(x => x.Amount));
+
+
         }
     }
 }

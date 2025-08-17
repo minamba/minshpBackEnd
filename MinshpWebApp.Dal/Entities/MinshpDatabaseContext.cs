@@ -35,6 +35,7 @@ public partial class MinshpDatabaseContext : DbContext
 
     public virtual DbSet<Stock> Stocks { get; set; }
 
+    public virtual DbSet<Taxe> Taxes { get; set; }
     public virtual DbSet<Video> Videos { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -46,6 +47,7 @@ public partial class MinshpDatabaseContext : DbContext
         modelBuilder.Entity<Category>(entity =>
         {
             entity.ToTable("Category");
+            entity.Property(e => e.IdTaxe).HasColumnName("Id_taxe");
         });
 
         modelBuilder.Entity<Customer>(entity =>
@@ -167,6 +169,15 @@ public partial class MinshpDatabaseContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Stock_Product");
         });
+
+
+        modelBuilder.Entity<Taxe>(entity =>
+        {
+            entity.ToTable("Taxe");
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+        });
+
 
         modelBuilder.Entity<Video>(entity =>
         {
