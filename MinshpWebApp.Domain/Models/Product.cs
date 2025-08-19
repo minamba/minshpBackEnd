@@ -27,4 +27,5 @@ public partial class Product
     public string? Brand { get; set; }
 
     public string? Model { get; set; }
+    public int? IdPromotionCode { get; set; }
 }

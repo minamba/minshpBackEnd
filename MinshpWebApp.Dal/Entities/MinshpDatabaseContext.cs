@@ -33,6 +33,8 @@ public partial class MinshpDatabaseContext : DbContext
 
     public virtual DbSet<Promotion> Promotions { get; set; }
 
+    public virtual DbSet<PromotionCode> PromotionCodes { get; set; }
+
     public virtual DbSet<Stock> Stocks { get; set; }
 
     public virtual DbSet<Taxe> Taxes { get; set; }
@@ -47,6 +49,7 @@ public partial class MinshpDatabaseContext : DbContext
         modelBuilder.Entity<Category>(entity =>
         {
             entity.ToTable("Category");
+            entity.Property(e => e.IdPromotionCode).HasColumnName("Id_promotion_code");
             entity.Property(e => e.IdTaxe).HasColumnName("Id_taxe");
         });
 
@@ -109,6 +112,7 @@ public partial class MinshpDatabaseContext : DbContext
             entity.ToTable("Product");
 
             entity.Property(e => e.Id_Category).HasColumnName("Id_Category");
+            entity.Property(e => e.IdPromotionCode).HasColumnName("Id_promotion_code");
             entity.Property(e => e.CreationDate)
                 .HasColumnType("datetime")
                 .HasColumnName("Creation_Date");
@@ -155,6 +159,24 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasForeignKey(d => d.Id_product)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Promotion_Product");
+        });
+
+
+        modelBuilder.Entity<PromotionCode>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Promo_code");
+
+            entity.ToTable("Promotion_code");
+
+            entity.Property(e => e.DateCreation)
+                .HasColumnType("datetime")
+                .HasColumnName("Date_creation");
+            entity.Property(e => e.EndDate)
+                .HasColumnType("datetime")
+                .HasColumnName("End_date");
+            entity.Property(e => e.StartDate)
+                .HasColumnType("datetime")
+                .HasColumnName("Start_date");
         });
 
 

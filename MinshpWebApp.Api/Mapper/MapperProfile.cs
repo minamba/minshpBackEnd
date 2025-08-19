@@ -21,6 +21,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Brand, dest => dest.MapFrom(x => x.Brand))
               .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
               .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
+              .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
             CreateMap<ProductDto, Product>()
@@ -33,7 +34,20 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Brand, dest => dest.MapFrom(x => x.Brand))
               .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
               .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
+              .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
+
+
+            CreateMap<ProductDto, ProductVIewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
+              .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
+              .ForMember(x => x.Model, dest => dest.MapFrom(x => x.Model))
+              .ForMember(x => x.Brand, dest => dest.MapFrom(x => x.Brand))
+              .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
+              .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
+              .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode));
 
             CreateMap<PromotionRequest, Promotion>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
@@ -56,11 +70,13 @@ namespace MinshpWebApp.Api.Mapper
             CreateMap<CategoryRequest, Category>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
+              .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
             CreateMap<Category, CategoryViewModel>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.TaxeId, dest => dest.MapFrom(x => x.IdTaxe))
+              .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
 
@@ -187,6 +203,25 @@ namespace MinshpWebApp.Api.Mapper
                .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
                .ForMember(x => x.Purcentage, dest => dest.MapFrom(x => x.Purcentage))
                .ForMember(x => x.Amount, dest => dest.MapFrom(x => x.Amount));
+
+
+
+            CreateMap<PromotionCodeRequest, PromotionCode>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.Purcentage, dest => dest.MapFrom(x => x.Purcentage))
+              .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
+              .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate))
+              .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation));
+
+
+            CreateMap<PromotionCode, PromotionCodeViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.Purcentage, dest => dest.MapFrom(x => x.Purcentage))
+              .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
+              .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate))
+              .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation));
 
 
         }

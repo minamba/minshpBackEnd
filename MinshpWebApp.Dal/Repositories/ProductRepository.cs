@@ -43,6 +43,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Model = p.Model,
                 CreationDate = p.CreationDate,
                 ModificationDate = p.ModificationDate,
+                IdPromotionCode = p.IdPromotionCode,
                 
             }).ToListAsync();
 
@@ -54,6 +55,7 @@ namespace MinshpWebApp.Dal.Repositories
         {
             var ProductToUpdate = await _context.Products.FirstOrDefaultAsync(u => u.Id == model.Id  );
             var StockToUpdate = await _context.Stocks.FirstOrDefaultAsync(s => s.IdProduct == model.Id);
+            var GetPromotion = await _context.PromotionCodes.FirstOrDefaultAsync(s => s.Id == model.IdPromotionCode);
 
             if (ProductToUpdate == null)
                 return null; // ou throw une exception
@@ -68,6 +70,14 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Model != null) ProductToUpdate.Model = model.Model;
             if (model.ModificationDate != null) ProductToUpdate.ModificationDate = model.ModificationDate;
 
+            if (GetPromotion != null)
+            {
+                if (model.IdPromotionCode != null) ProductToUpdate.IdPromotionCode = model.IdPromotionCode;
+            }
+            else
+                ProductToUpdate.IdPromotionCode = null;
+
+             
             await _context.SaveChangesAsync();
 
 
@@ -89,6 +99,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Model = model.Model,
                 ModificationDate = model.ModificationDate,
                 CreationDate = model.CreationDate,
+                IdPromotionCode = model.IdPromotionCode,
             };
         }
 
@@ -105,6 +116,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Brand = model.Brand,
                 Model = model.Model,
                 CreationDate= DateTime.Now,
+                IdPromotionCode = model.IdPromotionCode,
             };
 
             _context.Products.Add(newProduct);
@@ -134,6 +146,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Model = model.Model,
                 CreationDate= DateTime.Now,
                 ModificationDate= null,
+                IdPromotionCode = model.IdPromotionCode,
             };
         }
 

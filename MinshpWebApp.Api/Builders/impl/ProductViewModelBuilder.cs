@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Azure;
+using Microsoft.Build.Tasks.Deployment.Bootstrapper;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Dal.Entities;
@@ -7,6 +8,7 @@ using MinshpWebApp.Domain.Dtos;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
 using MinshpWebApp.Domain.Services.impl;
+using System.Collections.Generic;
 using System.Linq;
 using Product = MinshpWebApp.Domain.Models.Product;
 using Taxe = MinshpWebApp.Domain.Models.Taxe;
@@ -25,12 +27,13 @@ namespace MinshpWebApp.Api.Builders.impl
         private IVideoService _videoService;
         private IStockService _stockService;
         private ITaxeService _taxeService;
+        private IPromotionCodeService _promotionCodeService;
 
         const string soonOutOfStock = "Bientôt en rupture";
         const string inStock = "En stock";
         const string outOfStock = "En rupture";
 
-        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, ITaxeService taxeService, IMapper mapper)
+        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IMapper mapper)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -41,6 +44,7 @@ namespace MinshpWebApp.Api.Builders.impl
             _productFeature = productFeature;
             _stockService = stockService;
             _taxeService = taxeService;
+            _promotionCodeService = promotionCodeService;
             _mapper = mapper;
                
         }
@@ -97,7 +101,9 @@ namespace MinshpWebApp.Api.Builders.impl
                     Price = p.Price,
                     PriceTtc = await GetPriceTtc(p.IdCategory,p.Price),
                     PriceTtcPromoted = await GetPriceTtcPromoted(await GetPriceTtc(p.IdCategory, p.Price), promotionList),
-                    TaxWithoutTvaAmount = await GetTaxeAmountWithoutTVA(p.IdCategory), 
+                    PriceTtcCategoryCodePromoted = await GetPriceTtcCategoryCodePromoted(await GetPriceTtc(p.IdCategory, p.Price),p.IdCategory, promotionList),
+                    PurcentageCodePromoted = await GetPurcentageCodePromoted(p.Id, p.IdCategory,promotionList),
+                    TaxWithoutTvaAmount = await GetTaxeAmountWithoutTVA(p.IdCategory),
                     Category = categoryName,
                     Main = p.Main,
                     Brand = p.Brand,
@@ -105,6 +111,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     StockStatus = await GetStockStatus(stockList),
                     CreationDate = p.CreationDate,
                     ModificationDate = p.ModificationDate,
+                    IdPromotionCode = p.IdPromotionCode,
                     Features = featuresList,
                     Images = imageList,
                     Promotions = promotionList,
@@ -192,6 +199,66 @@ namespace MinshpWebApp.Api.Builders.impl
                 var promotedPrice = priceTtc - (priceTtc * (purcentage / 100m));
 
                 return promotedPrice;
+            }
+
+            return null;
+        }
+
+
+        //CUMULABLE SI IL Y A DEJA UNE PROMO SUR LE PRODUIT
+        private async Task<decimal?> GetPriceTtcCategoryCodePromoted(decimal? priceTtc, int? idCategory, IEnumerable<PromotionViewModel> promotionList)
+        {
+            decimal? promotedCategoryCodePrice = 0;
+            var getPromotionCategoryCodeId = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory && c.IdPromotionCode != 0).IdPromotionCode;
+
+            var getPricePromotted = await GetPriceTtcPromoted(priceTtc, promotionList);
+
+            //Dans le cas ou la promotion est faite la category
+            if (getPromotionCategoryCodeId != null)
+            {
+                var getPormotionPurcentage = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(pr => pr.Id == getPromotionCategoryCodeId);
+
+                if (getPormotionPurcentage != null)
+                {
+                    if (getPormotionPurcentage.Purcentage != null && getPormotionPurcentage.EndDate >= DateTime.Now)
+                    {
+                        if (getPricePromotted != null)
+                            promotedCategoryCodePrice = getPricePromotted - (getPricePromotted * (getPormotionPurcentage.Purcentage / 100m));
+                        else
+                            promotedCategoryCodePrice = priceTtc - (priceTtc * (getPormotionPurcentage.Purcentage / 100m));
+
+                        return promotedCategoryCodePrice;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+
+        //POURCENTAGE CUMULABLE SI IL Y A DEJA UNE PROMO SUR LE PRODUIT
+        private async Task<int?> GetPurcentageCodePromoted(int? productId, int? idCategory, IEnumerable<PromotionViewModel> promotionList)
+        {
+            int? totalPromotedCodePurcentage = null;
+            var getPromotionCategoryCodeId = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory && c.IdPromotionCode != 0).IdPromotionCode;
+
+            var getBasePurcentagePromotted = (await _promotionService.GetPromotionsAsync()).FirstOrDefault(p => p.IdProduct == productId);
+
+            //Dans le cas ou la promotion est faite la category
+            if (getPromotionCategoryCodeId != null)
+            {
+                var getPormotionCodePurcentage = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(pr => pr.Id == getPromotionCategoryCodeId);
+
+
+                if (getPormotionCodePurcentage != null && getPormotionCodePurcentage.EndDate >= DateTime.Now)
+                {
+                    if(getBasePurcentagePromotted != null && getBasePurcentagePromotted.EndDate >= DateTime.Now)
+                        totalPromotedCodePurcentage = getPormotionCodePurcentage.Purcentage + getBasePurcentagePromotted.Purcentage;
+                    else
+                        totalPromotedCodePurcentage = getPormotionCodePurcentage.Purcentage;
+             
+                        return totalPromotedCodePurcentage;
+                }
             }
 
             return null;

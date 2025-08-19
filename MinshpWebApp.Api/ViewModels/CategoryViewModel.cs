@@ -8,5 +8,6 @@
 
         public string? TaxeId { get; set; }
         public List<string>? TaxeName { get; set; }
+        public int? IdPromotionCode { get; set; }
     }
 }

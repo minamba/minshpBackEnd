@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MinshpWebApp.Domain.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,5 +29,6 @@ namespace MinshpWebApp.Domain.Dtos
         public DateTime? CreationDate { get; set; }
 
         public DateTime? ModificationDate { get; set; }
+        public int? IdPromotionCode { get; set; }
     }
 }

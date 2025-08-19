@@ -7,5 +7,6 @@
         public string? Name { get; set; }
 
         public string? IdTaxe { get; set; }
+        public int? IdPromotionCode { get; set; }
     }
 }

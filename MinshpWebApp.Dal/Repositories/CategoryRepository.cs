@@ -28,6 +28,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = p.Id,
                 Name = p.Name,
                 IdTaxe = p.IdTaxe,
+                IdPromotionCode = p.IdPromotionCode,
             }).ToListAsync();
 
             return CategoryEntities;
@@ -37,6 +38,7 @@ namespace MinshpWebApp.Dal.Repositories
         public async Task<Category> UpdateCategorysAsync(Category model)
         {
             var CategoryToUpdate = await _context.Categories.FirstOrDefaultAsync(u => u.Id == model.Id);
+            var GetPromotion = await _context.PromotionCodes.FirstOrDefaultAsync(s => s.Id == model.IdPromotionCode);
 
             if (CategoryToUpdate == null)
                 return null; // ou throw une exception
@@ -44,6 +46,15 @@ namespace MinshpWebApp.Dal.Repositories
             // On met à jour ses propriétés
             if (model.Name != null) CategoryToUpdate.Name = model.Name;
             if (model.IdTaxe != null) CategoryToUpdate.IdTaxe = model.IdTaxe;
+
+
+            if (GetPromotion != null)
+            {
+                if (model.IdPromotionCode != null) CategoryToUpdate.IdPromotionCode = model.IdPromotionCode;
+            }
+            else
+                CategoryToUpdate.IdPromotionCode = null;
+
 
             await _context.SaveChangesAsync();
 
@@ -53,6 +64,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
+                IdPromotionCode = model.IdPromotionCode,
             };
         }
 
@@ -64,6 +76,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
+                IdPromotionCode = model.IdPromotionCode,
             };
 
             _context.Categories.Add(newCategory);
@@ -74,6 +87,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
+                IdPromotionCode = model.IdPromotionCode,
             };
         }
 
