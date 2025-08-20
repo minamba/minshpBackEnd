@@ -15,6 +15,9 @@ public partial class MinshpDatabaseContext : DbContext
     {
     }
 
+    public virtual DbSet<Application> Applications { get; set; }
+
+    public virtual DbSet<BillingAddress> BillingAddresses { get; set; }
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Customer> Customers { get; set; }
@@ -22,6 +25,8 @@ public partial class MinshpDatabaseContext : DbContext
     public virtual DbSet<Feature> Features { get; set; }
 
     public virtual DbSet<FeatureCategory> FeatureCategories { get; set; }
+
+    public virtual DbSet<DeliveryAddress> DeliveryAddresses { get; set; }
 
     public virtual DbSet<Image> Images { get; set; }
 
@@ -46,6 +51,38 @@ public partial class MinshpDatabaseContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Application>(entity =>
+        {
+            entity.ToTable("Application");
+
+            entity.Property(e => e.DisplayNewProductNumber).HasColumnName("Display_new_product_number");
+            entity.Property(e => e.EndDate)
+                .HasColumnType("datetime")
+                .HasColumnName("End_date");
+            entity.Property(e => e.StartDate)
+                .HasColumnType("datetime")
+                .HasColumnName("Start_date");
+        });
+
+
+
+        modelBuilder.Entity<BillingAddress>(entity =>
+        {
+            entity.ToTable("Billing_address");
+
+            entity.Property(e => e.ComplementaryAddress).HasColumnName("Complementary_address");
+            entity.Property(e => e.IdCustomer).HasColumnName("Id_customer");
+            entity.Property(e => e.PostalCode).HasColumnName("Postal_code");
+
+            entity.HasOne(d => d.IdCustomerNavigation).WithMany(p => p.BillingAddresses)
+                .HasForeignKey(d => d.IdCustomer)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Billing_address_Customer");
+        });
+
+
+
+
         modelBuilder.Entity<Category>(entity =>
         {
             entity.ToTable("Category");
@@ -58,13 +95,24 @@ public partial class MinshpDatabaseContext : DbContext
             entity.ToTable("Customer");
 
             entity.Property(e => e.Id).ValueGeneratedNever();
-            entity.Property(e => e.BillingAddress)
-                .HasMaxLength(50)
-                .HasColumnName("Billing_address");
-            entity.Property(e => e.DeliveryAddress).HasColumnName("Delivery_address");
             entity.Property(e => e.FirstName).HasColumnName("First_name");
             entity.Property(e => e.LastName).HasColumnName("Last_name");
             entity.Property(e => e.PhoneNumber).HasColumnName("Phone_number");
+        });
+
+
+        modelBuilder.Entity<DeliveryAddress>(entity =>
+        {
+            entity.ToTable("Delivery_address");
+
+            entity.Property(e => e.ComplementaryAddress).HasColumnName("Complementary_address");
+            entity.Property(e => e.IdCustomer).HasColumnName("Id_customer");
+            entity.Property(e => e.PostalCode).HasColumnName("Postal_code");
+
+            entity.HasOne(d => d.IdCustomerNavigation).WithMany(p => p.DeliveryAddresses)
+                .HasForeignKey(d => d.IdCustomer)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Delivery_address_Customer");
         });
 
 

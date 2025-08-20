@@ -14,7 +14,9 @@
 
         public string? DeliveryAddress { get; set; }
 
-        public string? BillingAddress { get; set; }
+        public BillingAddressViewModel? BillingAddress { get; set; }
+
+        public IEnumerable<DeliveryAddressViewModel>? DeliveryAddresses { get; set; }
 
         public IEnumerable<OrderViewModel> Orders { get; set; }
     }

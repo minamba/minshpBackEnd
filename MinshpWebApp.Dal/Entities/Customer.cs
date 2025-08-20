@@ -15,9 +15,9 @@ public partial class Customer
 
     public string? PhoneNumber { get; set; }
 
-    public string? DeliveryAddress { get; set; }
+    public virtual ICollection<BillingAddress> BillingAddresses { get; set; } = new List<BillingAddress>();
 
-    public string? BillingAddress { get; set; }
+    public virtual ICollection<DeliveryAddress> DeliveryAddresses { get; set; } = new List<DeliveryAddress>();
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

@@ -28,8 +28,6 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = p.Id,
                 LastName = p.LastName,
                 FirstName = p.FirstName,
-                BillingAddress = p.BillingAddress,
-                DeliveryAddress = p.DeliveryAddress,
                 Password = p.Password,
                 PhoneNumber = p.PhoneNumber,
             }).ToListAsync();
@@ -48,8 +46,6 @@ namespace MinshpWebApp.Dal.Repositories
             // On met à jour ses propriétés
             if (model.LastName != null) CustomerToUpdate.LastName = model.LastName;
             if (model.FirstName != null) CustomerToUpdate.FirstName = model.FirstName;
-            if (model.BillingAddress != null) CustomerToUpdate.BillingAddress = model.BillingAddress;
-            if (model.DeliveryAddress != null) CustomerToUpdate.DeliveryAddress = model.DeliveryAddress;
             if (model.Password != null) CustomerToUpdate.Password = model.Password;
             if (model.PhoneNumber != null) CustomerToUpdate.PhoneNumber = model.PhoneNumber;
 
@@ -61,8 +57,6 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                BillingAddress = model.BillingAddress,
-                DeliveryAddress = model.DeliveryAddress,
                 Password = model.Password,
                 PhoneNumber = model.PhoneNumber,
             };
@@ -76,8 +70,6 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                BillingAddress = model.BillingAddress,
-                DeliveryAddress = model.DeliveryAddress,
                 Password = model.Password,
                 PhoneNumber = model.PhoneNumber,
             };
@@ -90,8 +82,6 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                BillingAddress = model.BillingAddress,
-                DeliveryAddress = model.DeliveryAddress,
                 Password = model.Password,
                 PhoneNumber = model.PhoneNumber,
             };

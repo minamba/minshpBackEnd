@@ -14,8 +14,4 @@ public partial class Customer
     public string? Password { get; set; }
 
     public string? PhoneNumber { get; set; }
-
-    public string? DeliveryAddress { get; set; }
-
-    public string? BillingAddress { get; set; }
 }

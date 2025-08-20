@@ -128,8 +128,6 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.FirstName, dest => dest.MapFrom(x => x.FirstName))
               .ForMember(x => x.LastName, dest => dest.MapFrom(x => x.LastName))
               .ForMember(x => x.PhoneNumber, dest => dest.MapFrom(x => x.PhoneNumber))
-              .ForMember(x => x.DeliveryAddress, dest => dest.MapFrom(x => x.DeliveryAddress))
-              .ForMember(x => x.BillingAddress, dest => dest.MapFrom(x => x.BillingAddress))
               .ForMember(x => x.Password, dest => dest.MapFrom(x => x.Password));
 
 
@@ -222,6 +220,20 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate))
               .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation));
+
+
+            CreateMap<ApplicationRequest, Application>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.DisplayNewProductNumber, dest => dest.MapFrom(x => x.DisplayNewProductNumber))
+              .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
+              .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
+
+
+            CreateMap<Application, ApplicationViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.DisplayNewProductNumber, dest => dest.MapFrom(x => x.DisplayNewProductNumber))
+              .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
+              .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
 
 
         }
