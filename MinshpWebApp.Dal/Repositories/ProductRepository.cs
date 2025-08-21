@@ -21,9 +21,9 @@ namespace MinshpWebApp.Dal.Repositories
     {
         private MinshpDatabaseContext _context { get; set; }
 
-        public ProductRepository()
+        public ProductRepository(MinshpDatabaseContext context)
         {
-            _context = new MinshpDatabaseContext();
+            _context = context;
         }
 
 

@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Http.Features;
+﻿using Microsoft.AspNetCore.Http.Features;
+using Microsoft.EntityFrameworkCore;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Builders.impl;
 using MinshpWebApp.Dal.Entities;
@@ -6,6 +7,7 @@ using MinshpWebApp.Dal.Repositories;
 using MinshpWebApp.Domain.Repositories;
 using MinshpWebApp.Domain.Services;
 using MinshpWebApp.Domain.Services.impl;
+using OpenIddict.Validation.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +16,63 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<MinshpDatabaseContext>();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Minshp API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new()
+    {
+        Description = "JWT Bearer. Exemple: Bearer {token}",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+    c.AddSecurityRequirement(new()
+    {
+        {
+            new() { Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" } },
+            Array.Empty<string>()
+        }
+    });
+});
+builder.Services.AddDbContext<MinshpDatabaseContext>(opt =>
+    opt.UseSqlServer(
+        builder.Configuration.GetConnectionString("MainDb"),
+        sql =>
+        {
+            sql.MigrationsAssembly("MinshpWebApp.Dal");
+            sql.MigrationsHistoryTable("__EFMigrationsHistory_Business", "dbo");
+        }));
 builder.Services.AddMvc();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+
+// AuthN/AuthZ : l’API valide les tokens émis par ton IdentityServer OpenIddict
+// AuthN/AuthZ : valider les tokens émis par ton IdentityServer OpenIddict
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+});
+
+builder.Services.AddOpenIddict()
+    .AddValidation(options =>
+    {
+        options.SetIssuer("https://localhost:7183"); // ← URL EXACTE de ton IdentityServer
+        options.AddAudiences("api-resource");     // décommente si tu utilises une audience nommée
+        options.UseSystemNetHttp();
+        options.UseAspNetCore();
+    });
+
+builder.Services.AddAuthorization();
+
+
+// CORS (déclare une policy nommée pour la réutiliser)
+const string CorsPolicy = "WebCors";
+builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p =>
+    p.WithOrigins("http://localhost:3000", "http://localhost:5173", "https://bd158b87393d.ngrok.app")
+     .AllowAnyHeader()
+     .AllowAnyMethod()));
 
 
 //scoped repositories

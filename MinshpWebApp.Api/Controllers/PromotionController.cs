@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
@@ -29,7 +30,7 @@ namespace MinshpWebApp.Api.Controllers
         }
 
 
-
+        [Authorize]
         [HttpPut("/promotion")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "modification of a promotion")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
@@ -39,7 +40,7 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(result);
         }
 
-
+        [Authorize]
         [HttpPost("/promotion")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "add a promotion")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
@@ -49,7 +50,7 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(result);
         }
 
-
+        [Authorize]
         [HttpDelete("/promotion/{id}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "Delete a promotion")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]

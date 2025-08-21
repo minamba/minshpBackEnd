@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Enums;
@@ -11,6 +12,7 @@ namespace MinshpWebApp.Api.Controllers
 {
 
     [ApiController]
+    [Authorize]
     [Route("Upload")]
     public class UploadController : Controller
     {

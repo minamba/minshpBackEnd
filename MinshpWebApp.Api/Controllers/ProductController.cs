@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Request;
@@ -32,7 +33,7 @@ namespace MinshpWebApp.Api.Controllers
         }
 
 
-
+        [Authorize]
         [HttpPut("/product")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "modification of a product")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
@@ -42,7 +43,7 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(result);
         }
 
-
+        [Authorize]
         [HttpPost("/product")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "add a product")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
@@ -52,7 +53,7 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(result);
         }
 
-
+        [Authorize]
         [HttpDelete("/product/{id}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "Delete a product")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]

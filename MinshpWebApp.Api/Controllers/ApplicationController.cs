@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
@@ -17,8 +18,7 @@ namespace MinshpWebApp.Api.Controllers
         {
             _applicationViewModelBuilder = applicationViewModelBuilder ?? throw new ArgumentNullException(nameof(applicationViewModelBuilder), $"Cannot instantiate {GetType().Name}");
         }
-
-
+        [Authorize]
         [HttpGet("/application")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<ApplicationViewModel>), Description = "list of applications")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
@@ -29,7 +29,7 @@ namespace MinshpWebApp.Api.Controllers
         }
 
 
-
+        [Authorize]
         [HttpPut("/application")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "modification of a application")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
@@ -39,7 +39,7 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(result);
         }
 
-
+        [Authorize]
         [HttpPost("/application")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "add a application")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
@@ -49,7 +49,7 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(result);
         }
 
-
+        [Authorize]
         [HttpDelete("/application/{id}")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "Delete a application")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]

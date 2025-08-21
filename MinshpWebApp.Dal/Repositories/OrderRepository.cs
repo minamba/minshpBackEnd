@@ -16,9 +16,9 @@ namespace MinshpWebApp.Dal.Repositories
         private MinshpDatabaseContext _context { get; set; }
         private readonly IMapper _mapper;
 
-        public OrderRepository()
+        public OrderRepository(MinshpDatabaseContext context)
         {
-            _context = new MinshpDatabaseContext();
+            _context = context;
         }
 
         public async Task<IEnumerable<Order>> GetOrdersAsync()
