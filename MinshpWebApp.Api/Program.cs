@@ -90,6 +90,8 @@ builder.Services.AddScoped<IFeatureCategoryRepository, FeatureCategoryRepository
 builder.Services.AddScoped<ITaxeRepository, TaxeRepository>();
 builder.Services.AddScoped<IPromotionCodeRepository, PromotionCodeRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
+builder.Services.AddScoped<IBillingAddressRepository, BillingAddressRepository>();
+builder.Services.AddScoped<IDeliveryAddressRepository, DeliveryAddressRepository>();
 
 
 //scoped services
@@ -107,6 +109,8 @@ builder.Services.AddScoped<IFeatureCategoryService, FeatureCategoryService>();
 builder.Services.AddScoped<ITaxeService, TaxeService>();
 builder.Services.AddScoped<IPromotionCodeService, PromotionCodeService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
+builder.Services.AddScoped<IBillingAddressService, BillingAddressService>();
+builder.Services.AddScoped<IDeliveryAddressService, DeliveryAddressService>();
 
 
 
@@ -125,6 +129,8 @@ builder.Services.AddScoped<IFeatureCategoryViewModelBuilder, FeatureCategoryView
 builder.Services.AddScoped<ITaxeViewModelBuilder, TaxeViewModelBuilder>();
 builder.Services.AddScoped<IPromotionCodeViewModelBuilder, PromotionCodeViewModelBuilder>();
 builder.Services.AddScoped<IApplicationViewModelBuilder, ApplicationViewModelBuilder>();
+builder.Services.AddScoped<IBillingAddressViewModelBuilder, BillingAddressViewModelBuilder>();
+builder.Services.AddScoped<IDeliveryAddressViewModelBuilder, DeliveryAddressViewModelBuilder>();
 
 
 builder.Services.AddHttpClient();

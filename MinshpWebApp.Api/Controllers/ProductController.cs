@@ -10,6 +10,7 @@ using System.Net;
 
 namespace MinshpWebApp.Api.Controllers
 {
+    //[Authorize(Roles = "Admin")]
     [ApiController]
     [Route("Products")]
     public class ProductController : Controller

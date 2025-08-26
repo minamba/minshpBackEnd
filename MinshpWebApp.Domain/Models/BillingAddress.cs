@@ -21,5 +21,6 @@ namespace MinshpWebApp.Domain.Models
         public string? Country { get; set; }
 
         public int? IdCustomer { get; set; }
+
     }
 }

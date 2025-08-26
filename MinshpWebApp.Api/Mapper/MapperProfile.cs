@@ -127,8 +127,27 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.FirstName, dest => dest.MapFrom(x => x.FirstName))
               .ForMember(x => x.LastName, dest => dest.MapFrom(x => x.LastName))
+              .ForMember(x => x.ClientNumber, dest => dest.MapFrom(x => x.ClientNumber))
+              .ForMember(x => x.Email, dest => dest.MapFrom(x => x.Email))
+              .ForMember(x => x.Pseudo, dest => dest.MapFrom(x => x.Pseudo))
+              .ForMember(x => x.Civilite, dest => dest.MapFrom(x => x.Civilite))
               .ForMember(x => x.PhoneNumber, dest => dest.MapFrom(x => x.PhoneNumber))
-              .ForMember(x => x.Password, dest => dest.MapFrom(x => x.Password));
+              .ForMember(x => x.Actif, dest => dest.MapFrom(x => x.Actif))
+              .ForMember(x => x.IdAspNetUser, dest => dest.MapFrom(x => x.IdAspNetUser))
+              .ForMember(x => x.BirthDate, dest => dest.MapFrom(x => x.BirthDate));
+
+            CreateMap<Customer, CustomerViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.FirstName, dest => dest.MapFrom(x => x.FirstName))
+              .ForMember(x => x.LastName, dest => dest.MapFrom(x => x.LastName))
+              .ForMember(x => x.ClientNumber, dest => dest.MapFrom(x => x.ClientNumber))
+              .ForMember(x => x.Email, dest => dest.MapFrom(x => x.Email))
+              .ForMember(x => x.Pseudo, dest => dest.MapFrom(x => x.Pseudo))
+              .ForMember(x => x.Civilite, dest => dest.MapFrom(x => x.Civilite))
+              .ForMember(x => x.PhoneNumber, dest => dest.MapFrom(x => x.PhoneNumber))
+              .ForMember(x => x.Actif, dest => dest.MapFrom(x => x.Actif))
+              .ForMember(x => x.IdAspNetUser, dest => dest.MapFrom(x => x.IdAspNetUser))
+              .ForMember(x => x.BirthDate, dest => dest.MapFrom(x => x.BirthDate));
 
 
             CreateMap<OrderRequest, Order>()
@@ -138,6 +157,20 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Date, dest => dest.MapFrom(x => x.Date))
               .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.Id_product))
+              .ForMember(x => x.Amount, dest => dest.MapFrom(x => x.Amount))
+              .ForMember(x => x.PaymentMethod, dest => dest.MapFrom(x => x.PaymentMethod))
+              .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
+
+
+            CreateMap<Order, OrderViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.OrderNumber, dest => dest.MapFrom(x => x.OrderNumber))
+              .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity))
+              .ForMember(x => x.Date, dest => dest.MapFrom(x => x.Date))
+              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
+              .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct))
+              .ForMember(x => x.Amount, dest => dest.MapFrom(x => x.Amount))
+              .ForMember(x => x.PaymentMethod, dest => dest.MapFrom(x => x.PaymentMethod))
               .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
 
 
@@ -234,6 +267,55 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.DisplayNewProductNumber, dest => dest.MapFrom(x => x.DisplayNewProductNumber))
               .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
+
+
+
+            CreateMap<BillingAddress, BillingAddressViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Address, dest => dest.MapFrom(x => x.Address))
+              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
+              .ForMember(x => x.ComplementaryAddress, dest => dest.MapFrom(x => x.ComplementaryAddress))
+              .ForMember(x => x.City, dest => dest.MapFrom(x => x.City))
+              .ForMember(x => x.Country, dest => dest.MapFrom(x => x.Country))
+              .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode));
+
+
+            CreateMap<BillingAddressRequest, BillingAddress>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Address, dest => dest.MapFrom(x => x.Address))
+              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
+              .ForMember(x => x.ComplementaryAddress, dest => dest.MapFrom(x => x.ComplementaryAddress))
+              .ForMember(x => x.City, dest => dest.MapFrom(x => x.City))
+              .ForMember(x => x.Country, dest => dest.MapFrom(x => x.Country))
+              .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode));
+
+
+            CreateMap<DeliveryAddress, DeliveryAddressViewModel>()
+                .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+                .ForMember(x => x.Address, dest => dest.MapFrom(x => x.Address))
+                .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
+                .ForMember(x => x.ComplementaryAddress, dest => dest.MapFrom(x => x.ComplementaryAddress))
+                .ForMember(x => x.City, dest => dest.MapFrom(x => x.City))
+                .ForMember(x => x.Country, dest => dest.MapFrom(x => x.Country))
+                .ForMember(x => x.Favorite, dest => dest.MapFrom(x => x.Favorite))
+                .ForMember(x => x.LastName, dest => dest.MapFrom(x => x.LastName))
+                .ForMember(x => x.FirstName, dest => dest.MapFrom(x => x.FirstName))
+                .ForMember(x => x.Phone, dest => dest.MapFrom(x => x.Phone))
+                .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode));
+
+
+            CreateMap<DeliveryAddressRequest, DeliveryAddress>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Address, dest => dest.MapFrom(x => x.Address))
+              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
+              .ForMember(x => x.ComplementaryAddress, dest => dest.MapFrom(x => x.ComplementaryAddress))
+              .ForMember(x => x.City, dest => dest.MapFrom(x => x.City))
+              .ForMember(x => x.Country, dest => dest.MapFrom(x => x.Country))
+              .ForMember(x => x.Favorite, dest => dest.MapFrom(x => x.Favorite))
+              .ForMember(x => x.LastName, dest => dest.MapFrom(x => x.LastName))
+              .ForMember(x => x.FirstName, dest => dest.MapFrom(x => x.FirstName))
+              .ForMember(x => x.Phone, dest => dest.MapFrom(x => x.Phone))
+              .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode));
 
 
         }

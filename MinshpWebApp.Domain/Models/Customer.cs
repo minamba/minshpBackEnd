@@ -11,7 +11,21 @@ public partial class Customer
 
     public string? FirstName { get; set; }
 
-    public string? Password { get; set; }
-
     public string? PhoneNumber { get; set; }
+
+    public bool Actif { get; set; }
+
+    public string? Civilite { get; set; }
+
+    public string? ClientNumber { get; set; }
+
+    public string? Email { get; set; }
+
+    public string? IdAspNetUser { get; set; }
+
+    public DateTime? BirthDate { get; set; }
+
+    public string? Pseudo { get; set; }
+
+    public string? ClientNumber1 { get; set; }
 }

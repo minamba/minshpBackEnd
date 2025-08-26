@@ -8,11 +8,13 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
 using static OpenIddict.Abstractions.OpenIddictConstants;
+using OidcClaims = OpenIddict.Abstractions.OpenIddictConstants.Claims;
+using OidcDestinations = OpenIddict.Abstractions.OpenIddictConstants.Destinations;
 
 namespace MinshpWebApp.IdentityServer.Controllers;
 
 [ApiController]
-public class TokenController : Controller
+public class TokenController : ControllerBase
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
@@ -36,15 +38,22 @@ public class TokenController : Controller
 
             var identity = new ClaimsIdentity(
                 authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
-                nameType: Claims.Name, roleType: Claims.Role);
+                nameType: OidcClaims.Name, roleType: OidcClaims.Role);
 
-            identity.AddClaim(Claims.Subject, user.Id);
-            identity.AddClaim(Claims.Name, user.UserName ?? "");
-            identity.AddClaim(Claims.Email, user.Email ?? "");
+            identity.AddClaim(OidcClaims.Subject, user.Id);
+            identity.AddClaim(OidcClaims.Name, user.UserName ?? "");
+            identity.AddClaim(OidcClaims.Email, user.Email ?? "");
+
+
+            // ✅ Ajouter les rôles
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var r in roles)
+                identity.AddClaim(OidcClaims.Role, r);
+
 
             // où doivent aller les claims
             identity.SetDestinations(claim =>
-                claim.Type is Claims.Name or Claims.Email
+                claim.Type is OidcClaims.Name or OidcClaims.Email or OidcClaims.Role
                     ? new[] { Destinations.AccessToken, Destinations.IdentityToken }
                     : new[] { Destinations.AccessToken });
 
@@ -63,6 +72,33 @@ public class TokenController : Controller
             principal.SetScopes(request.GetScopes());
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
+
+        if (request.IsClientCredentialsGrantType())
+        {
+            // Pas d’utilisateur ici : on émet un access_token “application”
+            var identity = new ClaimsIdentity(
+                authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+                nameType: OidcClaims.Name,
+                roleType: OidcClaims.Role);
+
+            // Optionnel : identifie le client dans le token
+            identity.AddClaim(OidcClaims.Subject, request.ClientId ?? string.Empty);
+            identity.AddClaim(OidcClaims.ClientId, request.ClientId ?? string.Empty);
+
+            // Destinations (access_token uniquement)
+            identity.SetDestinations(_ => new[] { Destinations.AccessToken });
+
+            var principal = new ClaimsPrincipal(identity);
+
+            // Reprend les scopes demandés (ex: "api")
+            principal.SetScopes(request.GetScopes());
+
+            // Déclare la ressource/API si tu l’utilises
+            principal.SetResources("api-resource");
+
+            return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        }
+
 
         throw new InvalidOperationException("Unsupported grant type.");
     }

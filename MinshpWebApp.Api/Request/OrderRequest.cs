@@ -15,5 +15,10 @@
         public int? IdCustomer { get; set; }
 
         public int? Id_product { get; set; }
+
+
+        public string? PaymentMethod { get; set; }
+
+        public decimal? Amount { get; set; }
     }
 }

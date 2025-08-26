@@ -40,7 +40,7 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(result);
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("/customer")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "add a Customer")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]

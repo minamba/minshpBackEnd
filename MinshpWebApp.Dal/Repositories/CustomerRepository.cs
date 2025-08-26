@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Domain.Repositories;
@@ -28,8 +29,16 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = p.Id,
                 LastName = p.LastName,
                 FirstName = p.FirstName,
-                Password = p.Password,
                 PhoneNumber = p.PhoneNumber,
+                Actif = p.Actif,
+                BirthDate = p.BirthDate,
+                Civilite = p.Civilite,
+                ClientNumber = p.ClientNumber1,
+                Email = p.Email,
+                IdAspNetUser = p.IdAspNetUser,
+                Pseudo = p.Pseudo,
+                
+               
             }).ToListAsync();
 
             return CustomerEntities;
@@ -38,7 +47,7 @@ namespace MinshpWebApp.Dal.Repositories
 
         public async Task<Customer> UpdateCustomersAsync(Customer model)
         {
-            var CustomerToUpdate = await _context.Customers.FirstOrDefaultAsync(u => u.Id == model.Id);
+            var CustomerToUpdate = await _context.Customers.FirstOrDefaultAsync(u => u.IdAspNetUser == model.IdAspNetUser);
 
             if (CustomerToUpdate == null)
                 return null; // ou throw une exception
@@ -46,8 +55,14 @@ namespace MinshpWebApp.Dal.Repositories
             // On met à jour ses propriétés
             if (model.LastName != null) CustomerToUpdate.LastName = model.LastName;
             if (model.FirstName != null) CustomerToUpdate.FirstName = model.FirstName;
-            if (model.Password != null) CustomerToUpdate.Password = model.Password;
             if (model.PhoneNumber != null) CustomerToUpdate.PhoneNumber = model.PhoneNumber;
+            if (model.Actif != null) CustomerToUpdate.Actif = model.Actif;
+            if (model.BirthDate != null) CustomerToUpdate.BirthDate = model.BirthDate;
+            if (model.Civilite != null) CustomerToUpdate.Civilite = model.Civilite;
+            if (model.Email != null) CustomerToUpdate.Email = model.Email;
+            if (model.Pseudo != null) CustomerToUpdate.Pseudo = model.Pseudo;
+
+
 
             await _context.SaveChangesAsync();
 
@@ -57,8 +72,14 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                Password = model.Password,
                 PhoneNumber = model.PhoneNumber,
+                Actif = model.Actif,
+                BirthDate = model.BirthDate,
+                Civilite = model.Civilite,
+                ClientNumber = model.ClientNumber1,
+                Email = model.Email,
+                IdAspNetUser = model.IdAspNetUser,
+                Pseudo = model.Pseudo
             };
         }
 
@@ -70,8 +91,13 @@ namespace MinshpWebApp.Dal.Repositories
                 Id = model.Id,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                Password = model.Password,
                 PhoneNumber = model.PhoneNumber,
+                Actif = model.Actif,
+                BirthDate = model.BirthDate,
+                Civilite = model.Civilite,
+                Email = model.Email,
+                IdAspNetUser = model.IdAspNetUser,
+                Pseudo = model.Pseudo
             };
 
             _context.Customers.Add(newCustomer);
@@ -79,11 +105,17 @@ namespace MinshpWebApp.Dal.Repositories
 
             return new Customer()
             {
-                Id = model.Id,
+                Id = newCustomer.Id,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                Password = model.Password,
                 PhoneNumber = model.PhoneNumber,
+                Actif = model.Actif,
+                BirthDate = model.BirthDate,
+                Civilite = model.Civilite,
+                ClientNumber = newCustomer.ClientNumber1,
+                Email = model.Email,
+                IdAspNetUser = model.IdAspNetUser,
+                Pseudo = model.Pseudo
             };
         }
 

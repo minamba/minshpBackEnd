@@ -7,10 +7,12 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using System.Security.Claims;
 using static OpenIddict.Abstractions.OpenIddictConstants;
+using OidcClaims = OpenIddict.Abstractions.OpenIddictConstants.Claims;
+using OidcDestinations = OpenIddict.Abstractions.OpenIddictConstants.Destinations;
 
-namespace MinshpWebApp.IdentityServer.Controllers;
+namespace MinshpWebApp.IdentityServer.Controller;
 
-public class AuthorizationController : Controller
+public class AuthorizationController : ControllerBase
 {
     private readonly UserManager<AppUser> _userManager;
     public AuthorizationController(UserManager<AppUser> um) { _userManager = um; }
@@ -31,12 +33,12 @@ public class AuthorizationController : Controller
 
         var identity = new ClaimsIdentity(
             authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
-            nameType: Claims.Name,
-            roleType: Claims.Role);
+            nameType: OidcClaims.Name,
+            roleType: OidcClaims.Role);
 
-        identity.AddClaim(Claims.Subject, user.Id);
-        identity.AddClaim(Claims.Name, user.UserName ?? string.Empty, Destinations.AccessToken);
-        identity.AddClaim(Claims.Email, user.Email ?? string.Empty, Destinations.AccessToken);
+        identity.AddClaim(OidcClaims.Subject, user.Id);
+        identity.AddClaim(OidcClaims.Name, user.UserName ?? string.Empty, Destinations.AccessToken);
+        identity.AddClaim(OidcClaims.Email, user.Email ?? string.Empty, Destinations.AccessToken);
 
         var principal = new ClaimsPrincipal(identity);
 
@@ -45,7 +47,7 @@ public class AuthorizationController : Controller
         principal.SetResources("api-resource");
 
         identity.SetDestinations(claim =>
-            claim.Type is Claims.Name or Claims.Email
+            claim.Type is OidcClaims.Name or OidcClaims.Email
                 ? new[] { Destinations.AccessToken, Destinations.IdentityToken }
                 : new[] { Destinations.AccessToken });
 

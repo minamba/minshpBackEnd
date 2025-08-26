@@ -27,7 +27,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = p.Id,
                 Date = p.Date,
-                OrderNumber = p.OrderNumber,
+                OrderNumber = p.OrderNumber1,
                 Quantity = p.Quantity,
                 Status = p.Status,
                 IdCustomer = p.IdCustomer,
@@ -47,7 +47,6 @@ namespace MinshpWebApp.Dal.Repositories
 
             // On met à jour ses propriétés
             if (model.Date != null) OrderToUpdate.Date = model.Date;
-            if (model.OrderNumber != null) OrderToUpdate.OrderNumber = model.OrderNumber;
             if (model.Quantity != null) OrderToUpdate.Quantity = model.Quantity;
             if (model.Status != null) OrderToUpdate.Status = model.Status;
             if (model.IdCustomer != null) OrderToUpdate.IdCustomer = model.IdCustomer;
@@ -60,7 +59,6 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Date = model.Date,
-                OrderNumber = model.OrderNumber,
                 Quantity = model.Quantity,
                 Status = model.Status,
                 IdCustomer = model.IdCustomer,
@@ -75,11 +73,11 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Date = model.Date,
-                OrderNumber = model.OrderNumber,
                 Quantity = model.Quantity,
                 Status = model.Status,
                 IdCustomer = model.IdCustomer,
                 Id_product = model.IdProduct,
+                
             };
 
             _context.Orders.Add(newOrder);
@@ -89,7 +87,7 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Date = model.Date,
-                OrderNumber = model.OrderNumber,
+                OrderNumber = newOrder.OrderNumber1,
                 Quantity = model.Quantity,
                 Status = model.Status,
                 IdCustomer = model.IdCustomer,
