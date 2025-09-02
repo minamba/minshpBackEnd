@@ -1,4 +1,6 @@
-﻿namespace MinshpWebApp.Api.Request
+﻿using MinshpWebApp.Api.ViewModels;
+
+namespace MinshpWebApp.Api.Request
 {
     public class CategoryRequest
     {
@@ -8,5 +10,7 @@
 
         public string? IdTaxe { get; set; }
         public int? IdPromotionCode { get; set; }
+
+        public int? IdPackageProfil { get; set; }
     }
 }

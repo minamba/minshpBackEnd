@@ -16,24 +16,34 @@ namespace MinshpWebApp.Domain.Services.impl
         {
             _repository = repository;
         }
-        public Task<Order> AddOrdersAsync(Order model)
+        public async Task<Order> AddOrdersAsync(Order model)
         {
-            throw new NotImplementedException();
+            return await _repository.AddOrdersAsync(model);
         }
 
-        public Task<bool> DeleteOrdersAsync(int idOrder)
+        public async Task<bool> DeleteOrdersAsync(int idOrder)
         {
-            throw new NotImplementedException();
+           return await _repository.DeleteOrdersAsync(idOrder);
         }
 
-        public Task<IEnumerable<Order>> GetOrdersAsync()
+        public async Task<Order> FindByShipmentIdAsync(string providerShipmentId)
         {
-            throw new NotImplementedException();
+            return await _repository.FindByShipmentIdAsync(providerShipmentId);
         }
 
-        public Task<Order> UpdateOrdersAsync(Order model)
+        public async Task<Order> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            return await (_repository.GetByIdAsync(id));
+        }
+
+        public async Task<IEnumerable<Order>> GetOrdersAsync()
+        {
+            return await _repository.GetOrdersAsync();
+        }
+
+        public async Task<Order> UpdateOrdersAsync(Order model)
+        {
+           return await _repository.UpdateOrdersAsync(model);
         }
     }
 }

@@ -44,8 +44,9 @@ namespace MinshpWebApp.Dal.Repositories
                 CreationDate = p.CreationDate,
                 ModificationDate = p.ModificationDate,
                 IdPromotionCode = p.IdPromotionCode,
-                
-            }).ToListAsync();
+                IdPackageProfil = p.IdPackageProfil
+
+                }).ToListAsync();
 
             return productEntities;
         }
@@ -69,6 +70,8 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Brand != null) ProductToUpdate.Brand = model.Brand;
             if (model.Model != null) ProductToUpdate.Model = model.Model;
             if (model.ModificationDate != null) ProductToUpdate.ModificationDate = model.ModificationDate;
+            ProductToUpdate.IdPackageProfil = model.IdPackageProfil;
+
 
             if (GetPromotion != null)
             {
@@ -100,6 +103,7 @@ namespace MinshpWebApp.Dal.Repositories
                 ModificationDate = model.ModificationDate,
                 CreationDate = model.CreationDate,
                 IdPromotionCode = model.IdPromotionCode,
+                IdPackageProfil = model.IdPackageProfil
             };
         }
 
@@ -117,6 +121,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Model = model.Model,
                 CreationDate= DateTime.Now,
                 IdPromotionCode = model.IdPromotionCode,
+                IdPackageProfil = model.IdPackageProfil
             };
 
             _context.Products.Add(newProduct);
@@ -147,6 +152,7 @@ namespace MinshpWebApp.Dal.Repositories
                 CreationDate= DateTime.Now,
                 ModificationDate= null,
                 IdPromotionCode = model.IdPromotionCode,
+                IdPackageProfil = model.IdPackageProfil
             };
         }
 

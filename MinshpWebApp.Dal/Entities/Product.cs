@@ -27,6 +27,8 @@ public partial class Product
 
     public int? IdPromotionCode { get; set; }
 
+    public int? IdPackageProfil { get; set; }
+
     public virtual Category? IdCategoryNavigation { get; set; }
 
     public virtual ICollection<ProductFeature> ProductFeatures { get; set; } = new List<ProductFeature>();

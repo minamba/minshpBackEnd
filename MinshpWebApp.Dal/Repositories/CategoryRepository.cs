@@ -29,6 +29,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = p.Name,
                 IdTaxe = p.IdTaxe,
                 IdPromotionCode = p.IdPromotionCode,
+                IdPackageProfil = p.IdPackageProfil
             }).ToListAsync();
 
             return CategoryEntities;
@@ -40,12 +41,14 @@ namespace MinshpWebApp.Dal.Repositories
             var CategoryToUpdate = await _context.Categories.FirstOrDefaultAsync(u => u.Id == model.Id);
             var GetPromotion = await _context.PromotionCodes.FirstOrDefaultAsync(s => s.Id == model.IdPromotionCode);
 
+
             if (CategoryToUpdate == null)
                 return null; // ou throw une exception
 
             // On met à jour ses propriétés
             if (model.Name != null) CategoryToUpdate.Name = model.Name;
             if (model.IdTaxe != null) CategoryToUpdate.IdTaxe = model.IdTaxe;
+            if (model.IdPackageProfil != null) CategoryToUpdate.IdPackageProfil = model.IdPackageProfil;
 
 
             if (GetPromotion != null)
@@ -65,6 +68,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
+                IdPackageProfil = model.IdPackageProfil
             };
         }
 
@@ -77,6 +81,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
+                IdPackageProfil = model.IdPackageProfil
             };
 
             _context.Categories.Add(newCategory);
@@ -88,6 +93,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
+                IdPackageProfil = model.IdPackageProfil
             };
         }
 

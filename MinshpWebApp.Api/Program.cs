@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Builders.impl;
 using MinshpWebApp.Dal.Entities;
@@ -7,9 +8,18 @@ using MinshpWebApp.Dal.Repositories;
 using MinshpWebApp.Domain.Repositories;
 using MinshpWebApp.Domain.Services;
 using MinshpWebApp.Domain.Services.impl;
+using MinshpWebApp.Domain.Services.Shipping;
+using MinshpWebApp.Domain.Services.Shipping.impl;
 using OpenIddict.Validation.AspNetCore;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+// Activer les logs dans la console
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 // Add services to the container.
 
@@ -92,6 +102,9 @@ builder.Services.AddScoped<IPromotionCodeRepository, PromotionCodeRepository>();
 builder.Services.AddScoped<IApplicationRepository, ApplicationRepository>();
 builder.Services.AddScoped<IBillingAddressRepository, BillingAddressRepository>();
 builder.Services.AddScoped<IDeliveryAddressRepository, DeliveryAddressRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IOrderCustomerProductRepository, OrderCustomerProductRepository>();
+builder.Services.AddScoped<IPackageProfilRepository, PackageProfilRepository>();
 
 
 //scoped services
@@ -111,6 +124,12 @@ builder.Services.AddScoped<IPromotionCodeService, PromotionCodeService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IBillingAddressService, BillingAddressService>();
 builder.Services.AddScoped<IDeliveryAddressService, DeliveryAddressService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IOrderCustomerProductService, OrderCustomerProductService>();
+builder.Services.AddScoped<IShippingProvider, BoxtalProvider>();
+builder.Services.AddScoped<IPackageProfilService, PackageProfilService>();
+
+
 
 
 
@@ -131,7 +150,44 @@ builder.Services.AddScoped<IPromotionCodeViewModelBuilder, PromotionCodeViewMode
 builder.Services.AddScoped<IApplicationViewModelBuilder, ApplicationViewModelBuilder>();
 builder.Services.AddScoped<IBillingAddressViewModelBuilder, BillingAddressViewModelBuilder>();
 builder.Services.AddScoped<IDeliveryAddressViewModelBuilder, DeliveryAddressViewModelBuilder>();
+builder.Services.AddScoped<IInvoiceViewModelBuilder, InvoiceViewModelBuilder>();
+builder.Services.AddScoped<IOrderCustomerProductViewModelBuilder, OrderCustomerProductViewModelBuilder>();
+builder.Services.AddScoped<IBoxalProviderViewModelBuilder, BoxalProviderViewModelBuilder>();
+builder.Services.AddScoped<IPackageProfilViewModelBuilder, PackageProfilViewModelBuilder>();
 
+//BOXTAL LIVRAISON
+// 1) BoxtalOptions ← Shipping:Boxtal
+var cfg = builder.Configuration;
+builder.Services.Configure<BoxtalOptions>(cfg.GetSection("Shipping:Boxtal"));
+
+// 2) Compléter FromZip/FromCountry depuis Shipping:From
+builder.Services.PostConfigure<BoxtalOptions>(opt =>
+{
+    var from = cfg.GetSection("Shipping:From");
+    opt.FromZip = from["Zip"] ?? opt.FromZip;
+    opt.FromCountry = from["Country"] ?? opt.FromCountry;
+});
+
+// 3) HttpClient v1 (test.envoimoinscher.com)
+builder.Services.AddHttpClient("BoxtalV1", (sp, c) =>
+{
+    var opt = sp.GetRequiredService<IOptions<BoxtalOptions>>().Value;
+    c.BaseAddress = new Uri((opt.BaseUrlV1 ?? "").TrimEnd('/') + "/");
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("Minshp/1.0");
+});
+
+// 4) HttpClient v3 (api.boxtal.build)
+builder.Services.AddHttpClient("BoxtalV3", (sp, c) =>
+{
+    var opt = sp.GetRequiredService<IOptions<BoxtalOptions>>().Value;
+    c.BaseAddress = new Uri(opt.BaseUrlV3);
+    c.DefaultRequestHeaders.Accept.Clear();
+    c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    c.DefaultRequestHeaders.UserAgent.ParseAdd("Minshp/1.0");
+});
+//BOXTAL LIVRAISON
+
+builder.Services.AddMemoryCache();
 
 builder.Services.AddHttpClient();
 
@@ -144,6 +200,15 @@ builder.Services.Configure<FormOptions>(options =>
 
 
 var app = builder.Build();
+
+
+//Logger 
+app.MapGet("/", (ILogger<Program> logger) =>
+{
+    logger.LogInformation("Une requête a été reçue !");
+    return "Hello World!";
+});
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -163,7 +228,9 @@ app.UseCors(builder =>
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllers();
 

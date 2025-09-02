@@ -10,5 +10,8 @@ namespace MinshpWebApp.Api.Builders
         Task<IEnumerable<OrderViewModel>> GetOrdersAsync();
         Task<Order> AddOrdersAsync(OrderRequest model);
         Task<bool> DeleteOrdersAsync(int idOrder);
+
+        Task<Order> FindByShipmentIdAsync(string providerShipmentId);
+        Task<Order> GetByIdAsync(int id);
     }
 }

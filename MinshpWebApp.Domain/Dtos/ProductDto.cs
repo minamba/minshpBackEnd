@@ -30,5 +30,7 @@ namespace MinshpWebApp.Domain.Dtos
 
         public DateTime? ModificationDate { get; set; }
         public int? IdPromotionCode { get; set; }
+
+        public int? IdPackageProfil { get; set; }
     }
 }

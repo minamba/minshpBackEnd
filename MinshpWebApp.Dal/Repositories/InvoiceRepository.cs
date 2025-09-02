@@ -1,12 +1,105 @@
-﻿using System;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Domain.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Invoice = MinshpWebApp.Domain.Models.Invoice;
 
 namespace MinshpWebApp.Dal.Repositories
 {
-    public class InvoiceRepository
+    public class InvoiceRepository : IInvoiceRepository
     {
+        private MinshpDatabaseContext _context { get; set; }
+        private readonly IMapper _mapper;
+
+        public InvoiceRepository(MinshpDatabaseContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<IEnumerable<Invoice>> GetInvoicesAsync()
+        {
+            var InvoiceEntities = await _context.Invoices.Select(p => new Invoice
+            {
+                Id = p.Id,
+                CustomerId = p.CustomerId,
+                InvoiceNumber = p.InvoiceNumber,
+                DateCreation = p.DateCreation,
+                OrderId = p.OrderId,
+                Representative = p.Representative,
+            }).ToListAsync();
+
+            return InvoiceEntities;
+        }
+
+
+        public async Task<Invoice> UpdateInvoicesAsync(Invoice model)
+        {
+            var InvoiceToUpdate = await _context.Invoices.FirstOrDefaultAsync(u => u.Id == model.Id);
+
+            if (InvoiceToUpdate == null)
+                return null; // ou throw une exception
+
+            // On met à jour ses propriétés
+            if (model.CustomerId != null) InvoiceToUpdate.CustomerId = model.CustomerId;
+            if (model.OrderId != null) InvoiceToUpdate.OrderId = model.OrderId;
+            if (model.Representative != null) InvoiceToUpdate.Representative = model.Representative;
+
+            await _context.SaveChangesAsync();
+
+
+            return new Invoice()
+            {
+                Id = model.Id,
+                CustomerId = model.CustomerId,
+                OrderId = model.OrderId,
+                Representative = model.Representative,
+            };
+        }
+
+
+        public async Task<Invoice> AddInvoicesAsync(Domain.Models.Invoice model)
+        {
+            var newInvoice = new Dal.Entities.Invoice
+            {
+                Id = model.Id,
+                CustomerId = model.CustomerId,
+                DateCreation = DateTime.Now,
+                OrderId = model.OrderId,
+                Representative = model.Representative,
+
+            };
+
+            _context.Invoices.Add(newInvoice);
+            _context.SaveChanges();
+
+            return new Invoice()
+            {
+                Id = newInvoice.Id,
+                CustomerId = model.CustomerId,
+                DateCreation = DateTime.Now,
+                OrderId = model.OrderId,
+                Representative = model.Representative,
+                InvoiceNumber = newInvoice.InvoiceNumber,
+            };
+        }
+
+
+        public async Task<bool> DeleteInvoicesAsync(int idInvoice)
+        {
+            var InvoiceToDelete = await _context.Invoices.FirstOrDefaultAsync(u => u.Id == idInvoice);
+
+            if (InvoiceToDelete == null)
+                return false; // ou throw une exception;
+
+            _context.Invoices.Remove(InvoiceToDelete);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

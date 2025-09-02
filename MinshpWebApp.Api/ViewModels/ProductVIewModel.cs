@@ -24,6 +24,8 @@
 
         public DateTime? ModificationDate { get; set; }
         public int? IdPromotionCode { get; set; }
+        public int? IdPackageProfil { get; set; }
+        public PackageProfilViewModel? PackageProfil { get; set; }
         public IEnumerable<PromotionViewModel>? Promotions { get; set; }
         public IEnumerable<FeatureViewModel>? Features { get; set; }
         public IEnumerable<VideoViewModel>? Videos { get; set; }

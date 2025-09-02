@@ -14,5 +14,8 @@ namespace MinshpWebApp.Domain.Services
         Task<IEnumerable<Order>> GetOrdersAsync();
         Task<Order> AddOrdersAsync(Domain.Models.Order model);
         Task<bool> DeleteOrdersAsync(int idOrder);
+
+        Task<Order> FindByShipmentIdAsync(string providerShipmentId);
+        Task<Order> GetByIdAsync(int id);
     }
 }

@@ -28,12 +28,13 @@ namespace MinshpWebApp.Api.Builders.impl
         private IStockService _stockService;
         private ITaxeService _taxeService;
         private IPromotionCodeService _promotionCodeService;
+        private IPackageProfilService _packageProfilService;
 
         const string soonOutOfStock = "Bientôt en rupture";
         const string inStock = "En stock";
         const string outOfStock = "En rupture";
 
-        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IMapper mapper)
+        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IPackageProfilService packageProfilService, IMapper mapper)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -45,6 +46,7 @@ namespace MinshpWebApp.Api.Builders.impl
             _stockService = stockService;
             _taxeService = taxeService;
             _promotionCodeService = promotionCodeService;
+            _packageProfilService = packageProfilService;
             _mapper = mapper;
                
         }
@@ -116,7 +118,9 @@ namespace MinshpWebApp.Api.Builders.impl
                     Images = imageList,
                     Promotions = promotionList,
                     Videos = videosList,
-                    Stocks = stockList
+                    Stocks = stockList,
+                    IdPackageProfil = p.IdPackageProfil,
+                    PackageProfil = await GetPackageProfil(p.IdPackageProfil)
                 };
 
                 productVmList.Add(productVm);
@@ -302,6 +306,14 @@ namespace MinshpWebApp.Api.Builders.impl
             };
 
             return result;
+        }
+
+
+        private async Task<PackageProfilViewModel> GetPackageProfil(int? id)
+        {
+            var packgeProfil = (await _packageProfilService.GetPackageProfilsAsync()).FirstOrDefault(pa => pa.Id == id);
+
+            return _mapper.Map<PackageProfilViewModel>(packgeProfil);
         }
     }
 

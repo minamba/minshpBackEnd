@@ -22,6 +22,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
               .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
+              .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
             CreateMap<ProductDto, Product>()
@@ -35,6 +36,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
               .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
+              .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
 
@@ -71,12 +73,14 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
+              .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
             CreateMap<Category, CategoryViewModel>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.TaxeId, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
+              .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
 
@@ -152,26 +156,57 @@ namespace MinshpWebApp.Api.Mapper
 
             CreateMap<OrderRequest, Order>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-              .ForMember(x => x.OrderNumber, dest => dest.MapFrom(x => x.OrderNumber))
-              .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity))
               .ForMember(x => x.Date, dest => dest.MapFrom(x => x.Date))
-              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
-              .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.Id_product))
               .ForMember(x => x.Amount, dest => dest.MapFrom(x => x.Amount))
+              .ForMember(x => x.CustomerId, dest => dest.MapFrom(x => x.CustomerId))
               .ForMember(x => x.PaymentMethod, dest => dest.MapFrom(x => x.PaymentMethod))
+              .ForMember(x => x.DeliveryAmount, dest => dest.MapFrom(x => x.DeliveryAmount))
+
+              .ForMember(x => x.DeliveryMode, dest => dest.MapFrom(x => x.DeliveryMode))
+              .ForMember(x => x.Carrier, dest => dest.MapFrom(x => x.Carrier))
+              .ForMember(x => x.ServiceCode, dest => dest.MapFrom(x => x.ServiceCode))
+              .ForMember(x => x.RelayId, dest => dest.MapFrom(x => x.RelayId))
+              .ForMember(x => x.RelayLabel, dest => dest.MapFrom(x => x.RelayLabel))
+              .ForMember(x => x.BoxtalShipmentId, dest => dest.MapFrom(x => x.BoxtalShipmentId))
+              .ForMember(x => x.TrackingNumber, dest => dest.MapFrom(x => x.TrackingNumber))
+              .ForMember(x => x.LabelUrl, dest => dest.MapFrom(x => x.LabelUrl))
               .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
 
 
             CreateMap<Order, OrderViewModel>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.OrderNumber, dest => dest.MapFrom(x => x.OrderNumber))
-              .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity))
               .ForMember(x => x.Date, dest => dest.MapFrom(x => x.Date))
-              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
-              .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct))
               .ForMember(x => x.Amount, dest => dest.MapFrom(x => x.Amount))
               .ForMember(x => x.PaymentMethod, dest => dest.MapFrom(x => x.PaymentMethod))
+              .ForMember(x => x.DeliveryAmount, dest => dest.MapFrom(x => x.DeliveryAmount))
+
+              .ForMember(x => x.DeliveryMode, dest => dest.MapFrom(x => x.DeliveryMode))
+              .ForMember(x => x.Carrier, dest => dest.MapFrom(x => x.Carrier))               
+              .ForMember(x => x.ServiceCode, dest => dest.MapFrom(x => x.ServiceCode))                      
+              .ForMember(x => x.RelayId, dest => dest.MapFrom(x => x.RelayId))                          
+              .ForMember(x => x.RelayLabel, dest => dest.MapFrom(x => x.RelayLabel))                    
+              .ForMember(x => x.BoxtalShipmentId, dest => dest.MapFrom(x => x.BoxtalShipmentId))                          
+              .ForMember(x => x.TrackingNumber, dest => dest.MapFrom(x => x.TrackingNumber))                    
+              .ForMember(x => x.LabelUrl, dest => dest.MapFrom(x => x.LabelUrl))
               .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
+
+
+            CreateMap<Invoice, InvoiceViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.CustomerId, dest => dest.MapFrom(x => x.CustomerId))
+              .ForMember(x => x.OrderId, dest => dest.MapFrom(x => x.OrderId))
+              .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation))
+              .ForMember(x => x.Representative, dest => dest.MapFrom(x => x.Representative))
+              .ForMember(x => x.InvoiceNumber, dest => dest.MapFrom(x => x.InvoiceNumber));
+
+
+            CreateMap<InvoiceRequest, Invoice>()
+             .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+             .ForMember(x => x.CustomerId, dest => dest.MapFrom(x => x.CustomerId))
+             .ForMember(x => x.OrderId, dest => dest.MapFrom(x => x.OrderId))
+             .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation))
+             .ForMember(x => x.Representative, dest => dest.MapFrom(x => x.Representative));
 
 
 
@@ -318,6 +353,122 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode));
 
 
+
+
+            CreateMap<OrderCustomerProductRequest, OrderCustomerProduct>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.OrderId, dest => dest.MapFrom(x => x.OrderId))
+              .ForMember(x => x.CustomerId, dest => dest.MapFrom(x => x.CustomerId))
+              .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity))
+              .ForMember(x => x.ProductUnitPrice, dest => dest.MapFrom(x => x.ProductUnitPrice))
+              .ForMember(x => x.ProductId, dest => dest.MapFrom(x => x.ProductId));
+
+
+            CreateMap<OrderCustomerProduct, OrderCustomerProductViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.OrderId, dest => dest.MapFrom(x => x.OrderId))
+              .ForMember(x => x.CustomerId, dest => dest.MapFrom(x => x.CustomerId))
+              .ForMember(x => x.Quantity, dest => dest.MapFrom(x => x.Quantity))
+              .ForMember(x => x.ProductUnitPrice, dest => dest.MapFrom(x => x.ProductUnitPrice))
+              .ForMember(x => x.ProductId, dest => dest.MapFrom(x => x.ProductId));
+
+
+
+            CreateMap<RelaysAddressRequest, RelaysAddress>()
+               .ForMember(x => x.Number, dest => dest.MapFrom(x => x.Number))
+               .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode))
+               .ForMember(x => x.State, dest => dest.MapFrom(x => x.State))
+               .ForMember(x => x.Street, dest => dest.MapFrom(x => x.Street))
+               .ForMember(x => x.SearchNetworks, dest => dest.MapFrom(x => x.SearchNetworks))
+               .ForMember(x => x.CountryIsoCode, dest => dest.MapFrom(x => x.CountryIsoCode))
+               .ForMember(x => x.Limit, dest => dest.MapFrom(x => x.Limit))
+               .ForMember(x => x.City, dest => dest.MapFrom(x => x.City));
+
+
+
+            CreateMap<RelaysAddress,RelaysAddressRequest>()
+               .ForMember(x => x.Number, dest => dest.MapFrom(x => x.Number))
+               .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode))
+               .ForMember(x => x.State, dest => dest.MapFrom(x => x.State))
+               .ForMember(x => x.Street, dest => dest.MapFrom(x => x.Street))
+               .ForMember(x => x.SearchNetworks, dest => dest.MapFrom(x => x.SearchNetworks))
+               .ForMember(x => x.CountryIsoCode, dest => dest.MapFrom(x => x.CountryIsoCode))
+               .ForMember(x => x.Limit, dest => dest.MapFrom(x => x.Limit))
+               .ForMember(x => x.City, dest => dest.MapFrom(x => x.City));
+
+
+
+            CreateMap<Rate, RateViewModel>()
+               .ForMember(x => x.Code, dest => dest.MapFrom(x => x.Code))
+               .ForMember(x => x.Carrier, dest => dest.MapFrom(x => x.Carrier))
+               .ForMember(x => x.PriceTtc, dest => dest.MapFrom(x => x.PriceTtc))
+               .ForMember(x => x.IsRelay, dest => dest.MapFrom(x => x.IsRelay))
+               .ForMember(x => x.Label, dest => dest.MapFrom(x => x.Label));
+
+
+            CreateMap<OrderDetailsRequest, OrderDetails>()
+               .ForMember(x => x.SenderZipCode, dest => dest.MapFrom(x => x.SenderZipCode))
+               .ForMember(x => x.SenderType, dest => dest.MapFrom(x => x.SenderType))
+               .ForMember(x => x.SenderCity, dest => dest.MapFrom(x => x.SenderCity))
+
+               .ForMember(x => x.RecipientCity, dest => dest.MapFrom(x => x.RecipientCity))
+               .ForMember(x => x.RecipientCountry, dest => dest.MapFrom(x => x.RecipientCountry))
+               .ForMember(x => x.RecipientType, dest => dest.MapFrom(x => x.RecipientType))
+               .ForMember(x => x.RecipientZipCode, dest => dest.MapFrom(x => x.RecipientZipCode))
+
+               .ForMember(x => x.PackageWidth, dest => dest.MapFrom(x => x.PackageWidth))
+               .ForMember(x => x.PackageHeight, dest => dest.MapFrom(x => x.PackageHeight))
+               .ForMember(x => x.PackageLonger, dest => dest.MapFrom(x => x.PackageLonger))
+               .ForMember(x => x.PackageWeight, dest => dest.MapFrom(x => x.PackageWeight))
+               .ForMember(x => x.PackageValue, dest => dest.MapFrom(x => x.PackageValue))
+               .ForMember(x => x.ContainedCode, dest => dest.MapFrom(x => x.ContainedCode));
+
+
+            CreateMap<RateViewModel, Rate>()
+               .ForMember(x => x.Code, dest => dest.MapFrom(x => x.Code))
+               .ForMember(x => x.Carrier, dest => dest.MapFrom(x => x.Carrier))
+               .ForMember(x => x.PriceTtc, dest => dest.MapFrom(x => x.PriceTtc))
+               .ForMember(x => x.IsRelay, dest => dest.MapFrom(x => x.IsRelay))
+               .ForMember(x => x.Label, dest => dest.MapFrom(x => x.Label));
+
+
+            CreateMap<Rate, RateViewModel >()
+               .ForMember(x => x.Code, dest => dest.MapFrom(x => x.Code))
+               .ForMember(x => x.Carrier, dest => dest.MapFrom(x => x.Carrier))
+               .ForMember(x => x.PriceTtc, dest => dest.MapFrom(x => x.PriceTtc))
+               .ForMember(x => x.IsRelay, dest => dest.MapFrom(x => x.IsRelay))
+               .ForMember(x => x.Label, dest => dest.MapFrom(x => x.Label));
+
+
+
+            CreateMap<PackageProfil, PackageProfilViewModel>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
+               .ForMember(x => x.Width, dest => dest.MapFrom(x => x.Width))
+               .ForMember(x => x.Weight, dest => dest.MapFrom(x => x.Weight))
+               .ForMember(x => x.Longer, dest => dest.MapFrom(x => x.Longer))
+               .ForMember(x => x.Height, dest => dest.MapFrom(x => x.Height));
+
+
+            CreateMap<PackageProfil, PackageProfilRequest>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
+               .ForMember(x => x.Width, dest => dest.MapFrom(x => x.Width))
+               .ForMember(x => x.Weight, dest => dest.MapFrom(x => x.Weight))
+               .ForMember(x => x.Longer, dest => dest.MapFrom(x => x.Longer))
+               .ForMember(x => x.Height, dest => dest.MapFrom(x => x.Height));
+
+
+            CreateMap<PackageProfilRequest, PackageProfil>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
+               .ForMember(x => x.Width, dest => dest.MapFrom(x => x.Width))
+               .ForMember(x => x.Weight, dest => dest.MapFrom(x => x.Weight))
+               .ForMember(x => x.Longer, dest => dest.MapFrom(x => x.Longer))
+               .ForMember(x => x.Height, dest => dest.MapFrom(x => x.Height));
         }
     }
 }

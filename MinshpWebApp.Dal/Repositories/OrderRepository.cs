@@ -27,11 +27,12 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = p.Id,
                 Date = p.Date,
-                OrderNumber = p.OrderNumber1,
-                Quantity = p.Quantity,
+                OrderNumber = p.OrderNumber,
                 Status = p.Status,
-                IdCustomer = p.IdCustomer,
-                IdProduct = p.Id_product,
+                CustomerId = p.CustomerId,
+                Amount = p.Amount,
+                PaymentMethod = p.PaymentMethod,
+                DeliveryAmount = p.DeliveryAmount
             }).ToListAsync();
 
             return OrderEntities;
@@ -47,10 +48,20 @@ namespace MinshpWebApp.Dal.Repositories
 
             // On met à jour ses propriétés
             if (model.Date != null) OrderToUpdate.Date = model.Date;
-            if (model.Quantity != null) OrderToUpdate.Quantity = model.Quantity;
             if (model.Status != null) OrderToUpdate.Status = model.Status;
-            if (model.IdCustomer != null) OrderToUpdate.IdCustomer = model.IdCustomer;
-            if (model.IdProduct != null) OrderToUpdate.Id_product = model.IdProduct;
+            if (model.CustomerId != null) OrderToUpdate.CustomerId = model.CustomerId;
+            if (model.Amount != null) OrderToUpdate.Amount = model.Amount;
+            if (model.PaymentMethod != null) OrderToUpdate.PaymentMethod = model.PaymentMethod;
+            if (model.DeliveryAmount != null) OrderToUpdate.DeliveryAmount = model.DeliveryAmount;
+
+            if (model.DeliveryMode != null) OrderToUpdate.DeliveryMode = model.DeliveryMode;
+            if (model.Carrier != null) OrderToUpdate.Carrier = model.Carrier;
+            if (model.ServiceCode != null) OrderToUpdate.ServiceCode = model.ServiceCode;
+            if (model.RelayId != null) OrderToUpdate.RelayId = model.RelayId;
+            if (model.RelayLabel != null) OrderToUpdate.RelayLabel = model.RelayLabel;
+            if (model.BoxtalShipmentId != null) OrderToUpdate.BoxtalShipmentId = model.BoxtalShipmentId;
+            if (model.TrackingNumber != null) OrderToUpdate.TrackingNumber = model.TrackingNumber;
+            if (model.LabelUrl != null) OrderToUpdate.LabelUrl = model.LabelUrl;
 
             await _context.SaveChangesAsync();
 
@@ -59,10 +70,11 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = model.Id,
                 Date = model.Date,
-                Quantity = model.Quantity,
                 Status = model.Status,
-                IdCustomer = model.IdCustomer,
-                IdProduct = model.IdProduct,
+                CustomerId = model.CustomerId,
+                Amount = model.Amount,
+                PaymentMethod = model.PaymentMethod,
+                DeliveryAmount = model.DeliveryAmount
             };
         }
 
@@ -72,12 +84,13 @@ namespace MinshpWebApp.Dal.Repositories
             var newOrder = new Dal.Entities.Order
             {
                 Id = model.Id,
-                Date = model.Date,
-                Quantity = model.Quantity,
+                Date = DateTime.Now,
                 Status = model.Status,
-                IdCustomer = model.IdCustomer,
-                Id_product = model.IdProduct,
-                
+                CustomerId = model.CustomerId,
+                Amount = model.Amount,
+                PaymentMethod = model.PaymentMethod,
+                DeliveryAmount = model.DeliveryAmount
+
             };
 
             _context.Orders.Add(newOrder);
@@ -85,13 +98,14 @@ namespace MinshpWebApp.Dal.Repositories
 
             return new Order()
             {
-                Id = model.Id,
+                Id = newOrder.Id,
                 Date = model.Date,
-                OrderNumber = newOrder.OrderNumber1,
-                Quantity = model.Quantity,
+                OrderNumber = newOrder.OrderNumber,
                 Status = model.Status,
-                IdCustomer = model.IdCustomer,
-                IdProduct = model.IdProduct,
+                CustomerId = model.CustomerId,
+                Amount = model.Amount,
+                PaymentMethod = model.PaymentMethod,
+                DeliveryAmount = model.DeliveryAmount
             };
         }
 
@@ -108,5 +122,67 @@ namespace MinshpWebApp.Dal.Repositories
 
             return true;
         }
+
+
+        //BOXTAL 
+
+        public async Task<Order> FindByShipmentIdAsync(string providerShipmentId)
+        {
+            var orderToFind = await _context.Orders.FirstOrDefaultAsync(o => o.BoxtalShipmentId == providerShipmentId);
+
+
+            var order = new Order
+            {
+                Id = orderToFind.Id,
+                Date = orderToFind.Date,
+                Status = orderToFind.Status,
+                CustomerId = orderToFind.CustomerId,
+                Amount = orderToFind.Amount,
+                PaymentMethod = orderToFind.PaymentMethod,
+                DeliveryAmount = orderToFind.DeliveryAmount,
+                
+                DeliveryMode = orderToFind.DeliveryMode,
+                Carrier = orderToFind.Carrier,
+                ServiceCode = orderToFind.ServiceCode,
+                RelayId = orderToFind.RelayId,
+                RelayLabel = orderToFind.RelayLabel,
+                BoxtalShipmentId = orderToFind.BoxtalShipmentId,
+                TrackingNumber = orderToFind.TrackingNumber,
+                LabelUrl = orderToFind.LabelUrl,
+            };
+
+            return order;
+
+        }
+
+
+        public async Task<Order> GetByIdAsync(int id)
+        {
+            var orderToFind = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id);
+
+
+            var order = new Order
+            {
+                Id = orderToFind.Id,
+                Date = orderToFind.Date,
+                Status = orderToFind.Status,
+                CustomerId = orderToFind.CustomerId,
+                Amount = orderToFind.Amount,
+                PaymentMethod = orderToFind.PaymentMethod,
+                DeliveryAmount = orderToFind.DeliveryAmount,
+
+                DeliveryMode = orderToFind.DeliveryMode,
+                Carrier = orderToFind.Carrier,
+                ServiceCode = orderToFind.ServiceCode,
+                RelayId = orderToFind.RelayId,
+                RelayLabel = orderToFind.RelayLabel,
+                BoxtalShipmentId = orderToFind.BoxtalShipmentId,
+                TrackingNumber = orderToFind.TrackingNumber,
+                LabelUrl = orderToFind.LabelUrl,
+            };
+
+            return order;
+        }
+
     }
 }

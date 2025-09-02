@@ -34,6 +34,9 @@ public partial class MinshpDatabaseContext : DbContext
     public virtual DbSet<Invoice> Invoices { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
+    public virtual DbSet<OrderCustomerProduct> OrderCustomerProducts { get; set; }
+
+    public virtual DbSet<PackageProfil> PackageProfils { get; set; }
 
     public virtual DbSet<Product> Products { get; set; }
 
@@ -157,6 +160,7 @@ public partial class MinshpDatabaseContext : DbContext
         {
             entity.ToTable("Category");
             entity.Property(e => e.IdPromotionCode).HasColumnName("Id_promotion_code");
+            entity.Property(e => e.IdPackageProfil).HasColumnName("Id_package_profil");
             entity.Property(e => e.IdTaxe).HasColumnName("Id_taxe");
         });
 
@@ -257,32 +261,24 @@ public partial class MinshpDatabaseContext : DbContext
 
         modelBuilder.Entity<Invoice>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("Invoice");
+            entity.ToTable("Invoice");
 
-            entity.HasIndex(e => e.InvoiceNumber1, "UX_Invoices_InvoiceNumber").IsUnique();
+            entity.HasIndex(e => e.InvoiceNumber, "UX_Invoice_InvoiceNumber").IsUnique();
 
             entity.Property(e => e.CustomerId).HasColumnName("Customer_id");
             entity.Property(e => e.DateCreation)
                 .HasColumnType("datetime")
                 .HasColumnName("Date_creation");
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            entity.Property(e => e.InvoiceNumber).HasColumnName("Invoice_number");
-            entity.Property(e => e.InvoiceNumber1)
+            entity.Property(e => e.InvoiceNumber)
                 .HasMaxLength(11)
                 .IsUnicode(false)
-                .HasComputedColumnSql("('FA'+right(replicate('0',(9))+CONVERT([varchar](20),[InvoiceNumberInt]),(9)))", true)
-                .HasColumnName("InvoiceNumber");
+                .HasComputedColumnSql("('FA'+right(replicate('0',(9))+CONVERT([varchar](20),[InvoiceNumberInt]),(9)))", true);
             entity.Property(e => e.InvoiceNumberInt).HasDefaultValueSql("(NEXT VALUE FOR [dbo].[InvoiceNumberSeq])");
             entity.Property(e => e.OrderId).HasColumnName("Order_id");
 
-            entity.HasOne(d => d.Customer).WithMany()
-                .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("FK_Invoice_Customer");
-
-            entity.HasOne(d => d.Order).WithMany()
+            entity.HasOne(d => d.Order).WithMany(p => p.Invoices)
                 .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Invoice_Order");
         });
 
@@ -348,15 +344,51 @@ public partial class MinshpDatabaseContext : DbContext
         {
             entity.ToTable("Order");
 
+            entity.HasIndex(e => e.OrderNumber, "UX_Orders_OrderNumber").IsUnique();
+
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.CustomerId).HasColumnName("Customer_id");
             entity.Property(e => e.Date).HasColumnType("datetime");
-            entity.Property(e => e.OrderNumber).HasColumnName("Order_number");
+            entity.Property(e => e.DeliveryAmount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("Delivery_amount");
+            entity.Property(e => e.OrderNumber)
+                .HasMaxLength(11)
+                .IsUnicode(false)
+                .HasComputedColumnSql("('CD'+right(replicate('0',(9))+CONVERT([varchar](20),[OrderNumberInt]),(9)))", true);
+            entity.Property(e => e.OrderNumberInt).HasDefaultValueSql("(NEXT VALUE FOR [dbo].[OrderNumberSeq])");
             entity.Property(e => e.PaymentMethod).HasColumnName("Payment_method");
 
-            entity.HasOne(d => d.IdCustomerNavigation).WithMany(p => p.Orders)
-                .HasForeignKey(d => d.IdCustomer)
+            entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Order_Customer");
+        });
+
+
+        modelBuilder.Entity<OrderCustomerProduct>(entity =>
+        {
+            entity.ToTable("OrderCustomerProduct");
+
+            entity.Property(e => e.CustomerId).HasColumnName("Customer_id");
+            entity.Property(e => e.OrderId).HasColumnName("Order_id");
+            entity.Property(e => e.ProductId).HasColumnName("Product_id");
+            entity.Property(e => e.ProductUnitPrice)
+                    .HasColumnType("decimal(18, 2)")
+                    .HasColumnName("Product_unit_price");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderCustomerProducts)
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_OrderCustomerProduct_Order");
+        });
+
+
+        modelBuilder.Entity<PackageProfil>(entity =>
+        {
+            entity.ToTable("Package_profil");
+
+            entity.Property(e => e.Weight).HasColumnType("decimal(18, 2)");
         });
 
         modelBuilder.Entity<Product>(entity =>
@@ -364,6 +396,7 @@ public partial class MinshpDatabaseContext : DbContext
             entity.ToTable("Product");
 
             entity.Property(e => e.Id_Category).HasColumnName("Id_Category");
+            entity.Property(e => e.IdPackageProfil).HasColumnName("Id_package_profil");
             entity.Property(e => e.IdPromotionCode).HasColumnName("Id_promotion_code");
             entity.Property(e => e.CreationDate)
                 .HasColumnType("datetime")
