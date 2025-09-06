@@ -18,5 +18,6 @@
 
         public ProductVIewModel Product { get; set; }
         public CategoryViewModel Category { get; set; }
+        public SubCategoryViewModel SubCategory { get; set; }
     }
 }

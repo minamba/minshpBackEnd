@@ -32,6 +32,7 @@ namespace MinshpWebApp.Dal.Repositories
                 IdProduct = p.Id_product,
                 Position = p.Position,
                 IdCategory = p.IdCategory,
+                IdSubCategory = p.IdSubCategory
             }).ToListAsync();
 
             return ImageEntities;
@@ -56,7 +57,13 @@ namespace MinshpWebApp.Dal.Repositories
             else
                 ImageToUpdate.IdCategory = null;
 
-               await _context.SaveChangesAsync();
+
+            if (model.IdSubCategory != null)
+                ImageToUpdate.IdSubCategory = model.IdSubCategory;
+            else
+                ImageToUpdate.IdSubCategory = null;
+
+            await _context.SaveChangesAsync();
 
 
             return new Image()
@@ -68,6 +75,7 @@ namespace MinshpWebApp.Dal.Repositories
                 IdProduct = model.IdProduct,
                 Position = model.Position,
                 IdCategory = model.IdCategory,
+                IdSubCategory = model.IdSubCategory
             };
         }
 
@@ -83,6 +91,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Title = model.Title,
                 Position = model.Position,
                 IdCategory = model.IdCategory,
+                IdSubCategory = model.IdSubCategory
             };
 
             _context.Images.Add(newImage);
@@ -97,6 +106,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Title = model.Title,
                 Position = model.Position,
                 IdCategory = model.IdCategory,
+                IdSubCategory = model.IdSubCategory
             };
         }
 

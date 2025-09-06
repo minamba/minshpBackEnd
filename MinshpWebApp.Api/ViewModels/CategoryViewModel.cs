@@ -10,6 +10,8 @@
         public List<string>? TaxeName { get; set; }
         public int? IdPromotionCode { get; set; }
         public int? IdPackageProfil { get; set; }
+
+        public int? ContentCode { get; set; }
         public PackageProfilViewModel? PackageProfil { get; set; }
     }
 }

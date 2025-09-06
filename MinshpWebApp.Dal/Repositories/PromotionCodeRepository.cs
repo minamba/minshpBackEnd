@@ -100,8 +100,14 @@ namespace MinshpWebApp.Dal.Repositories
         {
             var PromotionCodeToDelete = await _context.PromotionCodes.FirstOrDefaultAsync(u => u.Id == idPromotionCode);
 
+            //Je dois mettre la subCategory a null si la promotion supprimé est liée a une sous catégory
+            var getSubCategoryToUpdate = await _context.SubCategories.FirstOrDefaultAsync(u => u.IdPromotionCode == idPromotionCode);
+
             if (PromotionCodeToDelete == null)
                 return false; // ou throw une exception;
+
+            if (getSubCategoryToUpdate != null)
+                getSubCategoryToUpdate.IdPromotionCode = null;
 
             _context.PromotionCodes.Remove(PromotionCodeToDelete);
             await _context.SaveChangesAsync();

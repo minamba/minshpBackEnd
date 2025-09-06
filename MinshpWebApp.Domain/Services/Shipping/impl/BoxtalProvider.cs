@@ -12,10 +12,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using CreateShipmentCmdModel = MinshpWebApp.Domain.Models.CreateShipmentCmd;
+using Package = MinshpWebApp.Domain.Models.Package;
 
 namespace MinshpWebApp.Domain.Services.Shipping.impl
 {
     /* ===================== Modèles d'aide (désérialisation souple) ===================== */
+
 
     public sealed class ParcelPointResponse
     {
@@ -78,7 +81,17 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
         // expéditeur par défaut
         public string FromZip { get; set; } = "91000";
         public string FromCountry { get; set; } = "FR";
-        public string FromCity { get; set; } = "Jargeau";
+        public string FromCity { get; set; } = "Evry-courcouronnes";
+
+        public string? FromEmail { get; set; } = "minamba.c@gmail.com";
+        public string? FromPhone { get; set; } = "06 24 95 75 58";
+        public string? FromCompany { get; set; } = "Mins Shop";
+        public string? FromFirstName { get; set; } = "Minamba";
+        public string? FromLastName { get; set; } = "Camara";
+        public int? FromNumber { get; set; } = 2;
+        public string? FromStreet { get; set; } = "rue des jules vallès";
+        public string? FromAdditionalInfo { get; set; }
+        public string? ReturnAdditionalInfo { get; set; } = "Retour Mins Shop";
     }
 
     /* ===================== Provider ===================== */
@@ -131,24 +144,46 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
             var client = _httpFactory.CreateClient("BoxtalV1");
             var basic = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_opt.V1UserName}:{_opt.V1Password}"));
 
+            string codeHighTech = null;
+            var packagesLst = orderDetails.Packages.ToList();
+
+            bool b = packagesLst.Any(c => c.ContainedCode == "50110");
+
+            if(b)
+                codeHighTech = packagesLst?.FirstOrDefault(c => c.ContainedCode == "50110").ContainedCode ?? null;
+
+
             var qs = new Dictionary<string, string?>
             {
                 ["expediteur.pays"] = _opt.FromCountry,
                 ["expediteur.code_postal"] = _opt.FromZip,
                 ["expediteur.ville"] = _opt.FromCity,
-                ["expediteur.type"] = orderDetails.SenderType,
+                ["expediteur.type"] = orderDetails.SenderType.ToLower(),
 
+                ["destinataire.ville"] = orderDetails.RecipientCity,
                 ["destinataire.pays"] = orderDetails.RecipientCountry,
                 ["destinataire.code_postal"] = orderDetails.RecipientZipCode,
-                ["destinataire.type"] = orderDetails.RecipientType,
+                ["destinataire.type"] = orderDetails.RecipientType.ToLower(),
 
-                ["colis_1.poids"] = orderDetails.PackageWeight.ToString(CultureInfo.InvariantCulture),
-                ["colis_1.longueur"] = orderDetails.PackageLonger,
-                ["colis_1.largeur"] = orderDetails.PackageWidth,
-                ["colis_1.hauteur"] = orderDetails.PackageHeight,
-
-                ["code_contenu"] = orderDetails.ContainedCode
+                ["code_contenu"] = codeHighTech ?? packagesLst[0].ContainedCode,
             };
+
+
+  
+
+            // Puis les colis (1, 2, 3, ...)
+            for (int i = 0; i < packagesLst.Count; i++)
+            {
+                var package = packagesLst[i];
+                var n = i + 1;
+                var prefix = $"colis_{n}";
+
+                qs[$"{prefix}.poids"] = package.PackageWeight?.ToString(CultureInfo.InvariantCulture);
+                qs[$"{prefix}.valeur"] = package.PackageValue?.ToString(CultureInfo.InvariantCulture);
+                qs[$"{prefix}.largeur"] = package.PackageWidth;
+                qs[$"{prefix}.hauteur"] = package.PackageHeight;
+                qs[$"{prefix}.longueur"] = package.PackageLonger;
+            }
 
             var query = string.Join("&", qs.Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
                                            .Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value!)}"));
@@ -250,6 +285,42 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
             }
             return list;
         }
+
+
+        public async Task<CodeCategories> GetContentCategoriesAsync()
+        {
+            var token = await GetTokenV3Async();
+            var client = _httpFactory.CreateClient("BoxtalV3");
+
+            var url = $"/shipping/v3.1/content-category?language={Uri.EscapeDataString("fr")}";
+            var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var resp = await client.SendAsync(req);
+            var json = await resp.Content.ReadAsStringAsync();
+            if (!resp.IsSuccessStatusCode)
+                throw new InvalidOperationException($"/parcel-point failed {(int)resp.StatusCode} {json}");
+
+            // Parse selon: { content: [ { distanceFromSearchLocation, parcelPoint { ... } }, ... ] }
+            using var doc = JsonDocument.Parse(json);
+            var cdCategoriesLst = new CodeCategories();
+
+            if (doc.RootElement.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in content.EnumerateArray())
+                {
+                        var cdCategory = new CodeCategory()
+                        {
+                            Id = item.Val("Id", "id") ?? "",
+                            Label = item.Val("Label", "label") ?? ""
+                        };
+                        cdCategoriesLst.AllCodeCategories.Add(cdCategory);
+                }
+            }
+
+            return cdCategoriesLst;
+        }
+
 
         /* -------- RELAYS v3 -------- */
 
@@ -384,39 +455,152 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
         }
 
         /* -------- CREATE SHIPMENT v3 -------- */
-        public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd)
+        public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmdModel cmd)
         {
             var token = await GetTokenV3Async();
             var client = _httpFactory.CreateClient("BoxtalV3");
 
+            // ----- MAP Shipment (C# → schéma attendu Boxtal v3) -----
+            var srcShipment = cmd.Shipment ?? new Shipment();
+            var srcPackages = srcShipment.Packages;
+
+            // Fallback sur le 1er colis pour dimensions/poids si besoin
+            var p0 = srcPackages.FirstOrDefault();
+
+            var fallbackWidth = cmd.PackageWidth ?? SafeInt(p0?.PackageWidth, 15);
+            var fallbackHeight = cmd.PackageHeight ?? SafeInt(p0?.PackageHeight, 11);
+            var fallbackLength = cmd.PackageLength ?? SafeInt(p0?.PackageLonger, 16);
+            var fallbackWeight = cmd.WeightKg.HasValue ? (double)cmd.WeightKg.Value : SafeDouble(p0?.PackageWeight, 0.25);
+
+            var mappedPackages = (srcPackages).Select(p => new
+            {
+                type = string.IsNullOrWhiteSpace(p.Type) ? "PARCEL" : p.Type,
+                weight = SafeDouble(p.PackageWeight, fallbackWeight),
+                width = SafeInt(p.PackageWidth, fallbackWidth),
+                height = SafeInt(p.PackageHeight, fallbackHeight),
+                length = SafeInt(p.PackageLonger, fallbackLength),
+                value = (p.PackageValue.HasValue && p.PackageValue.Value > 0)
+                            ? new { value = p.PackageValue.Value, currency = "EUR" }
+                            : null,
+                content = (string.IsNullOrWhiteSpace(cmd.ContentId) && string.IsNullOrWhiteSpace(cmd.ContentDescription))
+                            ? null
+                            : new { id = cmd.ContentId, description = cmd.ContentDescription },
+                stackable = p.PackageStackable ?? true,
+                externalId = !string.IsNullOrWhiteSpace(p.ExternalId)
+                                ? p.ExternalId
+                                : (!string.IsNullOrWhiteSpace(cmd.PackageExternalId) ? cmd.PackageExternalId : cmd.OrderExternalId)
+            }).ToArray();
+
+            // Types d’adresses en VAL v3
+            string ToType(string? t) =>
+                string.Equals(t, "BUSINESS", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(t, "entreprise", StringComparison.OrdinalIgnoreCase)
+                    ? "BUSINESS" : "RESIDENTIAL";
+
+            var mappedShipment = new
+            {
+                packages = mappedPackages,
+
+                toAddress = new
+                {
+                    type = ToType(srcShipment.ToAddress?.Type),
+                    contact = new
+                    {
+                        email = cmd.ToEmail ?? srcShipment.ToAddress?.Contact?.Email,
+                        phone = cmd.ToPhone ?? srcShipment.ToAddress?.Contact?.Phone,
+                        lastName = cmd.ToLastName ?? srcShipment.ToAddress?.Contact?.LastName,
+                        firstName = cmd.ToFirstName ?? srcShipment.ToAddress?.Contact?.FirstName
+                    },
+                    location = new
+                    {
+                        city = cmd.ToCity ?? srcShipment.ToAddress?.Location?.City,
+                        number = (int?)null, // si tu as un numéro précis sinon null
+                        street = cmd.ToStreet ?? srcShipment.ToAddress?.Location?.Street,
+                        postalCode = cmd.ToZip ?? srcShipment.ToAddress?.Location?.PostalCode,
+                        countryIsoCode = string.IsNullOrWhiteSpace(cmd.ToCountry)
+                                            ? (srcShipment.ToAddress?.Location?.CountryIsoCode ?? "FR")
+                                            : cmd.ToCountry
+                    }
+                },
+
+                externalId = cmd.OrderExternalId ?? srcShipment.ExternalId,
+
+                fromAddress = new
+                {
+                    type = "BUSINESS",
+                    contact = new
+                    {
+                        email = _opt.FromEmail,
+                        phone = _opt.FromPhone,
+                        company = _opt.FromCompany,
+                        lastName = _opt.FromLastName,
+                        firstName = _opt.FromFirstName
+                    },
+                    location = new
+                    {
+                        city = _opt.FromCity,
+                        number = _opt.FromNumber,
+                        street = _opt.FromStreet,
+                        postalCode = _opt.FromZip,
+                        countryIsoCode = _opt.FromCountry
+                    },
+                    additionalInformation = _opt.FromAdditionalInfo
+                },
+
+                returnAddress = new
+                {
+                    type = "BUSINESS",
+                    contact = new
+                    {
+                        email = _opt.FromEmail,
+                        phone = _opt.FromPhone,
+                        company = _opt.FromCompany,
+                        lastName = _opt.FromLastName,
+                        firstName = _opt.FromFirstName
+                    },
+                    location = new
+                    {
+                        city = _opt.FromCity,
+                        number = _opt.FromNumber,
+                        street = _opt.FromStreet,
+                        postalCode = _opt.FromZip,
+                        countryIsoCode = _opt.FromCountry
+                    },
+                    additionalInformation = _opt.ReturnAdditionalInfo
+                },
+
+                pickupPointCode = (cmd.IsRelay == true) ? (cmd.RelayId ?? srcShipment.PickupPointCode) : null,
+                dropOffPointCode = cmd.DropOffPointCode ?? srcShipment.DropOffPointCode
+            };
+
+            // ----- BODY RACINE (v3) -----
+            var expectedDate = !string.IsNullOrWhiteSpace(cmd.ExpectedTakingOverDate)
+                ? DateTime.Parse(cmd.ExpectedTakingOverDate, CultureInfo.InvariantCulture).ToString("yyyy-MM-dd")
+                : DateTime.UtcNow.ToString("yyyy-MM-dd");
+
             var body = new
             {
-                receiver = new
-                {
-                    firstName = cmd.toFirstName,
-                    lastName = cmd.toLastName,
-                    street = cmd.toStreet,
-                    address2 = cmd.toExtra,
-                    zipCode = cmd.toZip,
-                    city = cmd.toCity,
-                    country = cmd.toCountry
-                },
-                sender = new
-                {
-                    zipCode = _opt.FromZip,
-                    country = _opt.FromCountry
-                },
-                parcels = new[]
-                {
-                    new { weight = cmd.weightKg, length = 20, width = 15, height = 10, insuredValue = cmd.declaredValue }
-                },
-                selection = new { serviceCode = cmd.serviceCode },
-                relay = cmd.isRelay ? new { id = cmd.relayId } : null
+                insured = cmd.Insured ?? false,
+                labelType = string.IsNullOrWhiteSpace(cmd.LabelType) ? "PDF_A4" : cmd.LabelType,
+
+                // v3 exige AU MOINS un des deux :
+                shippingOfferCode = "CHRP", //string.IsNullOrWhiteSpace(cmd.ServiceCode) ? null : cmd.ServiceCode,
+                shippingOfferId = "CHRP-736BX",//string.IsNullOrWhiteSpace(cmd.ShippingOfferId) ? null : cmd.ShippingOfferId,
+
+                expectedTakingOverDate = expectedDate,
+
+                shipment = mappedShipment
+            };
+
+            var jsonOpts = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
             var req = new HttpRequestMessage(HttpMethod.Post, "/shipping/v3.1/shipping-order");
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            req.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+            req.Content = new StringContent(JsonSerializer.Serialize(body, jsonOpts), Encoding.UTF8, "application/json");
 
             var resp = await client.SendAsync(req);
             var text = await resp.Content.ReadAsStringAsync();
@@ -429,12 +613,16 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
 
             return new ShipmentResult(
                 providerShipmentId: r.TryGetProperty("id", out var id) ? id.GetString()! : "",
-                carrier: r.TryGetProperty("carrierCode", out var cc) ? cc.GetString()! : "Boxtal",
+                carrier: r.TryGetProperty("carrierCode", out var cc) ? (cc.GetString() ?? "Boxtal") : "Boxtal",
                 serviceCode: r.Val("productCode", "serviceCode") ?? "",
-                trackingNumber: r.TryGetProperty("trackingNumber", out var tr) ? r.GetString()! : "",
-                labelUrl: r.TryGetProperty("labelUrl", out var lu) ? lu.GetString()! : ""
+                trackingNumber: r.TryGetProperty("trackingNumber", out var tr) ? tr.GetString() ?? "" : "",
+                labelUrl: r.TryGetProperty("labelUrl", out var lu) ? lu.GetString() ?? "" : ""
             );
         }
+
+
+
+
 
         /* ===================== Helpers ===================== */
 
@@ -472,6 +660,15 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
             s = s.Trim().Replace(',', '.');
             return decimal.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0m;
         }
+
+
+
+        private static int SafeInt(string? s, int fallback) =>
+        int.TryParse((s ?? "").Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : fallback;
+
+        private static double SafeDouble(string? s, double fallback) =>
+            double.TryParse((s ?? "").Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out var v) ? v : fallback;
+
     }
 
     internal static class JsonElementExt
@@ -506,4 +703,6 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
         public static string? Val(this XElement e, params string[] names)
             => ElementAny(e, names)?.Value;
     }
+
+
 }

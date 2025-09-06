@@ -12,5 +12,7 @@ namespace MinshpWebApp.Api.Builders
         Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd);
 
         Task<List<RelaysAddressViewModel>> GetRelaysByAddressAsync(RelaysAddressRequest q);
+
+        Task<CodeCategoriesViewModel> GetContentCategoriesAsync();
     }
 }

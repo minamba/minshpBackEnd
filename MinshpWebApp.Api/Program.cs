@@ -105,6 +105,7 @@ builder.Services.AddScoped<IDeliveryAddressRepository, DeliveryAddressRepository
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IOrderCustomerProductRepository, OrderCustomerProductRepository>();
 builder.Services.AddScoped<IPackageProfilRepository, PackageProfilRepository>();
+builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 
 
 //scoped services
@@ -128,6 +129,7 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IOrderCustomerProductService, OrderCustomerProductService>();
 builder.Services.AddScoped<IShippingProvider, BoxtalProvider>();
 builder.Services.AddScoped<IPackageProfilService, PackageProfilService>();
+builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
 
 
 
@@ -154,6 +156,7 @@ builder.Services.AddScoped<IInvoiceViewModelBuilder, InvoiceViewModelBuilder>();
 builder.Services.AddScoped<IOrderCustomerProductViewModelBuilder, OrderCustomerProductViewModelBuilder>();
 builder.Services.AddScoped<IBoxalProviderViewModelBuilder, BoxalProviderViewModelBuilder>();
 builder.Services.AddScoped<IPackageProfilViewModelBuilder, PackageProfilViewModelBuilder>();
+builder.Services.AddScoped<ISubCategoryViewModelBuilder, SubCategoryViewModelBuilder>();
 
 //BOXTAL LIVRAISON
 // 1) BoxtalOptions ← Shipping:Boxtal

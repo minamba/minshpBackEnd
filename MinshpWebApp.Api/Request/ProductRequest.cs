@@ -26,5 +26,7 @@
         public int? IdPromotionCode { get; set; }
 
         public int? IdPackageProfil { get; set; }
+
+        public int? IdSubCategory { get; set; }
     }
 }

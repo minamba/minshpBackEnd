@@ -12,5 +12,7 @@ namespace MinshpWebApp.Api.Request
         public int? IdPromotionCode { get; set; }
 
         public int? IdPackageProfil { get; set; }
+
+        public int? ContentCode { get; set; }
     }
 }

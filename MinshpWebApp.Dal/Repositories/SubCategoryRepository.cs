@@ -7,110 +7,110 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Category = MinshpWebApp.Domain.Models.Category;
+using SubCategory = MinshpWebApp.Domain.Models.SubCategory;
 
 namespace MinshpWebApp.Dal.Repositories
 {
-    public class CategoryRepository : ICategoryRepository
+    public class SubCategoryRepository : ISubCategoryRepository
     {
         private MinshpDatabaseContext _context { get; set; }
         private readonly IMapper _mapper;
 
-        public CategoryRepository(MinshpDatabaseContext context)
+        public SubCategoryRepository(MinshpDatabaseContext context)
         {
             _context = context;
         }
 
-        public async Task<IEnumerable<Category>> GetCategoriesAsync()
+        public async Task<IEnumerable<SubCategory>> GetSubCategoriesAsync()
         {
-            var CategoryEntities = await _context.Categories.Select(p => new Category
+            var SubCategoryEntities = await _context.SubCategories.Select(p => new SubCategory
             {
                 Id = p.Id,
                 Name = p.Name,
                 IdTaxe = p.IdTaxe,
                 IdPromotionCode = p.IdPromotionCode,
-                IdPackageProfil = p.IdPackageProfil,
-                ContentCode = p.ContentCode
+                ContentCode = p.ContentCode,
+                IdCategory = p.IdCategory
             }).ToListAsync();
 
-            return CategoryEntities;
+            return SubCategoryEntities;
         }
 
 
-        public async Task<Category> UpdateCategorysAsync(Category model)
+        public async Task<SubCategory> UpdateSubCategorysAsync(SubCategory model)
         {
-            var CategoryToUpdate = await _context.Categories.FirstOrDefaultAsync(u => u.Id == model.Id);
+            var SubCategoryToUpdate = await _context.SubCategories.FirstOrDefaultAsync(u => u.Id == model.Id);
             var GetPromotion = await _context.PromotionCodes.FirstOrDefaultAsync(s => s.Id == model.IdPromotionCode);
 
 
-            if (CategoryToUpdate == null)
+            if (SubCategoryToUpdate == null)
                 return null; // ou throw une exception
 
             // On met à jour ses propriétés
-            if (model.Name != null) CategoryToUpdate.Name = model.Name;
-            if (model.IdTaxe != null) CategoryToUpdate.IdTaxe = model.IdTaxe;
-            if (model.IdPackageProfil != null) CategoryToUpdate.IdPackageProfil = model.IdPackageProfil;
-            if (model.ContentCode != null) CategoryToUpdate.ContentCode = model.ContentCode;
+            if (model.Name != null) SubCategoryToUpdate.Name = model.Name;
+            if (model.IdTaxe != null) SubCategoryToUpdate.IdTaxe = model.IdTaxe;
+            if (model.ContentCode != null) SubCategoryToUpdate.ContentCode = model.ContentCode;
+            if (model.IdCategory != null) SubCategoryToUpdate.IdCategory = model.IdCategory;
 
 
             if (GetPromotion != null)
             {
-                if (model.IdPromotionCode != null) CategoryToUpdate.IdPromotionCode = model.IdPromotionCode;
+                if (model.IdPromotionCode != null) SubCategoryToUpdate.IdPromotionCode = model.IdPromotionCode;
             }
             else
-                CategoryToUpdate.IdPromotionCode = null;
+                SubCategoryToUpdate.IdPromotionCode = null;
 
 
             await _context.SaveChangesAsync();
 
 
-            return new Category()
+            return new SubCategory()
             {
                 Id = model.Id,
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
-                IdPackageProfil = model.IdPackageProfil,
+                IdCategory = model.IdCategory,
                 ContentCode = model.ContentCode
             };
         }
 
 
-        public async Task<Category> AddCategorysAsync(Domain.Models.Category model)
+        public async Task<SubCategory> AddSubCategorysAsync(Domain.Models.SubCategory model)
         {
-            var newCategory = new Dal.Entities.Category
+            var newSubCategory = new Dal.Entities.SubCategory
             {
                 Id = model.Id,
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
-                IdPackageProfil = model.IdPackageProfil,
+                IdCategory = model.IdCategory,
                 ContentCode = model.ContentCode
             };
 
-            _context.Categories.Add(newCategory);
+            _context.SubCategories.Add(newSubCategory);
             _context.SaveChanges();
 
-            return new Category()
+            return new SubCategory()
             {
                 Id = model.Id,
                 Name = model.Name,
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
-                IdPackageProfil = model.IdPackageProfil,
+                IdCategory = model.IdCategory,
                 ContentCode = model.ContentCode
             };
         }
 
 
-        public async Task<bool> DeleteCategorysAsync(int idCategory)
+        public async Task<bool> DeleteSubCategorysAsync(int idSubCategory)
         {
-            var CategoryToDelete = await _context.Categories.FirstOrDefaultAsync(u => u.Id == idCategory);
+            var SubCategoryToDelete = await _context.SubCategories.FirstOrDefaultAsync(u => u.Id == idSubCategory);
 
-            if (CategoryToDelete == null)
+            if (SubCategoryToDelete == null)
                 return false; // ou throw une exception;
 
-            _context.Categories.Remove(CategoryToDelete);
+            _context.SubCategories.Remove(SubCategoryToDelete);
             await _context.SaveChangesAsync();
 
             return true;

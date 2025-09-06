@@ -25,15 +25,11 @@ namespace MinshpWebApp.Api.Controllers
         public ShippingController(IShippingProvider provider, IMemoryCache cache, IOrderRepository orders, IBoxalProviderViewModelBuilder boxalProviderViewModelBuilder)
         { _provider = provider; _cache = cache; _orders = orders; _boxalProviderViewModelBuilder = boxalProviderViewModelBuilder; }
 
-        [HttpGet("rates")]
+        [HttpPost("rates")]
         public async Task<IActionResult> GetRates([FromBody] OrderDetailsRequest request)
         {
-            var key = $"rates:{request.RecipientZipCode}:{request.RecipientCountry}:{request.PackageWeight}: {request.PackageValue}";
-            if (!_cache.TryGetValue(key, out List<RateViewModel>? rates))
-            {
-                rates = await _boxalProviderViewModelBuilder.GetRatesAsync(request);
-                _cache.Set(key, rates, TimeSpan.FromMinutes(10));
-            }
+                var rates = await _boxalProviderViewModelBuilder.GetRatesAsync(request);
+            
             return Ok(rates);
         }
 
@@ -83,9 +79,24 @@ namespace MinshpWebApp.Api.Controllers
 
 
 
-        [HttpPost("create-shipment")]
-        public async Task<IActionResult> CreateShipment([FromQuery] int orderId, [FromBody] CreateShipmentCmd cmd)
+        [HttpGet("contentCodes")]
+        public async Task<IActionResult> GetContentCategoriesAsync()
         {
+            var key = $"content";
+            if (!_cache.TryGetValue(key, out CodeCategoriesViewModel? codes))
+            {
+                codes = await _boxalProviderViewModelBuilder.GetContentCategoriesAsync();
+                _cache.Set(key, codes, TimeSpan.FromMinutes(10));
+            }
+            return Ok(codes);
+        }
+
+
+
+        [HttpPost("create-shipment")]
+        public async Task<IActionResult> CreateShipment([FromBody] CreateShipmentCmd cmd)
+        {
+            int orderId = (int)cmd.Shipment.OrderId;
             var order = await _orders.GetByIdAsync(orderId);
             if (order is null) return NotFound();
 

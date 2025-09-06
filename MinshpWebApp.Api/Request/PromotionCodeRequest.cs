@@ -18,5 +18,7 @@
 
         public int? IdProduct { get; set; }
         public int? IdCategory { get; set; }
+
+        public int? IdSubCategory { get; set; }
     }
 }

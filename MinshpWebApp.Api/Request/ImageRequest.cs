@@ -11,5 +11,6 @@
         public int? Position { get; set; }
 
         public int? IdCategory { get; set; }
+        public int? IdSubCategory { get; set; }
     }
 }

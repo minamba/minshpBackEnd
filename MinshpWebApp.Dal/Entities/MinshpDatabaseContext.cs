@@ -48,6 +48,8 @@ public partial class MinshpDatabaseContext : DbContext
 
     public virtual DbSet<Stock> Stocks { get; set; }
 
+    public virtual DbSet<SubCategory> SubCategories { get; set; }
+
     public virtual DbSet<Taxe> Taxes { get; set; }
     public virtual DbSet<Video> Videos { get; set; }
 
@@ -159,6 +161,7 @@ public partial class MinshpDatabaseContext : DbContext
         modelBuilder.Entity<Category>(entity =>
         {
             entity.ToTable("Category");
+            entity.Property(e => e.ContentCode).HasColumnName("Content_code");
             entity.Property(e => e.IdPromotionCode).HasColumnName("Id_promotion_code");
             entity.Property(e => e.IdPackageProfil).HasColumnName("Id_package_profil");
             entity.Property(e => e.IdTaxe).HasColumnName("Id_taxe");
@@ -256,6 +259,7 @@ public partial class MinshpDatabaseContext : DbContext
 
             entity.Property(e => e.Id_product).HasColumnName("Id_product");
             entity.Property(e => e.IdCategory).HasColumnName("Id_category");
+            entity.Property(e => e.IdSubCategory).HasColumnName("Id_sub_category");
         });
 
 
@@ -398,6 +402,7 @@ public partial class MinshpDatabaseContext : DbContext
             entity.Property(e => e.Id_Category).HasColumnName("Id_Category");
             entity.Property(e => e.IdPackageProfil).HasColumnName("Id_package_profil");
             entity.Property(e => e.IdPromotionCode).HasColumnName("Id_promotion_code");
+            entity.Property(e => e.IdSubCategory).HasColumnName("Id_sub_category");
             entity.Property(e => e.CreationDate)
                 .HasColumnType("datetime")
                 .HasColumnName("Creation_Date");
@@ -475,6 +480,22 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasForeignKey(d => d.IdProduct)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Stock_Product");
+        });
+
+
+        modelBuilder.Entity<SubCategory>(entity =>
+        {
+            entity.ToTable("Sub_Category");
+
+            entity.Property(e => e.ContentCode).HasColumnName("Content_code");
+            entity.Property(e => e.IdCategory).HasColumnName("Id_category");
+            entity.Property(e => e.IdPromotionCode).HasColumnName("Id_promotion_code");
+            entity.Property(e => e.IdTaxe).HasColumnName("Id_taxe");
+
+            entity.HasOne(d => d.IdCategoryNavigation).WithMany(p => p.SubCategories)
+                .HasForeignKey(d => d.IdCategory)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Sub_Category_Category");
         });
 
 

@@ -14,14 +14,16 @@ namespace MinshpWebApp.Api.Builders.impl
         private IPromotionCodeService _promotionCodeService;
         private IProductViewModelBuilder _productVm;
         private ICategoryViewModelBuilder _categoryVm;
+        private ISubCategoryViewModelBuilder _subCategoryVm;
 
 
-        public PromotionCodeViewModelBuilder(IPromotionCodeService promotionCodeService, IProductViewModelBuilder productVm, ICategoryViewModelBuilder categoryVm, IMapper mapper)
+        public PromotionCodeViewModelBuilder(IPromotionCodeService promotionCodeService, IProductViewModelBuilder productVm, ICategoryViewModelBuilder categoryVm, ISubCategoryViewModelBuilder subCategoryVm, IMapper mapper)
         {
             _mapper = mapper;
             _promotionCodeService = promotionCodeService;
             _productVm = productVm;
             _categoryVm = categoryVm;
+            _subCategoryVm = subCategoryVm;
         }
 
 
@@ -31,24 +33,38 @@ namespace MinshpWebApp.Api.Builders.impl
 
             var getProduct = (await _productVm.GetProductsAsync()).FirstOrDefault(p => p.Id == model.IdProduct);
             var getCategory = (await _categoryVm.GetCategoriesAsync()).FirstOrDefault(p => p.Id == model.IdCategory);
+            var getSubCategory = (await _subCategoryVm.GetSubCategoriesAsync()).FirstOrDefault(p => p.Id == model.IdSubCategory);
 
-
-            if (model.IdProduct != null && model.IdCategory != null)
+            if(model.IdProduct != null && model.IdCategory != null && model.IdSubCategory != null)
             {
                 var productRequest = new ProductRequest();
                 productRequest.Id = getProduct.Id;
                 productRequest.IdPromotionCode = result.Id;
                 await _productVm.UpdateProductsAsync(productRequest);
             }
-            else if (model.IdCategory != null && model.IdProduct == null)
+            else if (model.IdProduct != null && model.IdCategory != null && model.IdSubCategory == null)
+            {
+                var productRequest = new ProductRequest();
+                productRequest.Id = getProduct.Id;
+                productRequest.IdPromotionCode = result.Id;
+                await _productVm.UpdateProductsAsync(productRequest);
+            }
+            else if (model.IdCategory != null && model.IdProduct == null && model.IdSubCategory == null)
             {
                 var categoryRequest = new CategoryRequest();
                 categoryRequest.Id = getCategory.Id;
                 categoryRequest.IdPromotionCode = result.Id;
                 await _categoryVm.UpdateCategorysAsync(categoryRequest);
             }
+            else if(model.IdSubCategory != null && model.IdCategory != null && model.IdProduct == null)
+            {
+                var subCategoryRequest = new SubCategoryRequest();
+                subCategoryRequest.Id = getSubCategory.Id;
+                subCategoryRequest.IdPromotionCode = result.Id;
+                await _subCategoryVm.UpdateSubCategorysAsync(subCategoryRequest);
+            }
 
-            return result;
+                return result;
         }
 
         public async Task<bool> DeletePromotionCodesAsync(int idPromotionCode)
@@ -57,6 +73,7 @@ namespace MinshpWebApp.Api.Builders.impl
 
             var getProduct = (await _productVm.GetProductsAsync()).FirstOrDefault(p => p.IdPromotionCode == idPromotionCode);
             var getCategory = (await _categoryVm.GetCategoriesAsync()).FirstOrDefault(p => p.IdPromotionCode == idPromotionCode);
+            var getSubCategory = (await _subCategoryVm.GetSubCategoriesAsync()).FirstOrDefault(p => p.IdPromotionCode == idPromotionCode);
 
             if (getProduct != null)
             {
@@ -76,6 +93,15 @@ namespace MinshpWebApp.Api.Builders.impl
             }
 
 
+            if (getCategory != null)
+            {
+                var subCategoryRequest = new SubCategoryRequest();
+                subCategoryRequest.Id = getCategory.Id;
+                subCategoryRequest.IdPromotionCode = idPromotionCode;
+                await _subCategoryVm.UpdateSubCategorysAsync(subCategoryRequest);
+            }
+
+
             return result;
         }
 
@@ -89,8 +115,10 @@ namespace MinshpWebApp.Api.Builders.impl
             {
                 var getProudct = (await _productVm.GetProductsAsync()).FirstOrDefault(p => p.IdPromotionCode == item.Id);
                 var getCategory = (await _categoryVm.GetCategoriesAsync()).FirstOrDefault(p => p.IdPromotionCode == item.Id);
+                var getSubCategory = (await _subCategoryVm.GetSubCategoriesAsync()).FirstOrDefault(p => p.IdPromotionCode == item.Id);
                 item.Product = getProudct;
                 item.Category = getCategory;
+                item.SubCategory = getSubCategory;
             }
 
             return list;

@@ -23,6 +23,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
+              .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
             CreateMap<ProductDto, Product>()
@@ -37,6 +38,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
+              .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
 
@@ -74,12 +76,14 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
+              .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
             CreateMap<Category, CategoryViewModel>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.TaxeId, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
+              .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
@@ -97,6 +101,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory))
+              .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
 
 
@@ -107,6 +112,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory))
+              .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description));
 
             CreateMap<VideoRequest, Video>()
@@ -415,14 +421,18 @@ namespace MinshpWebApp.Api.Mapper
                .ForMember(x => x.RecipientCountry, dest => dest.MapFrom(x => x.RecipientCountry))
                .ForMember(x => x.RecipientType, dest => dest.MapFrom(x => x.RecipientType))
                .ForMember(x => x.RecipientZipCode, dest => dest.MapFrom(x => x.RecipientZipCode))
-
-               .ForMember(x => x.PackageWidth, dest => dest.MapFrom(x => x.PackageWidth))
-               .ForMember(x => x.PackageHeight, dest => dest.MapFrom(x => x.PackageHeight))
-               .ForMember(x => x.PackageLonger, dest => dest.MapFrom(x => x.PackageLonger))
-               .ForMember(x => x.PackageWeight, dest => dest.MapFrom(x => x.PackageWeight))
-               .ForMember(x => x.PackageValue, dest => dest.MapFrom(x => x.PackageValue))
+               .ForMember(x => x.Packages, dest => dest.MapFrom(x => x.Packages))
                .ForMember(x => x.ContainedCode, dest => dest.MapFrom(x => x.ContainedCode));
 
+
+            CreateMap<PackageRequest, Package>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.ContainedCode, dest => dest.MapFrom(x => x.ContainedCode))
+               .ForMember(x => x.PackageValue, dest => dest.MapFrom(x => x.PackageValue))
+               .ForMember(x => x.PackageWidth, dest => dest.MapFrom(x => x.PackageWidth))
+               .ForMember(x => x.PackageWeight, dest => dest.MapFrom(x => x.PackageWeight))
+               .ForMember(x => x.PackageHeight, dest => dest.MapFrom(x => x.PackageHeight))
+               .ForMember(x => x.PackageLonger, dest => dest.MapFrom(x => x.PackageLonger));
 
             CreateMap<RateViewModel, Rate>()
                .ForMember(x => x.Code, dest => dest.MapFrom(x => x.Code))
@@ -469,6 +479,33 @@ namespace MinshpWebApp.Api.Mapper
                .ForMember(x => x.Weight, dest => dest.MapFrom(x => x.Weight))
                .ForMember(x => x.Longer, dest => dest.MapFrom(x => x.Longer))
                .ForMember(x => x.Height, dest => dest.MapFrom(x => x.Height));
+
+
+            CreateMap<CodeCategories, CodeCategoriesViewModel>()
+               .ForMember(x => x.AllCodeCategories, dest => dest.MapFrom(x => x.AllCodeCategories));
+
+
+
+            CreateMap<CodeCategory, CodeCategoryViewModel>()
+               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.Label, dest => dest.MapFrom(x => x.Label));
+
+
+            CreateMap<SubCategoryRequest, SubCategory>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
+              .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
+              .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
+              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
+
+
+
+            CreateMap<SubCategory, SubCategoryViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
+              .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
+              .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
+              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
         }
     }
 }

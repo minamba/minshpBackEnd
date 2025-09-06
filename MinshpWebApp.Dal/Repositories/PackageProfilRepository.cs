@@ -52,6 +52,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Height != null) PackageProfilToUpdate.Height = model.Height;
             if (model.Width != null) PackageProfilToUpdate.Width = model.Width;
             if (model.Name != null) PackageProfilToUpdate.Name = model.Name;
+            if (model.Weight != null) PackageProfilToUpdate.Weight = model.Weight;
 
             await _context.SaveChangesAsync();
 

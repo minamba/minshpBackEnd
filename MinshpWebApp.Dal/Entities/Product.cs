@@ -29,6 +29,8 @@ public partial class Product
 
     public int? IdPackageProfil { get; set; }
 
+    public int? IdSubCategory { get; set; }
+
     public virtual Category? IdCategoryNavigation { get; set; }
 
     public virtual ICollection<ProductFeature> ProductFeatures { get; set; } = new List<ProductFeature>();

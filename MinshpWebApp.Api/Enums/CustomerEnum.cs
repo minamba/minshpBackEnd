@@ -2,7 +2,7 @@
 {
     public enum CustomerEnum
     {
-        PROFESSIONNEL,
+        ENTREPRISE,
         PARTICULIER
     }
 }

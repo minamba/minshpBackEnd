@@ -12,4 +12,6 @@ public partial class Category
     public int? IdPromotionCode { get; set; }
 
     public int? IdPackageProfil { get; set; }
+
+    public int? ContentCode { get; set; }
 }

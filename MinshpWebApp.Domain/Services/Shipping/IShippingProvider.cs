@@ -25,12 +25,12 @@ namespace MinshpWebApp.Domain.Services.Shipping
         Dictionary<string, List<OpeningInterval>>? openingDays = null
     );
 
-    public record CreateShipmentCmd(
-        string serviceCode, bool isRelay, string? relayId,
-        string toFirstName, string toLastName,
-        string toStreet, string? toExtra,
-        string toZip, string toCity, string toCountry,
-        decimal weightKg, decimal declaredValue);
+    //public record CreateShipmentCmd(
+    //    string serviceCode, bool isRelay, string? relayId,
+    //    string toFirstName, string toLastName,
+    //    string toStreet, string? toExtra,
+    //    string toZip, string toCity, string toCountry,
+    //    decimal weightKg, decimal declaredValue);
 
     public record ShipmentResult(string providerShipmentId, string carrier, string serviceCode, string trackingNumber, string labelUrl);
 
@@ -41,5 +41,6 @@ namespace MinshpWebApp.Domain.Services.Shipping
         Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd);
 
         Task<List<Relay>> GetRelaysByAddressAsync(RelaysAddress q);
+        Task<CodeCategories> GetContentCategoriesAsync();
     }
 }

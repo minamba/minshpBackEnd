@@ -23,13 +23,26 @@ namespace MinshpWebApp.Domain.Models
 
 
         //colis
-        public string PackageWeight { get; set; }
-        public string PackageLonger { get; set; }
-        public string PackageWidth { get; set; }
-        public string PackageHeight { get; set; }
-        public decimal PackageValue { get; set; }
+        public IEnumerable<Package> Packages { get; set; }
 
         //code contenue
         public string ContainedCode { get; set; }
+    }
+
+
+
+    public class Package
+    {
+        public string? Id { get; set; }
+        public string? Type { get; set; }
+
+        public string? ContainedCode { get; set; }
+        public string? PackageWeight { get; set; }
+        public string? PackageLonger { get; set; }
+        public string? PackageWidth { get; set; }
+        public string? PackageHeight { get; set; }
+        public decimal? PackageValue { get; set; }
+        public bool? PackageStackable { get; set; }
+        public string? ExternalId { get; set; }
     }
 }

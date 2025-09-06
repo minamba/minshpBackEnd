@@ -38,9 +38,13 @@ namespace MinshpWebApp.Api.Builders.impl
         public async Task<List<RateViewModel>> GetRatesAsync(OrderDetailsRequest request)
         {
             var orderDetails = _mapper.Map<OrderDetails>(request);
-            var result = await _shippingProvider.GetRatesAsync(orderDetails);
+            var rates = await _shippingProvider.GetRatesAsync(orderDetails);
+            var ratesFilteredByIsRelay = rates.Where(r => r.IsRelay == true);
 
-            return _mapper.Map<List<RateViewModel>>(result);
+         
+
+            return _mapper.Map<List<RateViewModel>>(rates);
+
         }
 
         public async Task<List<Relay>> GetRelaysAsync(string zip, string country, int limit = 20)
@@ -80,6 +84,22 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
             return relayAddressLstVm;
+        }
+
+
+        public async Task<CodeCategoriesViewModel> GetContentCategoriesAsync()
+        {
+            var codeCategories = await _shippingProvider.GetContentCategoriesAsync();
+
+            var result =  _mapper.Map<CodeCategoriesViewModel>(codeCategories);
+
+            foreach (var r in result.AllCodeCategories)
+            {
+                var code = r.Id.Split(":");
+                r.Id = code[2];
+            }
+
+            return result;
         }
 
 

@@ -14,7 +14,11 @@ public partial class Category
 
     public int? IdPackageProfil { get; set; }
 
+    public int? ContentCode { get; set; }
+
     public virtual ICollection<Feature> Features { get; set; } = new List<Feature>();
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+
+    public virtual ICollection<SubCategory> SubCategories { get; set; } = new List<SubCategory>();
 }
