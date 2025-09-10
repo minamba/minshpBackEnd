@@ -15,5 +15,14 @@ namespace MinshpWebApp.Domain.Models
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
+
+
+        public string? DefaultDropOffMondialRelay { get; set; }
+
+        public string? DefaultDropOffChronoPost { get; set; }
+
+        public string? DefaultDropOffUps { get; set; }
+
+        public string? DefaultDropLaposte { get; set; }
     }
 }

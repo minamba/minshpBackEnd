@@ -62,7 +62,10 @@ public partial class MinshpDatabaseContext : DbContext
         modelBuilder.Entity<Application>(entity =>
         {
             entity.ToTable("Application");
-
+            entity.Property(e => e.DefaultDropOffChronoPost).HasColumnName("Default_dropOff_chronoPost");
+            entity.Property(e => e.DefaultDropOffMondialRelay).HasColumnName("Default_dropOff_mondialRelay");
+            entity.Property(e => e.DefaultDropOffUps).HasColumnName("Default_dropOff_ups");
+            entity.Property(e => e.DefaultDropLaposte).HasColumnName("Default_dropOff_laposte");
             entity.Property(e => e.DisplayNewProductNumber).HasColumnName("Display_new_product_number");
             entity.Property(e => e.EndDate)
                 .HasColumnType("datetime")

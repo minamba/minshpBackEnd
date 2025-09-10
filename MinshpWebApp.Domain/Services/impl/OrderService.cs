@@ -31,7 +31,7 @@ namespace MinshpWebApp.Domain.Services.impl
             return await _repository.FindByShipmentIdAsync(providerShipmentId);
         }
 
-        public async Task<Order> GetByIdAsync(int id)
+        public async Task<Order> GetByIdAsync(string id)
         {
             return await (_repository.GetByIdAsync(id));
         }

@@ -13,12 +13,16 @@ namespace MinshpWebApp.Api.Builders.impl
 
         private IMapper _mapper;
         private ICustomerService _customerService;
+        private IDeliveryAddressViewModelBuilder _deliveryAddressService;
+        private IBillingAddressViewModelBuilder _billingAddressService;
 
 
-        public CustomerViewModelBuilder(ICustomerService customerService, IMapper mapper)
+        public CustomerViewModelBuilder(ICustomerService customerService, IDeliveryAddressViewModelBuilder deliveryAddressService, IBillingAddressViewModelBuilder billingAddressService, IMapper mapper)
         {
             _mapper = mapper;
             _customerService = customerService;
+            _deliveryAddressService = deliveryAddressService;
+            _billingAddressService = billingAddressService;
         }
 
         public async Task<Customer> AddCustomersAsync(CustomerRequest model)
@@ -37,7 +41,21 @@ namespace MinshpWebApp.Api.Builders.impl
         {
             var result = await _customerService.GetCustomersAsync();
 
-            return _mapper.Map<IEnumerable<CustomerViewModel>>(result);
+
+
+            var list =  _mapper.Map<IEnumerable<CustomerViewModel>>(result);
+
+
+            foreach (var item in list)
+            {
+                var getDeliveryAdresses = (await _deliveryAddressService.GetDeliveryAddressesAsync()).Where(p => p.IdCustomer == item.Id);
+                var getBillingAdresse = (await _billingAddressService.GetBillingAddressesAsync()).FirstOrDefault(p => p.IdCustomer == item.Id);
+                item.DeliveryAddresses = getDeliveryAdresses;
+                item.BillingAddress = getBillingAdresse;
+            }
+
+            return list;
+
         }
 
         public async Task<Customer> UpdateCustomersAsync(CustomerRequest model)

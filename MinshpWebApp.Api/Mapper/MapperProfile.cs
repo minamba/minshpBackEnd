@@ -175,6 +175,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.RelayLabel, dest => dest.MapFrom(x => x.RelayLabel))
               .ForMember(x => x.BoxtalShipmentId, dest => dest.MapFrom(x => x.BoxtalShipmentId))
               .ForMember(x => x.TrackingNumber, dest => dest.MapFrom(x => x.TrackingNumber))
+              .ForMember(x => x.TrackingLink, dest => dest.MapFrom(x => x.TrackingLink))
               .ForMember(x => x.LabelUrl, dest => dest.MapFrom(x => x.LabelUrl))
               .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
 
@@ -193,7 +194,8 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.RelayId, dest => dest.MapFrom(x => x.RelayId))                          
               .ForMember(x => x.RelayLabel, dest => dest.MapFrom(x => x.RelayLabel))                    
               .ForMember(x => x.BoxtalShipmentId, dest => dest.MapFrom(x => x.BoxtalShipmentId))                          
-              .ForMember(x => x.TrackingNumber, dest => dest.MapFrom(x => x.TrackingNumber))                    
+              .ForMember(x => x.TrackingNumber, dest => dest.MapFrom(x => x.TrackingNumber))
+              .ForMember(x => x.TrackingLink, dest => dest.MapFrom(x => x.TrackingLink))
               .ForMember(x => x.LabelUrl, dest => dest.MapFrom(x => x.LabelUrl))
               .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
 
@@ -300,6 +302,10 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.DisplayNewProductNumber, dest => dest.MapFrom(x => x.DisplayNewProductNumber))
               .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
+              .ForMember(x => x.DefaultDropOffChronoPost, dest => dest.MapFrom(x => x.DefaultDropOffChronoPost))
+              .ForMember(x => x.DefaultDropOffUps, dest => dest.MapFrom(x => x.DefaultDropOffUps))
+              .ForMember(x => x.DefaultDropOffMondialRelay, dest => dest.MapFrom(x => x.DefaultDropOffMondialRelay))
+              .ForMember(x => x.DefaultDropLaposte, dest => dest.MapFrom(x => x.DefaultDropLaposte))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
 
 
@@ -307,6 +313,9 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.DisplayNewProductNumber, dest => dest.MapFrom(x => x.DisplayNewProductNumber))
               .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
+              .ForMember(x => x.DefaultDropOffChronoPost, dest => dest.MapFrom(x => x.DefaultDropOffChronoPost))
+              .ForMember(x => x.DefaultDropOffUps, dest => dest.MapFrom(x => x.DefaultDropOffUps))
+              .ForMember(x => x.DefaultDropOffMondialRelay, dest => dest.MapFrom(x => x.DefaultDropOffMondialRelay))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
 
 
@@ -409,6 +418,8 @@ namespace MinshpWebApp.Api.Mapper
                .ForMember(x => x.Carrier, dest => dest.MapFrom(x => x.Carrier))
                .ForMember(x => x.PriceTtc, dest => dest.MapFrom(x => x.PriceTtc))
                .ForMember(x => x.IsRelay, dest => dest.MapFrom(x => x.IsRelay))
+               .ForMember(x => x.DropOffPointCodes, dest => dest.MapFrom(x => x.DropOffPointCodes))
+               .ForMember(x => x.PickupPointCodes, dest => dest.MapFrom(x => x.PickupPointCodes))
                .ForMember(x => x.Label, dest => dest.MapFrom(x => x.Label));
 
 

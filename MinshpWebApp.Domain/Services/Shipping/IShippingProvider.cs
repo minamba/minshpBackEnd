@@ -38,8 +38,8 @@ namespace MinshpWebApp.Domain.Services.Shipping
     {
         Task<List<Rate>> GetRatesAsync(OrderDetails orderDetails);
         Task<List<Relay>> GetRelaysAsync(string zip, string country, int limit = 20);
-        Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd);
-
+        //Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd); //pour la v3
+        Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd); //pour la v3
         Task<List<Relay>> GetRelaysByAddressAsync(RelaysAddress q);
         Task<CodeCategories> GetContentCategoriesAsync();
     }

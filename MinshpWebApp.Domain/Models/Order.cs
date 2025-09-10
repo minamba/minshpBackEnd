@@ -34,5 +34,7 @@ public partial class Order
     public string? TrackingNumber { get; set; }          // n° suivi
     public string? LabelUrl { get; set; }                // URL étiquette
 
+    public string? TrackingLink { get; set; }
+
 
 }

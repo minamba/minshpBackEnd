@@ -28,6 +28,10 @@ namespace MinshpWebApp.Dal.Repositories
                 DisplayNewProductNumber = p.DisplayNewProductNumber,
                 StartDate = p.StartDate,
                 EndDate = p.EndDate,
+                DefaultDropOffChronoPost = p.DefaultDropOffChronoPost,
+                DefaultDropOffMondialRelay = p.DefaultDropOffMondialRelay,
+                DefaultDropOffUps = p.DefaultDropOffUps,
+                DefaultDropLaposte = p.DefaultDropLaposte
             }).ToListAsync();
 
             return ApplicationEntities;
@@ -45,6 +49,10 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.StartDate != null) ApplicationToUpdate.StartDate = model.StartDate;
             if (model.EndDate != null) ApplicationToUpdate.EndDate = model.EndDate;
             if (model.DisplayNewProductNumber != null) ApplicationToUpdate.DisplayNewProductNumber = model.DisplayNewProductNumber;
+            if (model.DefaultDropOffChronoPost != null) ApplicationToUpdate.DefaultDropOffChronoPost = model.DefaultDropOffChronoPost;
+            if (model.DefaultDropOffMondialRelay != null) ApplicationToUpdate.DefaultDropOffMondialRelay = model.DefaultDropOffMondialRelay;
+            if (model.DefaultDropOffUps != null) ApplicationToUpdate.DefaultDropOffUps = model.DefaultDropOffUps;
+            if (model.DefaultDropLaposte != null) ApplicationToUpdate.DefaultDropLaposte = model.DefaultDropLaposte;
 
 
 
@@ -57,6 +65,10 @@ namespace MinshpWebApp.Dal.Repositories
                 DisplayNewProductNumber = ApplicationToUpdate.DisplayNewProductNumber,
                 StartDate = ApplicationToUpdate.StartDate,
                 EndDate = ApplicationToUpdate.EndDate,
+                DefaultDropOffChronoPost = ApplicationToUpdate.DefaultDropOffChronoPost,
+                DefaultDropOffMondialRelay = ApplicationToUpdate.DefaultDropOffMondialRelay,
+                DefaultDropOffUps = ApplicationToUpdate.DefaultDropOffUps,
+                DefaultDropLaposte = ApplicationToUpdate.DefaultDropLaposte,
             };
         }
 
@@ -69,6 +81,10 @@ namespace MinshpWebApp.Dal.Repositories
                 DisplayNewProductNumber = model.DisplayNewProductNumber,
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
+                DefaultDropOffChronoPost = model.DefaultDropOffChronoPost,
+                DefaultDropOffMondialRelay = model.DefaultDropOffMondialRelay,
+                DefaultDropOffUps = model.DefaultDropOffUps,
+                DefaultDropLaposte = model.DefaultDropLaposte,
             };
 
             _context.Applications.Add(newApplication);
@@ -80,6 +96,10 @@ namespace MinshpWebApp.Dal.Repositories
                 DisplayNewProductNumber = newApplication.DisplayNewProductNumber,
                 StartDate = newApplication.StartDate,
                 EndDate = newApplication.EndDate,
+                DefaultDropOffChronoPost = newApplication.DefaultDropOffChronoPost,
+                DefaultDropOffMondialRelay = newApplication.DefaultDropOffMondialRelay,
+                DefaultDropOffUps = newApplication.DefaultDropOffUps,
+                DefaultDropLaposte = newApplication.DefaultDropLaposte,
             };
         }
 

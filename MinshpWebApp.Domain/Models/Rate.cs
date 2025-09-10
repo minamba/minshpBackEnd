@@ -13,5 +13,7 @@ namespace MinshpWebApp.Domain.Models
         public string Carrier { get; set; }
         public decimal PriceTtc { get; set; }
         public bool IsRelay { get; set; }
+        public List<string> DropOffPointCodes { get; set; }
+        public List<string> PickupPointCodes { get; set; }
     }
 }

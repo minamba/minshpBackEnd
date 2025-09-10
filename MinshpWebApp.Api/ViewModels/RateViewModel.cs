@@ -9,5 +9,8 @@
         public decimal? PriceTtc { get; set; }
 
         public bool? IsRelay { get; set; }
+
+        public List<string> DropOffPointCodes { get; set; }
+        public List<string> PickupPointCodes { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MinshpWebApp.Api.Request;
+using MinshpWebApp.Api.Utils;
 using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
@@ -40,7 +41,7 @@ namespace MinshpWebApp.Api.Builders.impl
             return await _orderService.FindByShipmentIdAsync(providerShipmentId);
         }
 
-        public async Task<Order> GetByIdAsync(int id)
+        public async Task<Order> GetByIdAsync(string id)
         {
             return await (_orderService.GetByIdAsync(id));
         }
@@ -51,6 +52,7 @@ namespace MinshpWebApp.Api.Builders.impl
             var customers = await _customerViewModelBuilder.GetCustomersAsync();
             var products = await _productViewModelBuilder.GetProductsAsync();
             var orderCustomerProducts = await _orderCustomerProductViewModelBuilder.GetOrderCustomerProductsAsync();
+            string trackingLink = null;
 
             var groupOrders =
                 from o in orders
@@ -95,6 +97,17 @@ namespace MinshpWebApp.Api.Builders.impl
                 }
 
                 customer = customers.FirstOrDefault(c => c.Id == Order.CustomerId);
+
+
+                if (customer.DeliveryAddresses.Count() > 0)
+                {
+                    var customerDeliveryAdress = customer.DeliveryAddresses.FirstOrDefault(d => d.Favorite == true);
+                    trackingLink = TrackingLink.Build(Order.Carrier, Order.TrackingNumber, customerDeliveryAdress.PostalCode.ToString());
+                }
+
+       
+                
+                Console.WriteLine("fock");
                 var ordervm = new OrderViewModel
                     {
                         Id = Order.Id,
@@ -105,8 +118,17 @@ namespace MinshpWebApp.Api.Builders.impl
                         Status = Order.Status,
                         OrderNumber = Order.OrderNumber,
                         Customer = customer,
-                        Products = ProductVmList
-                    };
+                        Products = ProductVmList,
+                        TrackingNumber = Order.TrackingNumber,
+                        DeliveryMode = Order.DeliveryMode,
+                        BoxtalShipmentId = Order.BoxtalShipmentId,
+                        LabelUrl = Order.LabelUrl,
+                        Carrier = Order.Carrier,
+                        RelayId = Order.RelayId,
+                        RelayLabel = Order.RelayLabel,
+                        ServiceCode = Order.ServiceCode,
+                        TrackingLink = trackingLink
+                };
                     orderVmList.Add(ordervm);
                     ProductVmList = new List<ProductVIewModel>();
             }

@@ -15,6 +15,6 @@ namespace MinshpWebApp.Domain.Repositories
         Task<bool> DeleteOrdersAsync(int idOrder);
 
         Task<Order> FindByShipmentIdAsync(string providerShipmentId);
-        Task<Order> GetByIdAsync(int id);
+        Task<Order> GetByIdAsync(string id);
     }
 }

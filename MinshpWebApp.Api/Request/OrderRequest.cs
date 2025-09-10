@@ -27,7 +27,9 @@
         public string? RelayLabel { get; set; }              // libellé point relais
         public string? BoxtalShipmentId { get; set; }        // id envoi Boxtal
         public string? TrackingNumber { get; set; }          // n° suivi
-        public string? LabelUrl { get; set; }                // URL étiquette
+        public string? LabelUrl { get; set; }             // URL étiquette
 
+        public string? TrackingLink { get; set; }
+        
     }
 }

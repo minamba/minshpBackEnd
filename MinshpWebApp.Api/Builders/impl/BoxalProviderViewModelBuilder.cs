@@ -1,10 +1,15 @@
 ﻿using AutoMapper;
 using Azure.Core;
+using Microsoft.Build.Tasks;
 using MinshpWebApp.Api.Enums;
 using MinshpWebApp.Api.Request;
+using MinshpWebApp.Api.Utils;
 using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services.Shipping;
+using System.Diagnostics.Metrics;
+using System.Globalization;
+using System.Linq;
 
 namespace MinshpWebApp.Api.Builders.impl
 {
@@ -30,18 +35,30 @@ namespace MinshpWebApp.Api.Builders.impl
             _shippingProvider = shippingProvider;
             _mapper = mapper;
         }
-        public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd)
+
+        //pour la v3
+        //public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd)
+        //{
+        //   return await _shippingProvider.CreateShipmentAsync(cmd);
+        //}
+
+        public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd)
         {
-           return await _shippingProvider.CreateShipmentAsync(cmd);
+            return await _shippingProvider.CreateShipmentAsync(cmd);
         }
 
         public async Task<List<RateViewModel>> GetRatesAsync(OrderDetailsRequest request)
         {
             var orderDetails = _mapper.Map<OrderDetails>(request);
             var rates = await _shippingProvider.GetRatesAsync(orderDetails);
-            var ratesFilteredByIsRelay = rates.Where(r => r.IsRelay == true);
 
-         
+            foreach (var r in rates)
+            {
+                if (r.PriceTtc > 50)
+                    r.PriceTtc = r.PriceTtc - (r.PriceTtc * (15/100m));
+            }
+
+
 
             return _mapper.Map<List<RateViewModel>>(rates);
 
@@ -58,32 +75,47 @@ namespace MinshpWebApp.Api.Builders.impl
             var relayLst =  await _shippingProvider.GetRelaysByAddressAsync(newRelaysByAddress);
             var relayAddressLstVm = new List<RelaysAddressViewModel>();
 
+            var address = q.Number + " " + q.Street + " " + q.PostalCode + " " + q.City;
 
-            foreach (var r in relayLst)
+            var getGeoPointFromAddress = await Geo.GeocodeWithNominatimAsync(address);
+
+
+            if (getGeoPointFromAddress != null)
             {
-                if (Enum.IsDefined(typeof(CarrierEnum), r.network))
+                foreach (var r in relayLst)
                 {
-                    var relayAddressVm = new RelaysAddressViewModel()
+
+
+
+                    if (Enum.IsDefined(typeof(CarrierEnum), r.network))
                     {
-                        Id = r.id,
-                        City = r.city,
-                        Name = r.name,
-                        Network = r.network,
-                        Carrier = await GetCarrier(r.network),
-                        Address = r.address,
-                        Distance = await GetDistance(r.distance.ToString()),
-                        Latitude = r.lat,
-                        Longitude = r.lng,
-                        ZipCode = r.zip,
-                        Schedules = await GetSchedules(r.openingDays)
-                    };
+                        var relayAddressVm = new RelaysAddressViewModel()
+                        {
+                            Id = r.id,
+                            City = r.city,
+                            Name = r.name,
+                            Network = r.network,
+                            Carrier = await GetCarrier(r.network),
+                            Address = r.address,
+                            Distance = await GetDistance(getGeoPointFromAddress.Lat, getGeoPointFromAddress.Lon, r.lat, r.lng),
+                            Latitude = r.lat,
+                            Longitude = r.lng,
+                            ZipCode = r.zip,
+                            Schedules = await GetSchedules(r.openingDays)
+                        };
 
                         relayAddressLstVm.Add(relayAddressVm);
+                    }
                 }
+
+                var result = relayAddressLstVm
+                            .OrderBy(p => ParseMeters(p.Distance))
+                            .ToList();
+
+                return result;
             }
 
-
-            return relayAddressLstVm;
+            return null;
         }
 
 
@@ -103,7 +135,69 @@ namespace MinshpWebApp.Api.Builders.impl
         }
 
 
-        private async Task<string?> GetSchedules(Dictionary<string, List<OpeningInterval>> OpeningDays) 
+        //METHODE POUR LA V3
+        //private async Task<string?> GetSchedules(Dictionary<string, List<OpeningInterval>> OpeningDays) 
+        //{
+        //    int countOpening = 0;
+        //    int countClosing = 0;
+
+        //    string openDay = null;
+        //    string closeDay = null;
+
+        //    string openHour = null;
+        //    string closeHour = null;
+
+        //    string schedules = null;
+
+        //    foreach (var o in OpeningDays.ToList())
+        //    {
+        //        DaysEnum dayEnum = Enum.Parse<DaysEnum>(o.Key);
+
+        //        string day = dayEnum switch
+        //        {
+        //            DaysEnum.MONDAY => monday,
+        //            DaysEnum.TUESDAY => tuesday,
+        //            DaysEnum.WEDNESDAY => wednesday,
+        //            DaysEnum.THURSDAY => thursday,
+        //            DaysEnum.FRIDAY => friday,
+        //            DaysEnum.SATURDAY => saturday,
+        //            DaysEnum.SUNDAY => sunday,
+        //        };
+
+        //        foreach(var s in o.Value)
+        //        {
+        //            if (s.openingTime != null)
+        //            {
+        //                countOpening++;
+        //                if (countOpening == 1)
+        //                {
+        //                    openDay = day;
+        //                    openHour = s.openingTime.ToString();
+        //                }
+        //            }
+
+
+        //            if (s.closingTime != null)
+        //            {
+        //                countClosing++;                         
+        //                closeHour = s.closingTime.ToString();
+        //            }
+
+        //                closeDay = day;
+        //        }
+
+
+
+        //    }
+        //    schedules = openDay + "-" + closeDay + " : " + openHour + "-" + closeHour;
+        //    return schedules;
+
+        //}
+
+
+
+        //METHODE POUR LA V1
+        private async Task<string?> GetSchedules(Dictionary<string, List<OpeningInterval>> OpeningDays)
         {
             int countOpening = 0;
             int countClosing = 0;
@@ -118,7 +212,7 @@ namespace MinshpWebApp.Api.Builders.impl
 
             foreach (var o in OpeningDays.ToList())
             {
-                DaysEnum dayEnum = Enum.Parse<DaysEnum>(o.Key);
+                DaysEnum dayEnum = Enum.Parse<DaysEnum>(o.Key.ToUpper());
 
                 string day = dayEnum switch
                 {
@@ -131,7 +225,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     DaysEnum.SUNDAY => sunday,
                 };
 
-                foreach(var s in o.Value)
+                foreach (var s in o.Value)
                 {
                     if (s.openingTime != null)
                     {
@@ -146,14 +240,14 @@ namespace MinshpWebApp.Api.Builders.impl
 
                     if (s.closingTime != null)
                     {
-                        countClosing++;                         
+                        countClosing++;
                         closeHour = s.closingTime.ToString();
                     }
 
-                        closeDay = day;
+                    closeDay = day;
                 }
 
-               
+
 
             }
             schedules = openDay + "-" + closeDay + " : " + openHour + "-" + closeHour;
@@ -178,26 +272,54 @@ namespace MinshpWebApp.Api.Builders.impl
 
         }
 
-        private async Task<string> GetDistance (string distance)
+
+        // GET DISTANCE POUR LA V3
+        //private async Task<string> GetDistance (string distance)
+        //{
+        //    double d = int.Parse(distance);
+        //    string dist = null;
+
+
+        //    if (d < 100)
+        //    {
+        //        d = d * 10;
+        //        dist = d.ToString() + "m";
+        //    }
+        //    else if (d >= 1000)
+        //    {
+        //        d = d / 1000;
+        //        dist = d.ToString() + "km";
+        //    }
+        //    else
+        //        dist = d.ToString() + "m";
+
+        //    return dist;
+        //}
+
+
+        // GET DISTANCE POUR LA V1
+        private async Task<string> GetDistance(double latitudeInputAdress, double longitudeinputAdress, double latitudeRelay, double longitudeRelay)
         {
-            double d = int.Parse(distance);
-            string dist = null;
 
+            var distance = Geo.HaversineMeters(latitudeInputAdress, longitudeinputAdress, latitudeRelay, longitudeRelay);
 
-            if (d < 100)
-            {
-                d = d * 10;
-                dist = d.ToString() + "m";
-            }
-            else if (d >= 1000)
-            {
-                d = d / 1000;
-                dist = d.ToString() + "km";
-            }
-            else
-                dist = d.ToString() + "m";
+            if (distance < 1000)
+                return $"{distance}m";
 
-            return dist;
+            var km = distance / 1000.0;
+            return km < 10
+                ? $"{km:0.0}km"
+                : $"{Math.Round(km):0}km";
         }
+
+
+        int ParseMeters(string s)
+        {
+            s = s.ToLowerInvariant().Trim();
+            return s.EndsWith("km")
+                ? (int)Math.Round(double.Parse(s[..^2], CultureInfo.InvariantCulture) * 1000)
+                : int.Parse(s[..^1], CultureInfo.InvariantCulture); // "123m"
+        }
+
     }
 }
