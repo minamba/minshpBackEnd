@@ -8,8 +8,8 @@
 
         public int? CustomerId { get; set; }
 
-        public DateTime? DateCreation { get; set; }
-
         public string? Representative { get; set; }
+
+        public string? InvoiceLink { get; set; }
     }
 }

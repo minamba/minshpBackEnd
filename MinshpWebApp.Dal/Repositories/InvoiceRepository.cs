@@ -66,11 +66,10 @@ namespace MinshpWebApp.Dal.Repositories
         {
             var newInvoice = new Dal.Entities.Invoice
             {
-                Id = model.Id,
                 CustomerId = model.CustomerId,
                 DateCreation = DateTime.Now,
                 OrderId = model.OrderId,
-                Representative = model.Representative,
+                Representative = "M.Shop",
 
             };
 
@@ -81,9 +80,9 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 Id = newInvoice.Id,
                 CustomerId = model.CustomerId,
-                DateCreation = DateTime.Now,
-                OrderId = model.OrderId,
-                Representative = model.Representative,
+                DateCreation = newInvoice.DateCreation,
+                OrderId = newInvoice.OrderId,
+                Representative = newInvoice.Representative,
                 InvoiceNumber = newInvoice.InvoiceNumber,
             };
         }

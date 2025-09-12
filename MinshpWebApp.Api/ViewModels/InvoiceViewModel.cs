@@ -14,6 +14,8 @@
 
         public string? InvoiceNumber { get; set; }
 
+        public string? InvoiceLink { get; set; }
+
         public CustomerViewModel Customer { get; set; }
 
         public OrderViewModel Order { get; set; }

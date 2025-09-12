@@ -126,13 +126,13 @@ namespace MinshpWebApp.Dal.Repositories
             return new Order()
             {
                 Id = newOrder.Id,
-                Date = model.Date,
+                Date = newOrder.Date,
                 OrderNumber = newOrder.OrderNumber,
-                Status = model.Status,
-                CustomerId = model.CustomerId,
-                Amount = model.Amount,
-                PaymentMethod = model.PaymentMethod,
-                DeliveryAmount = model.DeliveryAmount
+                Status = newOrder.Status,
+                CustomerId = newOrder.CustomerId,
+                Amount = newOrder.Amount,
+                PaymentMethod = newOrder.PaymentMethod,
+                DeliveryAmount = newOrder.DeliveryAmount
             };
         }
 

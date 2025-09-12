@@ -19,5 +19,7 @@ public partial class Invoice
 
     public string? InvoiceNumber { get; set; }
 
+    public string? InvoiceLink { get; set; }
+
     public virtual Order? Order { get; set; }
 }

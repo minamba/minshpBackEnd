@@ -20,5 +20,7 @@ namespace MinshpWebApp.Domain.Models
 
         public string? InvoiceNumber { get; set; }
 
+        public string? InvoiceLink { get; set; }
+
     }
 }

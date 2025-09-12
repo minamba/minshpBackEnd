@@ -906,7 +906,7 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
             if (!string.IsNullOrWhiteSpace(cmd.ToLastName)) form["destinataire.nom"] = cmd.ToLastName;
             if (!string.IsNullOrWhiteSpace(cmd.ToFirstName)) form["destinataire.prenom"] = cmd.ToFirstName;
             if (!string.IsNullOrWhiteSpace(cmd.ToEmail)) form["destinataire.email"] = cmd.ToEmail;
-            form["destinataire.tel"] = string.IsNullOrWhiteSpace(cmd.ToPhone) ? "+33625957558" : null ; // fallback
+            form["destinataire.tel"] = NormalizeBoxtalPhone(toPhone, toCountry);
             if (!string.IsNullOrWhiteSpace(cmd.ToAddress)) form["destinataire.adresse"] = cmd.ToAddress;
             if (!string.IsNullOrWhiteSpace(cmd.ToZip)) form["destinataire.code_postal"] = cmd.ToZip;
             if (!string.IsNullOrWhiteSpace(cmd.ToCity)) form["destinataire.ville"] = cmd.ToCity;
@@ -924,9 +924,10 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
                 ? $"Commande {cmd.ExternalOrderId}"
                 : cmd.ContentDescription;
 
-            // valeur (requis si hors UE ou assurance=true)
-            if (cmd.DeclaredValue.HasValue)
-                form["colis.valeur"] = cmd.DeclaredValue.Value.ToString(CultureInfo.InvariantCulture);
+
+            //if (cmd.Packages?.Count == 1)
+                //form["colis.valeur"] = cmd.DeclaredValue.Value.ToString(CultureInfo.InvariantCulture);
+
 
             // --- Colis N ---
             var pkgs = cmd.Packages?.Count > 0 ? cmd.Packages : new List<Package>();

@@ -84,11 +84,11 @@ namespace MinshpWebApp.Dal.Repositories
             return new OrderCustomerProduct()
             {
                 Id = newOrderCustomerProduct.Id,
-                ProductId = model.ProductId,
-                OrderId = model.OrderId,
-                CustomerId = model.CustomerId,
-                Quantity = model.Quantity,
-                ProductUnitPrice = model.ProductUnitPrice
+                ProductId = newOrderCustomerProduct.ProductId,
+                OrderId = newOrderCustomerProduct.OrderId,
+                CustomerId = newOrderCustomerProduct.CustomerId,
+                Quantity = newOrderCustomerProduct.Quantity,
+                ProductUnitPrice = newOrderCustomerProduct.ProductUnitPrice
             };
         }
 

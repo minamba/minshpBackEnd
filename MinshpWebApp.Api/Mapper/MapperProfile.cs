@@ -206,6 +206,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.OrderId, dest => dest.MapFrom(x => x.OrderId))
               .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation))
               .ForMember(x => x.Representative, dest => dest.MapFrom(x => x.Representative))
+              .ForMember(x => x.InvoiceLink, dest => dest.MapFrom(x => x.InvoiceLink))
               .ForMember(x => x.InvoiceNumber, dest => dest.MapFrom(x => x.InvoiceNumber));
 
 
@@ -213,7 +214,7 @@ namespace MinshpWebApp.Api.Mapper
              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
              .ForMember(x => x.CustomerId, dest => dest.MapFrom(x => x.CustomerId))
              .ForMember(x => x.OrderId, dest => dest.MapFrom(x => x.OrderId))
-             .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation))
+             .ForMember(x => x.InvoiceLink, dest => dest.MapFrom(x => x.InvoiceLink))
              .ForMember(x => x.Representative, dest => dest.MapFrom(x => x.Representative));
 
 

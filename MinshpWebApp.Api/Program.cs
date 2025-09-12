@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Builders.impl;
+using MinshpWebApp.Api.Options;
 using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Dal.Repositories;
 using MinshpWebApp.Domain.Repositories;
@@ -11,8 +12,12 @@ using MinshpWebApp.Domain.Services.impl;
 using MinshpWebApp.Domain.Services.Shipping;
 using MinshpWebApp.Domain.Services.Shipping.impl;
 using OpenIddict.Validation.AspNetCore;
+using Stripe;
 using System.Net.Http.Headers;
+using QuestPDF.Infrastructure; // n'oublie pa
 
+
+QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -85,6 +90,8 @@ builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p =>
      .AllowAnyMethod()));
 
 
+
+
 //scoped repositories
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IImageRepository, ImageRepository>();
@@ -109,23 +116,23 @@ builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 
 
 //scoped services
-builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductService, MinshpWebApp.Domain.Services.impl.ProductService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IVideoService, VideoService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
-builder.Services.AddScoped<ICustomerService, CustomerService>();
-builder.Services.AddScoped<IProductFeatureService, ProductFeatureService>();
+builder.Services.AddScoped<ICustomerService, MinshpWebApp.Domain.Services.impl.CustomerService>();
+builder.Services.AddScoped<IProductFeatureService, MinshpWebApp.Domain.Services.impl.ProductFeatureService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IStockService, StockService>();
 builder.Services.AddScoped<IFeatureCategoryService, FeatureCategoryService>();
 builder.Services.AddScoped<ITaxeService, TaxeService>();
-builder.Services.AddScoped<IPromotionCodeService, PromotionCodeService>();
+builder.Services.AddScoped<IPromotionCodeService, MinshpWebApp.Domain.Services.impl.PromotionCodeService>();
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 builder.Services.AddScoped<IBillingAddressService, BillingAddressService>();
 builder.Services.AddScoped<IDeliveryAddressService, DeliveryAddressService>();
-builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IInvoiceService, MinshpWebApp.Domain.Services.impl.InvoiceService>();
 builder.Services.AddScoped<IOrderCustomerProductService, OrderCustomerProductService>();
 builder.Services.AddScoped<IShippingProvider, BoxtalProvider>();
 builder.Services.AddScoped<IPackageProfilService, PackageProfilService>();
@@ -193,6 +200,12 @@ builder.Services.AddHttpClient("BoxtalV3", (sp, c) =>
 builder.Services.AddMemoryCache();
 
 builder.Services.AddHttpClient();
+
+
+//stripe 
+var stripeSettings = builder.Configuration.GetSection("Stripe").Get<StripeSettings>();
+builder.Services.AddSingleton(_ => new StripeClient(stripeSettings.SecretKey));
+
 
 builder.Services.Configure<FormOptions>(options =>
 {
