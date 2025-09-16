@@ -123,11 +123,12 @@ namespace MinshpWebApp.Dal.Repositories
         public async Task<bool> DeleteCustomersAsync(int idCustomer)
         {
             var CustomerToDelete = await _context.Customers.FirstOrDefaultAsync(u => u.Id == idCustomer);
+            var aspNetUserToDelete = await _context.AspNetUsers.FirstOrDefaultAsync(u => u.Id == CustomerToDelete.IdAspNetUser);
 
             if (CustomerToDelete == null)
                 return false; // ou throw une exception;
 
-            _context.Customers.Remove(CustomerToDelete);
+            _context.AspNetUsers.Remove(aspNetUserToDelete);
             await _context.SaveChangesAsync();
 
             return true;

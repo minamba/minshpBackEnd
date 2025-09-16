@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 
+
 namespace MinshpWebApp.IdentityServer.Controller;
 
 [ApiController]
@@ -65,6 +66,28 @@ public class AccountController : ControllerBase
     }
 
     public record LoginDto(string Email, string Password);
+
+
+    public sealed class ForgotPasswordRequest
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = default!;
+    }
+
+
+    public sealed class ResetPasswordRequest
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = default!;
+
+        [Required] // token encodé en Base64Url
+        public string Token { get; set; } = default!;
+
+        [Required, MinLength(6)]
+        public string NewPassword { get; set; } = default!;
+    }
+
+
 
     [HttpPost("register")]
     [AllowAnonymous]

@@ -31,7 +31,11 @@ namespace MinshpWebApp.Dal.Repositories
                 DefaultDropOffChronoPost = p.DefaultDropOffChronoPost,
                 DefaultDropOffMondialRelay = p.DefaultDropOffMondialRelay,
                 DefaultDropOffUps = p.DefaultDropOffUps,
-                DefaultDropLaposte = p.DefaultDropLaposte
+                DefaultDropLaposte = p.DefaultDropLaposte,
+                SocietyName = p.SocietyName,
+                SocietyAddress = p.SocietyAddress,
+                SocietyCity = p.SocietyCity,
+                SocietyZipCode = p.SocietyZipCode
             }).ToListAsync();
 
             return ApplicationEntities;
@@ -53,6 +57,10 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.DefaultDropOffMondialRelay != null) ApplicationToUpdate.DefaultDropOffMondialRelay = model.DefaultDropOffMondialRelay;
             if (model.DefaultDropOffUps != null) ApplicationToUpdate.DefaultDropOffUps = model.DefaultDropOffUps;
             if (model.DefaultDropLaposte != null) ApplicationToUpdate.DefaultDropLaposte = model.DefaultDropLaposte;
+            if (model.SocietyName != null) ApplicationToUpdate.SocietyName = model.SocietyName;
+            if (model.SocietyAddress != null) ApplicationToUpdate.SocietyAddress = model.SocietyAddress;
+            if (model.SocietyZipCode != null) ApplicationToUpdate.SocietyZipCode = model.SocietyZipCode;
+            if (model.SocietyCity != null) ApplicationToUpdate.SocietyCity = model.SocietyCity;
 
 
 
@@ -85,6 +93,10 @@ namespace MinshpWebApp.Dal.Repositories
                 DefaultDropOffMondialRelay = model.DefaultDropOffMondialRelay,
                 DefaultDropOffUps = model.DefaultDropOffUps,
                 DefaultDropLaposte = model.DefaultDropLaposte,
+                SocietyName = model.SocietyName,
+                SocietyAddress = model.SocietyAddress,
+                SocietyZipCode = model.SocietyZipCode,
+                SocietyCity = model.SocietyCity
             };
 
             _context.Applications.Add(newApplication);
@@ -100,6 +112,10 @@ namespace MinshpWebApp.Dal.Repositories
                 DefaultDropOffMondialRelay = newApplication.DefaultDropOffMondialRelay,
                 DefaultDropOffUps = newApplication.DefaultDropOffUps,
                 DefaultDropLaposte = newApplication.DefaultDropLaposte,
+                SocietyName = model.SocietyName,
+                SocietyAddress = model.SocietyAddress,
+                SocietyZipCode = model.SocietyZipCode,
+                SocietyCity = model.SocietyCity
             };
         }
 

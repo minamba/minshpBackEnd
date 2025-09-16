@@ -71,8 +71,8 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Brand != null) ProductToUpdate.Brand = model.Brand;
             if (model.Model != null) ProductToUpdate.Model = model.Model;
             if (model.ModificationDate != null) ProductToUpdate.ModificationDate = model.ModificationDate;
-            if (model.IdSubCategory != null) ProductToUpdate.IdSubCategory = model.IdSubCategory;
             ProductToUpdate.IdPackageProfil = model.IdPackageProfil;
+            ProductToUpdate.IdSubCategory = model.IdSubCategory;
 
 
             if (GetPromotion != null)

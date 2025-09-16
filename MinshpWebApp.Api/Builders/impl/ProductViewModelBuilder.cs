@@ -102,12 +102,14 @@ namespace MinshpWebApp.Api.Builders.impl
                     Id = p.Id,
                     Name = p.Name,
                     Description = p.Description,
-                    Price = p.Price,
+                    Price = Math.Round((decimal)p.Price, 2),
                     PriceTtc = await GetPriceTtc(p.IdCategory, p.Price),
-                    PriceTtcPromoted = await GetPriceTtcPromoted(await GetPriceTtc(p.IdCategory, p.Price), promotionList),
-                    PriceTtcCategoryCodePromoted = await GetPriceTtcCategoryCodePromoted(await GetPriceTtc(p.IdCategory, p.Price), p.IdCategory, promotionList),
-                    PriceTtcSubCategoryCodePromoted = await GetPriceTtcSubCategoryCodePromoted(await GetPriceTtc(p.IdCategory, p.Price), await GetPriceTtcCategoryCodePromoted(await GetPriceTtc(p.IdCategory, p.Price), p.IdCategory, promotionList), p.IdSubCategory, promotionList),
+                    PriceHtPromoted = await GetPriceHtPromoted(p, promotionList),
+                    PriceHtCategoryCodePromoted = await GetPriceHtCategoryCodePromoted(p),
+                    PriceHtSubCategoryCodePromoted = await GetPriceHtSubCategoryCodePromoted(p),
                     PurcentageCodePromoted = await GetPurcentageCodePromoted(p.Id, p.IdCategory, p.IdSubCategory, promotionList),
+                    Tva = await GetTVA(p.IdCategory),
+                    TaxWithoutTva = await GetTaxeWithoutTVA(p.IdCategory, p.IdSubCategory),
                     TaxWithoutTvaAmount = await GetTaxeAmountWithoutTVA(p.IdCategory, p.IdSubCategory),
                     Category = categoryName,
                     Main = p.Main,
@@ -124,7 +126,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     Stocks = stockList,
                     IdPackageProfil = await GetIdPackageProfil(p),
                     PackageProfil = await GetPackageProfil(p.IdPackageProfil, p),
-                    ContainedCode =await  GetContainedCode(p),
+                    ContainedCode = await GetContainedCode(p),
                     IdSubCategory = p.IdSubCategory
                 };
 
@@ -195,33 +197,41 @@ namespace MinshpWebApp.Api.Builders.impl
 
             }
 
-            return priceTtc;
+            return Math.Round((decimal)priceTtc, 2);
 
         }
 
-        private async Task<decimal?> GetPriceTtcPromoted(decimal? priceTtc, IEnumerable<PromotionViewModel> promotionList)
+        private async Task<decimal?> GetPriceHtPromoted(ProductDto product, IEnumerable<PromotionViewModel> promotionList)
         {
+            decimal? basePrice = product.Price;
+
             if (promotionList.ToList().Count>0)
             {
                 var getPromotion = promotionList.ToList()[0];
                 var purcentage = getPromotion.Purcentage;
 
-                var promotedPrice = priceTtc - (priceTtc * (purcentage / 100m));
+                var promotedPrice = basePrice - (basePrice * (purcentage / 100m));
 
                 return promotedPrice;
             }
-
             return null;
         }
 
 
         //CUMULABLE SI IL Y A DEJA UNE PROMO SUR LE PRODUIT
-        private async Task<decimal?> GetPriceTtcCategoryCodePromoted(decimal? priceTtc, int? idCategory, IEnumerable<PromotionViewModel> promotionList)
+        private async Task<decimal?> GetPriceHtCategoryCodePromoted(ProductDto product)
         {
+            var basePrice = product.Price;
             decimal? promotedCategoryCodePrice = 0;
-            var getPromotionCategoryCodeId = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory && c.IdPromotionCode != 0).IdPromotionCode;
+            int? promotionPurcentage = 0;
+            int? totalPurcentage = 0;
 
-            var getPricePromotted = await GetPriceTtcPromoted(priceTtc, promotionList);
+            var getPromotionCategoryCodeId = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == product.IdCategory && c.IdPromotionCode != 0).IdPromotionCode;
+            var getPromotionPurcentage = (await _promotionService.GetPromotionsAsync()).FirstOrDefault(p => p.IdProduct == product.Id);
+
+            if (getPromotionPurcentage != null && getPromotionPurcentage.EndDate >= DateTime.Now)
+                promotionPurcentage = getPromotionPurcentage.Purcentage;
+            
 
             //Dans le cas ou la promotion est faite la category
             if (getPromotionCategoryCodeId != null)
@@ -232,55 +242,83 @@ namespace MinshpWebApp.Api.Builders.impl
                 {
                     if (getPormotionPurcentage.Purcentage != null && getPormotionPurcentage.EndDate >= DateTime.Now)
                     {
-                        if (getPricePromotted != null)
-                            promotedCategoryCodePrice = getPricePromotted - (getPricePromotted * (getPormotionPurcentage.Purcentage / 100m));
-                        else
-                            promotedCategoryCodePrice = priceTtc - (priceTtc * (getPormotionPurcentage.Purcentage / 100m));
+                        totalPurcentage = promotionPurcentage + getPormotionPurcentage.Purcentage;
+                        promotedCategoryCodePrice = Math.Round((decimal)(basePrice - (basePrice * (totalPurcentage / 100m))), 2);
 
                         return promotedCategoryCodePrice;
                     }
                 }
             }
-
             return null;
         }
 
         //CUMULABLE SI IL Y A DEJA UNE PROMO SUR LE PRODUIT ET SUR LA CATEGORIE
-        private async Task<decimal?> GetPriceTtcSubCategoryCodePromoted(decimal? priceTtc,decimal? priceTtcCategoryPromoted, int? idSubCategory, IEnumerable<PromotionViewModel> promotionList)
+        private async Task<decimal?> GetPriceHtSubCategoryCodePromoted(ProductDto product)
         {
-            if (idSubCategory != null)
+
+            var basePrice = product.Price;
+            int? promotionCategoryPurcentage = 0;
+            int? promotionPurcentage = 0;
+            int? totalPurcentage = 0;
+            decimal? promotedSubCategoryCodePrice = 0;
+
+
+            //je recupère le pourcentage de la promotion sur la catégory si il y en a un
+            var getPromotionCategoryIdPromotionCode = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == product.IdCategory && c.IdPromotionCode != 0).IdPromotionCode;
+
+            if (getPromotionCategoryIdPromotionCode != null)
             {
-                decimal? promotedSubCategoryCodePrice = 0;
+                var promotionCode = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(p => p.Id == getPromotionCategoryIdPromotionCode);
 
-                var getPromotionSubCategoryCodeId = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idSubCategory && c.IdPromotionCode != 0).IdPromotionCode;
+                if (promotionCode != null)
+                {
+                    if (promotionCode.EndDate >= DateTime.Now)
+                        promotionCategoryPurcentage = promotionCode.Purcentage;
+                }
+            }
+
+            //je recupère le pourcentage de la promotion sur le produit  si il y en a un
+            var getPromotionPurcentage = (await _promotionService.GetPromotionsAsync()).FirstOrDefault(p => p.IdProduct == product.Id);
+            if (getPromotionPurcentage != null && getPromotionPurcentage.EndDate >= DateTime.Now)
+                promotionPurcentage = getPromotionPurcentage.Purcentage;
 
 
-                var getPricePromotted = await GetPriceTtcPromoted(priceTtc, promotionList);
+            if (product.IdSubCategory != null)
+            {
+                var getPromotionSubCategoryCodeId = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == product.IdSubCategory).IdPromotionCode;
 
                 //Dans le cas ou la promotion est faite la sub category
                 if (getPromotionSubCategoryCodeId != null)
                 {
-                    var getPormotionPurcentage = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(pr => pr.Id == getPromotionSubCategoryCodeId);
+                    var getPormotionSubCategoryPurcentage = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(pr => pr.Id == getPromotionSubCategoryCodeId);
 
-                    if (getPormotionPurcentage != null)
+                    if (getPormotionSubCategoryPurcentage != null)
                     {
-                        if (getPormotionPurcentage.Purcentage != null && getPormotionPurcentage.EndDate >= DateTime.Now)
+                        if (getPormotionSubCategoryPurcentage.Purcentage != null && getPormotionSubCategoryPurcentage.EndDate >= DateTime.Now)
                         {
-                            if (getPricePromotted != null && priceTtcCategoryPromoted == null)
-                                promotedSubCategoryCodePrice = getPricePromotted - (getPricePromotted * (getPormotionPurcentage.Purcentage / 100m));
-                            else if (priceTtcCategoryPromoted != null)
+                            if (promotionPurcentage != 0 && promotionCategoryPurcentage != 0)
                             {
-                                promotedSubCategoryCodePrice = priceTtcCategoryPromoted - (priceTtcCategoryPromoted * (getPormotionPurcentage.Purcentage / 100m));
+                                totalPurcentage = promotionPurcentage + promotionCategoryPurcentage + getPormotionSubCategoryPurcentage.Purcentage;
+                                promotedSubCategoryCodePrice = Math.Round((decimal)(basePrice - (basePrice * (totalPurcentage / 100m))), 2);
+                            }
+                            else if (promotionPurcentage == 0 && promotionCategoryPurcentage != 0)
+                            {
+                                totalPurcentage = promotionCategoryPurcentage + getPormotionSubCategoryPurcentage.Purcentage;
+                                promotedSubCategoryCodePrice = Math.Round((decimal)(basePrice - (basePrice * (totalPurcentage / 100m))), 2);
+                            }
+                            else if (promotionPurcentage != 0 && promotionCategoryPurcentage == 0)
+                            {
+                                totalPurcentage = promotionPurcentage + getPormotionSubCategoryPurcentage.Purcentage;
+                                promotedSubCategoryCodePrice = Math.Round((decimal)(basePrice - (basePrice * (totalPurcentage / 100m))), 2);
                             }
                             else
-                                promotedSubCategoryCodePrice = priceTtc - (priceTtc * (getPormotionPurcentage.Purcentage / 100m));
+                                promotedSubCategoryCodePrice = Math.Round((decimal)(basePrice - (basePrice * (getPormotionSubCategoryPurcentage.Purcentage / 100m))), 2);
 
                             return promotedSubCategoryCodePrice;
                         }
                     }
                 }
             }
-
             return null;
         }
 
@@ -349,11 +387,11 @@ namespace MinshpWebApp.Api.Builders.impl
                 return null;
         }
 
-        private async Task<string?> GetTaxeAmountWithoutTVA(int? idCategory, int? idSubCategory) 
+        private async Task<string?> GetTaxeWithoutTVA(int? idCategory, int? idSubCategory) 
         {
             string taxeEcoParticipation = null;
             var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
-            var getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
+            var getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idSubCategory);
 
             List<string> taxes = getFocusCategory.IdTaxe.Split(',')
                                       .Select(x => x.Trim()) // Supprime les espaces éventuels
@@ -394,7 +432,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     {
                         if (getComplementaryTaxe.Name.ToLower().Contains("éco-participation"))
                         {
-                            taxeEcoParticipation = taxeEcoParticipation + " et " + getComplementaryTaxe.Name.Split(":")[0] + getComplementaryTaxe.Amount.ToString() + "€";
+                            taxeEcoParticipation = taxeEcoParticipation + " et " + getComplementaryTaxe.Name.Split(":")[0] + "sur" + getComplementaryTaxe.Name.Split(":")[1] + " " + getComplementaryTaxe.Amount.ToString() + "€";
                         }
                     }
                 }
@@ -402,6 +440,90 @@ namespace MinshpWebApp.Api.Builders.impl
             }
 
             return taxeEcoParticipation;
+        }
+
+
+        private async Task<decimal?> GetTaxeAmountWithoutTVA(int? idCategory, int? idSubCategory)
+        {
+            decimal? taxeEcoParticipation = null;
+            var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
+            var getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idSubCategory);
+
+            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
+                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                      .ToList();
+
+
+            //TAXE DE BASE
+
+            foreach (var t in taxes)
+            {
+                var idTaxe = int.Parse(t);
+                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+
+                if (!getTaxe.Name.ToLower().Contains("tva"))
+                {
+                    if (getTaxe.Name.ToLower().Contains("éco-participation"))
+                    {
+                        taxeEcoParticipation =  getTaxe.Amount;
+                    }
+                }
+            }
+
+            //TAXE COMPLEMENTAIRE (sous catégorie) : Cette va servir a recuperer les taxes (complémentaire) de la subCategory. On va faire une addition avec les taxes de la categorie. Les taxes de la catégorie parent est forcément appliquable sur l'enfant, mais l'inverse n'est pas vrai
+            List<string> taxesSubCategory = new List<string>();
+
+            if (getFocusSubCategory != null)
+            {
+                taxesSubCategory = getFocusSubCategory.IdTaxe.Split(',')
+                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                      .ToList();
+
+                foreach (var t in taxesSubCategory)
+                {
+                    var idComplementaryTaxe = int.Parse(t);
+                    var getComplementaryTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idComplementaryTaxe);
+
+                    if (!getComplementaryTaxe.Name.ToLower().Contains("tva"))
+                    {
+                        if (getComplementaryTaxe.Name.ToLower().Contains("éco-participation"))
+                        {
+                            taxeEcoParticipation += getComplementaryTaxe.Amount;
+                        }
+                    }
+                }
+
+            }
+
+            return taxeEcoParticipation;
+        }
+
+
+        private async Task<int?> GetTVA(int? idCategory)
+        {
+            string tva = null;
+            var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
+            var getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
+
+            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
+                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                      .ToList();
+
+
+            //TAXE DE BASE
+
+            foreach (var t in taxes)
+            {
+                var idTaxe = int.Parse(t);
+                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+
+                if (getTaxe.Name.ToLower().Contains("tva"))
+                {
+                    return getTaxe.Purcentage;
+                }
+            }
+
+            return null;
         }
 
         private async Task<string?> GetStockStatus(StockViewModel stockList)

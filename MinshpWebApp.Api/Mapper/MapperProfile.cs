@@ -307,6 +307,10 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.DefaultDropOffUps, dest => dest.MapFrom(x => x.DefaultDropOffUps))
               .ForMember(x => x.DefaultDropOffMondialRelay, dest => dest.MapFrom(x => x.DefaultDropOffMondialRelay))
               .ForMember(x => x.DefaultDropLaposte, dest => dest.MapFrom(x => x.DefaultDropLaposte))
+              .ForMember(x => x.SocietyName, dest => dest.MapFrom(x => x.SocietyName))
+              .ForMember(x => x.SocietyAddress, dest => dest.MapFrom(x => x.SocietyAddress))
+              .ForMember(x => x.SocietyZipCode, dest => dest.MapFrom(x => x.SocietyZipCode))
+              .ForMember(x => x.SocietyCity, dest => dest.MapFrom(x => x.SocietyCity))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
 
 
@@ -317,6 +321,10 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.DefaultDropOffChronoPost, dest => dest.MapFrom(x => x.DefaultDropOffChronoPost))
               .ForMember(x => x.DefaultDropOffUps, dest => dest.MapFrom(x => x.DefaultDropOffUps))
               .ForMember(x => x.DefaultDropOffMondialRelay, dest => dest.MapFrom(x => x.DefaultDropOffMondialRelay))
+              .ForMember(x => x.SocietyName, dest => dest.MapFrom(x => x.SocietyName))
+              .ForMember(x => x.SocietyAddress, dest => dest.MapFrom(x => x.SocietyAddress))
+              .ForMember(x => x.SocietyZipCode, dest => dest.MapFrom(x => x.SocietyZipCode))
+              .ForMember(x => x.SocietyCity, dest => dest.MapFrom(x => x.SocietyCity))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
 
 

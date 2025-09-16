@@ -15,21 +15,29 @@ namespace MinshpWebApp.Api.Builders.impl
         private ICustomerService _customerService;
         private IDeliveryAddressViewModelBuilder _deliveryAddressService;
         private IBillingAddressViewModelBuilder _billingAddressService;
+        private IMailViewModelBuilder _mailViewModelBuilder;
 
 
-        public CustomerViewModelBuilder(ICustomerService customerService, IDeliveryAddressViewModelBuilder deliveryAddressService, IBillingAddressViewModelBuilder billingAddressService, IMapper mapper)
+        public CustomerViewModelBuilder(ICustomerService customerService, IDeliveryAddressViewModelBuilder deliveryAddressService, IBillingAddressViewModelBuilder billingAddressService, IMailViewModelBuilder mailViewModelBuilder, IMapper mapper)
         {
             _mapper = mapper;
             _customerService = customerService;
             _deliveryAddressService = deliveryAddressService;
             _billingAddressService = billingAddressService;
+            _mailViewModelBuilder = mailViewModelBuilder;
         }
 
         public async Task<Customer> AddCustomersAsync(CustomerRequest model)
         {
             var customer = _mapper.Map<Customer>(model);
 
-            return await _customerService.AddCustomersAsync(customer);
+            var result = await _customerService.AddCustomersAsync(customer);
+
+
+            if (result != null)
+                _mailViewModelBuilder.SendMailRegistration("minamba.c@gmail.com");
+
+            return result;
         }
 
         public async Task<bool> DeleteCustomersAsync(int idCustomer)

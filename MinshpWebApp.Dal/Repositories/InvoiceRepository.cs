@@ -31,6 +31,7 @@ namespace MinshpWebApp.Dal.Repositories
                 DateCreation = p.DateCreation,
                 OrderId = p.OrderId,
                 Representative = p.Representative,
+                InvoiceLink = p.InvoiceLink
             }).ToListAsync();
 
             return InvoiceEntities;
@@ -48,6 +49,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.CustomerId != null) InvoiceToUpdate.CustomerId = model.CustomerId;
             if (model.OrderId != null) InvoiceToUpdate.OrderId = model.OrderId;
             if (model.Representative != null) InvoiceToUpdate.Representative = model.Representative;
+            if (model.InvoiceLink != null) InvoiceToUpdate.InvoiceLink = model.InvoiceLink;
 
             await _context.SaveChangesAsync();
 
@@ -58,6 +60,7 @@ namespace MinshpWebApp.Dal.Repositories
                 CustomerId = model.CustomerId,
                 OrderId = model.OrderId,
                 Representative = model.Representative,
+                InvoiceLink = model.InvoiceLink
             };
         }
 
@@ -84,6 +87,7 @@ namespace MinshpWebApp.Dal.Repositories
                 OrderId = newInvoice.OrderId,
                 Representative = newInvoice.Representative,
                 InvoiceNumber = newInvoice.InvoiceNumber,
+                InvoiceLink = newInvoice.InvoiceLink
             };
         }
 

@@ -84,13 +84,13 @@ namespace MinshpWebApp.Api.Builders.impl
                 {
                     int? quantity = orderCustomerProducts.FirstOrDefault(ocp => ocp.OrderId == Order.Id && ocp.ProductId == p.Id).Quantity;
 
-                        if (p.PriceTtcCategoryCodePromoted != null)
-                            p.PriceTtcCategoryCodePromoted = p.PriceTtcCategoryCodePromoted * quantity;
+                        if (p.PriceHtCategoryCodePromoted != null)
+                            p.PriceHtCategoryCodePromoted = p.PriceHtCategoryCodePromoted * quantity;
 
-                        if (p.PriceTtcPromoted != null && p.PriceTtcCategoryCodePromoted == null)
-                            p.PriceTtcPromoted = p.PriceTtcPromoted * quantity;
+                        if (p.PriceHtPromoted != null && p.PriceHtCategoryCodePromoted == null)
+                            p.PriceHtPromoted = p.PriceHtPromoted * quantity;
 
-                        if (p.PriceTtc != null && p.PriceTtcPromoted == null && p.PriceTtcCategoryCodePromoted == null)
+                        if (p.PriceTtc != null && p.PriceHtPromoted == null && p.PriceHtCategoryCodePromoted == null)
                             p.PriceTtc = p.PriceTtc * quantity;
 
                             ProductVmList.Add(p);
@@ -153,13 +153,13 @@ namespace MinshpWebApp.Api.Builders.impl
             {
                 var amount = 0;
 
-                if (p.PriceTtcCategoryCodePromoted != null)
-                    totalamount += p.PriceTtcCategoryCodePromoted;
+                if (p.PriceHtCategoryCodePromoted != null)
+                    totalamount += p.PriceHtCategoryCodePromoted;
 
-                if(p.PriceTtcPromoted != null && p.PriceTtcCategoryCodePromoted == null)
-                    totalamount += p.PriceTtcPromoted;
+                if(p.PriceHtPromoted != null && p.PriceHtCategoryCodePromoted == null)
+                    totalamount += p.PriceHtPromoted;
 
-                if (p.PriceTtc != null && p.PriceTtcPromoted == null && p.PriceTtcCategoryCodePromoted == null)
+                if (p.PriceTtc != null && p.PriceHtPromoted == null && p.PriceHtCategoryCodePromoted == null)
                     totalamount += p.PriceTtc;
             }
 

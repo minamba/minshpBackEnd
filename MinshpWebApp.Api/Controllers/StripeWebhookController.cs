@@ -2,10 +2,15 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using MinshpWebApp.Api.Builders;
+using MinshpWebApp.Api.Builders.impl;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.Utils; // <<< alias explicite
+using MinshpWebApp.Api.ViewModels;
+using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
+using MinshpWebApp.Domain.Services;
+using MinshpWebApp.Domain.Services.impl;
 using MinshpWebApp.Domain.Services.Shipping;
 using QuestPDF.Fluent;
 using Stripe;
@@ -13,6 +18,7 @@ using Stripe;
 using Stripe.Checkout;
 using Stripe.Checkout;
 using System.Globalization;
+using System.Linq;
 using static Microsoft.IO.RecyclableMemoryStreamManager;
 using StripeEvent = Stripe.Event;
 using StripeEvents = Stripe.Events;
@@ -33,6 +39,15 @@ namespace MinshpWebApp.Api.Controllers
         private readonly IInvoiceViewModelBuilder _invoiceBuilder;
         private readonly IProductViewModelBuilder _productBuilder;
         private readonly ITaxeViewModelBuilder _taxeBuilder;
+        private readonly IApplicationViewModelBuilder _applicationBuilder;
+        private readonly ICategoryService _categorynService;
+        private readonly ISubCategoryService _subCategoryService;
+        private readonly ITaxeService _taxeService;
+        private readonly IBillingAddressService _billingAddressService;
+        private readonly IPromotionService _promotionService;
+        private readonly IPromotionCodeService _promotionCodeService;
+        private readonly IMailViewModelBuilder _mailViewModelBuilder;
+
 
         public StripeWebhookController(
             ILogger<StripeWebhookController> logger,
@@ -44,7 +59,15 @@ namespace MinshpWebApp.Api.Controllers
             IOrderRepository orderRepo,
             IInvoiceViewModelBuilder invoiceBuilder,
             IProductViewModelBuilder productBuilder,
-            ITaxeViewModelBuilder taxeBuilder)
+            ITaxeViewModelBuilder taxeBuilder,
+            IApplicationViewModelBuilder applicationBuilder,
+            ICategoryService categorynService,
+            ITaxeService taxeService,
+            IBillingAddressService billingAddressService,
+            IPromotionService promotionService,
+            IPromotionCodeService promotionCodeService,
+            ISubCategoryService subCategoryService,
+            IMailViewModelBuilder mailViewModelBuilder)
         {
             _logger = logger;
             _config = config;
@@ -56,6 +79,14 @@ namespace MinshpWebApp.Api.Controllers
             _invoiceBuilder = invoiceBuilder;
             _productBuilder = productBuilder;
             _taxeBuilder = taxeBuilder;
+            _applicationBuilder = applicationBuilder;
+            _categorynService = categorynService;
+            _taxeService = taxeService;
+            _billingAddressService = billingAddressService;
+            _promotionService = promotionService;
+            _promotionCodeService = promotionCodeService;
+            _subCategoryService = subCategoryService;
+            _mailViewModelBuilder = mailViewModelBuilder;
         }
 
         [HttpPost]
@@ -199,7 +230,7 @@ namespace MinshpWebApp.Api.Controllers
             var newInvoice = new InvoiceRequest
             {
                 OrderId = orderId,
-                CustomerId = ctxReq.CustomerId,   
+                CustomerId = ctxReq.CustomerId,
             };
 
             var newInvoiceToGet = await _invoiceBuilder.AddInvoicesAsync(newInvoice);
@@ -212,34 +243,165 @@ namespace MinshpWebApp.Api.Controllers
             var tva = (await _taxeBuilder.GetTaxesAsync()).FirstOrDefault(t => t.Name == "TVA");
             var itemsInvoice = new List<Utils.InvoiceItem>();
             decimal totalHt = 0m;
+            decimal totalHtWithTva = 0m;
+            decimal? totalTaxes = 0m;
+            int? tvaPurcentage = 0;
+            decimal tvaAmount = 0;
+            decimal? priceHt = 0;
+            decimal? remise = 0;
+            int TotalproductPromotionPurcentage = 0;
+            decimal totalTTC = 0;
+            decimal BasePriceWithRemise = 0;
+            List<string> getTaxes = new List<string>();
+            List<string> taxes = new List<string>();
+            int countProductInCart = 0;
+
+            var products = await _productBuilder.GetProductsAsync();
+            var subCategories = await _subCategoryService.GetSubCategoriesAsync();
+            var categories = await _categorynService.GetCategoriesAsync();
+
 
             foreach (var item in orderProductList)
             {
-                var getProduct = (await _productBuilder.GetProductsAsync()).FirstOrDefault(p => p.Id == item.ProductId);
+                countProductInCart++;
+                var getProduct = products.FirstOrDefault(p => p.Id == item.ProductId);
+                var getSubCategory = subCategories.FirstOrDefault(c => c.Id == getProduct.IdSubCategory);
+                var getCategory = categories.FirstOrDefault(c => c.Name == getProduct.Category);
 
-                totalHt = (decimal)(totalHt + getProduct.Price);
+                    getTaxes.Add(getCategory.IdTaxe);
+
+                if (getSubCategory != null)
+                    getTaxes.Add(getSubCategory.IdTaxe);
+      
+
+                
+                TotalproductPromotionPurcentage = await GetTotalPromotionPurcentageOfProduct(getProduct, getCategory);
+
+
+                foreach (var tx in getTaxes)
+                {
+                    var list = tx.Split(',').ToList();
+
+                    foreach (var l in list)
+                    {
+                        taxes.Add(l);
+                    }
+                }
+
+                foreach (var t in taxes)
+                {
+                    var tax = (await _taxeService.GetTaxesAsync()).FirstOrDefault(ta => ta.Id == int.Parse(t));
+                    if (tax.Name.ToLower() != "tva")
+                        totalTaxes +=  tax.Amount;
+                    else
+                        tvaPurcentage = tax.Purcentage;
+                }
+
+                totalTaxes = totalTaxes * item.Quantity;
+
+
+                //calcul du prix hors taxe ainsi que du montant de la remise ***************
+                if(TotalproductPromotionPurcentage != 0)
+                    BasePriceWithRemise = (decimal)((getProduct.Price) - (getProduct.Price * (TotalproductPromotionPurcentage / 100m)));
+                else
+                    BasePriceWithRemise = (decimal)getProduct.Price;
+
+
+                remise = (decimal)getProduct.Price - BasePriceWithRemise;
+                totalHt = (decimal)((decimal)((totalHt + getProduct.Price) * item.Quantity) - remise);
+                tvaAmount = (decimal)(totalHt * (tvaPurcentage / 100m));
+                totalHtWithTva = totalHt + tvaAmount;
+
+                totalTTC = (decimal)(totalHtWithTva + totalTaxes + ctxReq.DeliveryAmount); //j'evite d'arrondir au supérieur pour que le montant soit exactement le meme que sur la commande
+                
+                //si le total TTC calculé est différent de celui de la commande, c'est que un code promo a été appliqué en dernière minute. donc on va ajuster TotalproductPromotionPurcentage
+                if (countProductInCart == orderProductList.Count && totalTTC != ctxReq.Amount)
+                {
+                    //je dois tout remettre a zero pour recalculer proprement car les valeurs sont interdependantes
+                    totalTTC = 0;
+                    BasePriceWithRemise = 0;
+                    remise = 0;
+                    totalHt = 0;
+                    tvaAmount = 0;
+                    totalHtWithTva = 0;
+                    TotalproductPromotionPurcentage = 0;
+
+                    foreach (var i in orderProductList)
+                    {
+                        var useCodes = ctxReq.UseCodes;
+                        var getProd = products.FirstOrDefault(p => p.Id == i.ProductId);
+                        var getCa = categories.FirstOrDefault(c => c.Name == getProd.Category);
+
+                        TotalproductPromotionPurcentage = await GetTotalPromotionPurcentageOfProduct(getProd, getCa);
+                        var promotionCodePurcentage = (await GetPromotionCodePurcentageOfProduct(getProd, useCodes));
+
+                        if(promotionCodePurcentage != 0)
+                            TotalproductPromotionPurcentage += promotionCodePurcentage;
+
+
+                        if (TotalproductPromotionPurcentage != 0)
+                            BasePriceWithRemise = (decimal)((getProd.Price) - (getProd.Price * (TotalproductPromotionPurcentage / 100m)));
+                        else
+                            BasePriceWithRemise = (decimal)getProd.Price;
+
+                        remise = (decimal)getProd.Price - BasePriceWithRemise;
+                        totalHt = (decimal)((decimal)((totalHt + getProd.Price) * item.Quantity) - remise);
+                        tvaAmount = (decimal)(totalHt * (tvaPurcentage / 100m));
+                        totalHtWithTva = totalHt + tvaAmount;
+
+                        totalTTC = (decimal)(totalHtWithTva + totalTaxes + ctxReq.DeliveryAmount);
+                    }
+                }
 
                 var it = new Utils.InvoiceItem
                 {
                     Description = getProduct.Brand + " " + getProduct.Model,
                     Quantity = item.Quantity ?? 1,
-                    UnitPrice = item.ProductUnitPrice ?? 0m
+                    UnitPrice = getProduct.Price ?? 0m,
+                    Reduction = (decimal)(remise * item.Quantity),
+                    TotalPriceItemProduct = (decimal)((decimal)(getProduct.Price * item.Quantity) - (remise * item.Quantity))
                 };
 
                 itemsInvoice.Add(it);
+
+                 getTaxes.Clear() ;
+                 taxes.Clear();
             }
 
+            var deliveryItem = new Utils.InvoiceItem
+            {
+                Description = "Frais de livraison",
+                TotalPriceItemProduct = (decimal)ctxReq.DeliveryAmount
+            };
+
+            itemsInvoice.Add(deliveryItem);
+
+            var billingAddress = (await _billingAddressService.GetBillingAddressesAsync()).FirstOrDefault(b => b.IdCustomer == ctxReq.CustomerId);
+
+
+
+
+
             //6) Generation de la facture PDF et envoi par email
+
+            var applicationSettings = (await _applicationBuilder.GetApplicationAsync()).FirstOrDefault();
             var invoice = new InvoiceDocument
             {
+                SocietyName = applicationSettings.SocietyName,
+                SocietyAddress = applicationSettings.SocietyAddress,
+                SocietyZipCode = applicationSettings.SocietyZipCode,
+                SocietyCity = applicationSettings.SocietyCity,
+                EcoPart = (decimal)totalTaxes,
                 InvoiceNumber = getInvoice.InvoiceNumber,
                 OrderNumber = orderIdStr.OrderNumber,
                 InvoiceDate = (DateTime)getInvoice.DateCreation,
-                BilledTo = "mr Camara Minamba\n4 Avenue du Général de Gaulle\n77500 CHELLES\nFRANCE",
-                ShippedTo = "mr Camara Minamba\nrue André Lalande\n91000 EVRY\nFRANCE",
+                BilledTo = $"{ctxReq.ToCivility} {ctxReq.ToLastName} {ctxReq.ToFirstName}\n{ctxReq.ToAddress}\n{ctxReq.ToZip} {ctxReq.ToCity}\n{ctxReq.ToCountry}",
+                ShippedTo = $"{ctxReq.ToCivility} {ctxReq.ToLastName} {ctxReq.ToFirstName}\n{billingAddress.Address}\n{billingAddress.PostalCode} {billingAddress.City}\n{billingAddress.Country}",
                 Items = itemsInvoice,
-                TotalHT = totalHt,
-                TVA = (decimal)tva.Purcentage
+                TotalHT = (decimal)(totalHt + ctxReq.DeliveryAmount),
+                TVAPurcentage = (decimal)tvaPurcentage,
+                TVA = tvaAmount,
+                TotalTTC = totalTTC
             };
 
             //7 Généreration de la facture et placement dans le dossier du mois correspondant + maj de l'URL dans la facture
@@ -251,7 +413,12 @@ namespace MinshpWebApp.Api.Controllers
                 InvoiceLink = invoiceLink
             });
 
-            //7) nettoyage context cache
+
+            //8 Envoie de l'e-mail
+            await _mailViewModelBuilder.SendMailRegistration("minamba.c@gmail.com");
+
+
+            //9) nettoyage context cache
             _cache.Remove(contextKey);
 
             return Ok();
@@ -266,6 +433,65 @@ namespace MinshpWebApp.Api.Controllers
             if (s.Contains("mondial")) return "MONR";
             if (s.Contains("poste")) return "POFR";
             return fallbackNetwork ?? "CHRP";
+        }
+
+
+        private async Task<int> GetTotalPromotionPurcentageOfProduct(ProductVIewModel product, Domain.Models.Category category)
+        {
+            int? TotalproductPromotionPurcentage = 0;
+            int? productPromotionPurcentage = 0;
+            int? productPromotionCategoryPurcentage = 0;
+            int? productPromotionSubCategoryPurcentage = 0;
+
+
+            var getProductPromotion = (await _promotionService.GetPromotionsAsync()).FirstOrDefault(p => p.IdProduct == product.Id);
+            var getProductCategoryPromotion = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(c => c.Id == category.IdPromotionCode);
+            var getProductSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(sb => sb.Id == product.IdSubCategory);
+
+            if (getProductPromotion != null)
+            {
+                if (getProductPromotion.EndDate >= DateTime.Now)
+                    TotalproductPromotionPurcentage += getProductPromotion.Purcentage;
+            }
+
+            if (getProductCategoryPromotion != null)
+            {
+                if (getProductCategoryPromotion.EndDate >= DateTime.Now)
+                    TotalproductPromotionPurcentage += getProductCategoryPromotion.Purcentage;
+            }
+
+            if (getProductSubCategory != null)
+            {
+                var getProductSubCategoryPromotion = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(c => c.Id == getProductSubCategory.IdPromotionCode);
+
+                if (getProductSubCategoryPromotion != null)
+                {
+                    if (getProductSubCategoryPromotion.EndDate >= DateTime.Now)
+                        TotalproductPromotionPurcentage += getProductSubCategoryPromotion.Purcentage;
+                }
+            }
+
+
+            return (int)TotalproductPromotionPurcentage;
+        }
+
+
+        private async Task<int> GetPromotionCodePurcentageOfProduct(ProductVIewModel product, List<PromoUseCode> useCodes)
+        {
+
+             var getProductPromotionCodePurcentage = (await _promotionCodeService.GetPromotionCodesAsync()).FirstOrDefault(p => p.Id == product.IdPromotionCode);
+
+            if (getProductPromotionCodePurcentage != null)
+            {
+                foreach (var uc in useCodes)
+                {
+                    if (uc.Name.ToLower().Contains(getProductPromotionCodePurcentage.Name.ToLower()))
+                            return (int)getProductPromotionCodePurcentage.Purcentage;
+                }
+
+            }
+
+            return 0;
         }
     }
 }

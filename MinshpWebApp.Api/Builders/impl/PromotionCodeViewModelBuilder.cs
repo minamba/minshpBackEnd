@@ -56,7 +56,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 categoryRequest.IdPromotionCode = result.Id;
                 await _categoryVm.UpdateCategorysAsync(categoryRequest);
             }
-            else if(model.IdSubCategory != null && model.IdCategory != null && model.IdProduct == null)
+            else if(model.IdSubCategory != null && model.IdCategory == null && model.IdProduct == null)
             {
                 var subCategoryRequest = new SubCategoryRequest();
                 subCategoryRequest.Id = getSubCategory.Id;

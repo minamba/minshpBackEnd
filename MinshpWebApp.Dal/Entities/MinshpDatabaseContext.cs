@@ -16,6 +16,9 @@ public partial class MinshpDatabaseContext : DbContext
     {
     }
 
+
+    public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
+
     public virtual DbSet<Application> Applications { get; set; }
 
     public virtual DbSet<BillingAddress> BillingAddresses { get; set; }

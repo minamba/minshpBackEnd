@@ -17,5 +17,10 @@
         public string? DefaultDropOffUps { get; set; }
 
         public string? DefaultDropLaposte { get; set; }
+
+        public string? SocietyName { get; set; }
+        public string? SocietyAddress { get; set; }
+        public string? SocietyZipCode { get; set; }
+        public string? SocietyCity { get; set; }
     }
 }

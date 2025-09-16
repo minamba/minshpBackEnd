@@ -24,6 +24,7 @@ namespace MinshpWebApp.Domain.Models
 
         //colis
         public IEnumerable<Package> Packages { get; set; }
+        
 
         //code contenue
         public string ContainedCode { get; set; }
@@ -44,5 +45,13 @@ namespace MinshpWebApp.Domain.Models
         public decimal? PackageValue { get; set; }
         public bool? PackageStackable { get; set; }
         public string? ExternalId { get; set; }
+    }
+
+
+    public class PromoUseCode
+    {
+        public string? Id { get; set; }
+        public string? Name { get; set; }
+
     }
 }

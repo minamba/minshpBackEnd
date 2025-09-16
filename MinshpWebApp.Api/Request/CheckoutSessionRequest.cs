@@ -68,6 +68,9 @@ namespace MinshpWebApp.Api.Request
         // Colis (tu peux réutiliser ta classe Package pour poids/dims/valeur)
         public List<Package> Packages { get; set; } = new();
 
+        //liste des codes utilisés dans le panier
+        public List<PromoUseCode>? UseCodes { get; set; }
+
         // Destinataire
         public string ToType { get; set; } = "particulier"; // "entreprise"|"particulier"
         public string? ToCivility { get; set; }                  // ex: "M","Mme" (si exigé par l'offre)

@@ -164,6 +164,7 @@ builder.Services.AddScoped<IOrderCustomerProductViewModelBuilder, OrderCustomerP
 builder.Services.AddScoped<IBoxalProviderViewModelBuilder, BoxalProviderViewModelBuilder>();
 builder.Services.AddScoped<IPackageProfilViewModelBuilder, PackageProfilViewModelBuilder>();
 builder.Services.AddScoped<ISubCategoryViewModelBuilder, SubCategoryViewModelBuilder>();
+builder.Services.AddScoped<IMailViewModelBuilder, MailViewModelBuilder>();
 
 //BOXTAL LIVRAISON
 // 1) BoxtalOptions ← Shipping:Boxtal

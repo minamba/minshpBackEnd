@@ -10,11 +10,13 @@
 
         public decimal? Price { get; set; }
         public decimal? PriceTtc { get; set; }
-        public decimal? PriceTtcPromoted { get; set; }
-        public decimal? PriceTtcCategoryCodePromoted { get; set; }
-        public decimal? PriceTtcSubCategoryCodePromoted { get; set; }
+        public decimal? PriceHtPromoted { get; set; }
+        public decimal? PriceHtCategoryCodePromoted { get; set; }
+        public decimal? PriceHtSubCategoryCodePromoted { get; set; }
         public int? PurcentageCodePromoted { get; set; }
-        public string? TaxWithoutTvaAmount { get; set; } // montant de la taxe hors TVA. en general on additionne la TVA + la taxe supplémentaire
+        public int? Tva { get; set; }
+        public string? TaxWithoutTva { get; set; }
+        public decimal? TaxWithoutTvaAmount { get; set; } // montant de la taxe hors TVA. en general on additionne la TVA + la taxe supplémentaire
         public string? Category { get; set; }
         public bool ? Main { get; set; }
         public string? Brand { get; set; }
