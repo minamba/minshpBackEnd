@@ -22,5 +22,7 @@
         public string? SocietyAddress { get; set; }
         public string? SocietyZipCode { get; set; }
         public string? SocietyCity { get; set; }
+
+        public bool? IsMaintenance { get; set; } 
     }
 }

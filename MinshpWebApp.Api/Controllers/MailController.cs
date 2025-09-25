@@ -1,7 +1,9 @@
 ﻿using AutoMapper.Internal;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Request;
+using OpenIddict.Validation.AspNetCore;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 
@@ -38,12 +40,23 @@ namespace MinshpWebApp.Api.Controllers
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> SendPaymentMailAsync([FromBody] MailRequest request)
         {
-            var result = await _mailViewModelBuilder.SendMailPayment(request.Customer.Email);
+            var result = await _mailViewModelBuilder.SendMailPayment(request.Customer.Email, request.Items, null,null,null, null, 0, 0);
 
             if (result == null)
                 return null;
             else
                 return Ok("mail envoyé");
+        }
+
+
+        [HttpPost("password-reset")]
+        [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> SendPasswordReset([FromBody] PasswordResetRequest req)
+        {
+            // À implémenter dans le builder si pas déjà fait :
+            //  -> lit Templates/Passwords/reset.html et remplace {{RESET_LINK}}
+            var r = await _mailViewModelBuilder.SendMailPasswordReset(req.To, req.ResetLink);
+            return Ok(new { result = r });
         }
 
         //[HttpPost("/send/seminaire/group")]

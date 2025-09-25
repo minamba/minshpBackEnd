@@ -23,9 +23,11 @@ namespace MinshpWebApp.Api.Builders.impl
             return await _InvoiceService.AddInvoicesAsync(_mapper.Map<Invoice>(model));
         }
 
-        public async Task<bool> DeleteInvoicesAsync(int idInvoice)
+        public async Task<bool> DeleteInvoicesAsync(InvoiceRequest model)
         {
-            return await _InvoiceService.DeleteInvoicesAsync(idInvoice);
+            var result = _mapper.Map<Invoice>(model);
+
+            return await _InvoiceService.DeleteInvoicesAsync(result);
         }
 
         public async Task<IEnumerable<InvoiceViewModel>> GetInvoicesAsync()

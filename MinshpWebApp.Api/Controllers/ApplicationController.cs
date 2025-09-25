@@ -18,7 +18,7 @@ namespace MinshpWebApp.Api.Controllers
         {
             _applicationViewModelBuilder = applicationViewModelBuilder ?? throw new ArgumentNullException(nameof(applicationViewModelBuilder), $"Cannot instantiate {GetType().Name}");
         }
-        [Authorize]
+
         [HttpGet("/application")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<ApplicationViewModel>), Description = "list of applications")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]

@@ -113,12 +113,34 @@ namespace MinshpWebApp.Dal.Repositories
 
         public async Task<bool> DeleteImagesAsync(int idImage)
         {
-            var ImageToDelete = await _context.Images.FirstOrDefaultAsync(u => u.Id == idImage);
+            var imageToDelete = await _context.Images.FirstOrDefaultAsync(u => u.Id == idImage);
 
-            if (ImageToDelete == null)
-                return false; // ou throw une exception;
+            if (imageToDelete == null)
+                return false;
 
-            _context.Images.Remove(ImageToDelete);
+            // 1) Supprimer le fichier physique si l'URL est renseignée
+            if (!string.IsNullOrWhiteSpace(imageToDelete.Url))
+            {
+                try
+                {
+                    // on suppose que Url contient un chemin relatif genre "images/xxx.jpg"
+                    var path = imageToDelete.Url.Replace("\\", "/").TrimStart('/');
+                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", path);
+
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        System.IO.File.Delete(fullPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // tu peux logger l'erreur ici, mais on ne bloque pas la suppression en BDD
+                    Console.WriteLine($"Erreur suppression fichier image : {ex.Message}");
+                }
+            }
+
+            // 2) Supprimer en base
+            _context.Images.Remove(imageToDelete);
             await _context.SaveChangesAsync();
 
             return true;

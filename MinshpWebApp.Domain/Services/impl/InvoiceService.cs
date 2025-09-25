@@ -22,9 +22,9 @@ namespace MinshpWebApp.Domain.Services.impl
             return await _repository.AddInvoicesAsync(model);
         }
 
-        public async Task<bool> DeleteInvoicesAsync(int idInvoice)
+        public async Task<bool> DeleteInvoicesAsync(Invoice model)
         {
-            return await _repository.DeleteInvoicesAsync(idInvoice);
+            return await _repository.DeleteInvoicesAsync(model);
         }
 
         public async Task<IEnumerable<Invoice>> GetInvoicesAsync()

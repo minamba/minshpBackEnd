@@ -37,15 +37,15 @@ namespace MinshpWebApp.Api.Builders.impl
         }
 
         //pour la v3
-        //public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd)
-        //{
-        //   return await _shippingProvider.CreateShipmentAsync(cmd);
-        //}
-
-        public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd)
+        public async Task<ShipmentResultV3> CreateShipmentAsync(CreateShipmentCmd cmd)
         {
             return await _shippingProvider.CreateShipmentAsync(cmd);
         }
+
+        //public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd)
+        //{
+        //    return await _shippingProvider.CreateShipmentAsync(cmd);
+        //}
 
         public async Task<List<RateViewModel>> GetRatesAsync(OrderDetailsRequest request)
         {
@@ -97,7 +97,7 @@ namespace MinshpWebApp.Api.Builders.impl
                             Network = r.network,
                             Carrier = await GetCarrier(r.network),
                             Address = r.address,
-                            Distance = await GetDistance(getGeoPointFromAddress.Lat, getGeoPointFromAddress.Lon, r.lat, r.lng),
+                            Distance = await GetDistance(r.distance.ToString()),  //await GetDistance(getGeoPointFromAddress.Lat, getGeoPointFromAddress.Lon, r.lat, r.lng),
                             Latitude = r.lat,
                             Longitude = r.lng,
                             ZipCode = r.zip,
@@ -135,68 +135,28 @@ namespace MinshpWebApp.Api.Builders.impl
         }
 
 
+
+        public async Task<Tracking> GetShippingTrackingAsync(string shippingBoxtalReference)
+        {
+            return await _shippingProvider.GetShippingTrackingAsync(shippingBoxtalReference);
+        }
+
+
+        public async Task<LiveTracking> CreateSubscriptionAsync(string evenType)
+        {
+            return await _shippingProvider.CreateSubscriptionAsync(evenType);
+        }
+
+        public async Task<LiveTracking> GetSubscriptionAsync()
+        {
+            return await _shippingProvider.GetSubscriptionAsync();
+        }
+
+
+
+        // HELPERS ****************************************************************************************************************
+
         //METHODE POUR LA V3
-        //private async Task<string?> GetSchedules(Dictionary<string, List<OpeningInterval>> OpeningDays) 
-        //{
-        //    int countOpening = 0;
-        //    int countClosing = 0;
-
-        //    string openDay = null;
-        //    string closeDay = null;
-
-        //    string openHour = null;
-        //    string closeHour = null;
-
-        //    string schedules = null;
-
-        //    foreach (var o in OpeningDays.ToList())
-        //    {
-        //        DaysEnum dayEnum = Enum.Parse<DaysEnum>(o.Key);
-
-        //        string day = dayEnum switch
-        //        {
-        //            DaysEnum.MONDAY => monday,
-        //            DaysEnum.TUESDAY => tuesday,
-        //            DaysEnum.WEDNESDAY => wednesday,
-        //            DaysEnum.THURSDAY => thursday,
-        //            DaysEnum.FRIDAY => friday,
-        //            DaysEnum.SATURDAY => saturday,
-        //            DaysEnum.SUNDAY => sunday,
-        //        };
-
-        //        foreach(var s in o.Value)
-        //        {
-        //            if (s.openingTime != null)
-        //            {
-        //                countOpening++;
-        //                if (countOpening == 1)
-        //                {
-        //                    openDay = day;
-        //                    openHour = s.openingTime.ToString();
-        //                }
-        //            }
-
-
-        //            if (s.closingTime != null)
-        //            {
-        //                countClosing++;                         
-        //                closeHour = s.closingTime.ToString();
-        //            }
-
-        //                closeDay = day;
-        //        }
-
-
-
-        //    }
-        //    schedules = openDay + "-" + closeDay + " : " + openHour + "-" + closeHour;
-        //    return schedules;
-
-        //}
-
-
-
-        //METHODE POUR LA V1
         private async Task<string?> GetSchedules(Dictionary<string, List<OpeningInterval>> OpeningDays)
         {
             int countOpening = 0;
@@ -212,7 +172,7 @@ namespace MinshpWebApp.Api.Builders.impl
 
             foreach (var o in OpeningDays.ToList())
             {
-                DaysEnum dayEnum = Enum.Parse<DaysEnum>(o.Key.ToUpper());
+                DaysEnum dayEnum = Enum.Parse<DaysEnum>(o.Key);
 
                 string day = dayEnum switch
                 {
@@ -256,6 +216,67 @@ namespace MinshpWebApp.Api.Builders.impl
         }
 
 
+
+        //METHODE POUR LA V1
+        //private async Task<string?> GetSchedules(Dictionary<string, List<OpeningInterval>> OpeningDays)
+        //{
+        //    int countOpening = 0;
+        //    int countClosing = 0;
+
+        //    string openDay = null;
+        //    string closeDay = null;
+
+        //    string openHour = null;
+        //    string closeHour = null;
+
+        //    string schedules = null;
+
+        //    foreach (var o in OpeningDays.ToList())
+        //    {
+        //        DaysEnum dayEnum = Enum.Parse<DaysEnum>(o.Key.ToUpper());
+
+        //        string day = dayEnum switch
+        //        {
+        //            DaysEnum.MONDAY => monday,
+        //            DaysEnum.TUESDAY => tuesday,
+        //            DaysEnum.WEDNESDAY => wednesday,
+        //            DaysEnum.THURSDAY => thursday,
+        //            DaysEnum.FRIDAY => friday,
+        //            DaysEnum.SATURDAY => saturday,
+        //            DaysEnum.SUNDAY => sunday,
+        //        };
+
+        //        foreach (var s in o.Value)
+        //        {
+        //            if (s.openingTime != null)
+        //            {
+        //                countOpening++;
+        //                if (countOpening == 1)
+        //                {
+        //                    openDay = day;
+        //                    openHour = s.openingTime.ToString();
+        //                }
+        //            }
+
+
+        //            if (s.closingTime != null)
+        //            {
+        //                countClosing++;
+        //                closeHour = s.closingTime.ToString();
+        //            }
+
+        //            closeDay = day;
+        //        }
+
+
+
+        //    }
+        //    schedules = openDay + "-" + closeDay + " : " + openHour + "-" + closeHour;
+        //    return schedules;
+
+        //}
+
+
         private async Task<string> GetCarrier(string network)
         {
             CarrierEnum carrierEnum = Enum.Parse<CarrierEnum>(network);
@@ -274,43 +295,43 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
         // GET DISTANCE POUR LA V3
-        //private async Task<string> GetDistance (string distance)
-        //{
-        //    double d = int.Parse(distance);
-        //    string dist = null;
+        private async Task<string> GetDistance(string distance)
+        {
+            double d = int.Parse(distance);
+            string dist = null;
 
 
-        //    if (d < 100)
-        //    {
-        //        d = d * 10;
-        //        dist = d.ToString() + "m";
-        //    }
-        //    else if (d >= 1000)
-        //    {
-        //        d = d / 1000;
-        //        dist = d.ToString() + "km";
-        //    }
-        //    else
-        //        dist = d.ToString() + "m";
+            if (d < 100)
+            {
+                d = d * 10;
+                dist = d.ToString() + "m";
+            }
+            else if (d >= 1000)
+            {
+                d = d / 1000;
+                dist = d.ToString() + "km";
+            }
+            else
+                dist = d.ToString() + "m";
 
-        //    return dist;
-        //}
+            return dist;
+        }
 
 
         // GET DISTANCE POUR LA V1
-        private async Task<string> GetDistance(double latitudeInputAdress, double longitudeinputAdress, double latitudeRelay, double longitudeRelay)
-        {
+        //private async Task<string> GetDistance(double latitudeInputAdress, double longitudeinputAdress, double latitudeRelay, double longitudeRelay)
+        //{
 
-            var distance = Geo.HaversineMeters(latitudeInputAdress, longitudeinputAdress, latitudeRelay, longitudeRelay);
+        //    var distance = Geo.HaversineMeters(latitudeInputAdress, longitudeinputAdress, latitudeRelay, longitudeRelay);
 
-            if (distance < 1000)
-                return $"{distance}m";
+        //    if (distance < 1000)
+        //        return $"{distance}m";
 
-            var km = distance / 1000.0;
-            return km < 10
-                ? $"{km:0.0}km"
-                : $"{Math.Round(km):0}km";
-        }
+        //    var km = distance / 1000.0;
+        //    return km < 10
+        //        ? $"{km:0.0}km"
+        //        : $"{Math.Round(km):0}km";
+        //}
 
 
         int ParseMeters(string s)
@@ -320,6 +341,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 ? (int)Math.Round(double.Parse(s[..^2], CultureInfo.InvariantCulture) * 1000)
                 : int.Parse(s[..^1], CultureInfo.InvariantCulture); // "123m"
         }
+
 
     }
 }

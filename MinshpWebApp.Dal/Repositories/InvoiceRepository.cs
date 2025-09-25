@@ -92,12 +92,40 @@ namespace MinshpWebApp.Dal.Repositories
         }
 
 
-        public async Task<bool> DeleteInvoicesAsync(int idInvoice)
+        public async Task<bool> DeleteInvoicesAsync(Invoice model)
         {
-            var InvoiceToDelete = await _context.Invoices.FirstOrDefaultAsync(u => u.Id == idInvoice);
+            var InvoiceToDelete = await _context.Invoices.FirstOrDefaultAsync(u => u.Id == model.Id);
 
             if (InvoiceToDelete == null)
                 return false; // ou throw une exception;
+
+
+
+
+            if (!string.IsNullOrWhiteSpace(InvoiceToDelete.InvoiceLink))
+            {
+                try
+                {
+                    if (model.HardDelete == true)
+                    {
+
+                        var path = InvoiceToDelete.InvoiceLink.Replace("\\", "/").TrimStart('/');
+                        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), path);
+
+                        if (System.IO.File.Exists(fullPath))
+                        {
+                            System.IO.File.Delete(fullPath);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erreur suppression hard de la facture  : {ex.Message}");
+                }
+            }
+
+
+
 
             _context.Invoices.Remove(InvoiceToDelete);
             await _context.SaveChangesAsync();

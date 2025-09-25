@@ -35,7 +35,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Favorite = p.Favorite,
                 LastName = p.LastName,
                 FirstName = p.FirstName,
-                Phone = p.Phone
+                Phone = p.Phone,
+                Civilite = p.Civilite
             }).ToListAsync();
 
             return DeliveryAddressEntities;
@@ -59,6 +60,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.LastName != null) DeliveryAddressToUpdate.LastName = model.LastName;
             if (model.FirstName != null) DeliveryAddressToUpdate.FirstName = model.FirstName;
             if (model.Phone != null) DeliveryAddressToUpdate.Phone = model.Phone;
+            if (model.Civilite != null) DeliveryAddressToUpdate.Civilite = model.Civilite;
 
 
 
@@ -76,7 +78,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Favorite = model.Favorite,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                Phone = model.Phone
+                Phone = model.Phone,
+                Civilite = model.Civilite
             };
         }
 
@@ -95,7 +98,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Favorite = model.Favorite,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                Phone = model.Phone
+                Phone = model.Phone,
+                Civilite = model.Civilite
             };
 
             _context.DeliveryAddresses.Add(newDeliveryAddress);
@@ -113,7 +117,8 @@ namespace MinshpWebApp.Dal.Repositories
                 Favorite = model.Favorite,
                 LastName = model.LastName,
                 FirstName = model.FirstName,
-                Phone = model.Phone
+                Phone = model.Phone,
+                Civilite = model.Civilite
             };
         }
 

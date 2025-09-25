@@ -11,6 +11,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
+using OpenIddict.Abstractions;
 
 
 namespace MinshpWebApp.IdentityServer.Controller;
@@ -22,13 +25,15 @@ public class AccountController : ControllerBase
     private readonly ILogger<AccountController> _logger;
     private readonly UserManager<AppUser> _userManager;
     private readonly SignInManager<AppUser> _signInManager;
+    private readonly IConfiguration _config;
     private readonly IHttpClientFactory _http;
 
-    public AccountController(UserManager<AppUser> um, SignInManager<AppUser> sm, IHttpClientFactory http, ILogger<AccountController> logger)
+    public AccountController(UserManager<AppUser> um, SignInManager<AppUser> sm, IHttpClientFactory http, ILogger<AccountController> logger, IConfiguration config)
     {
         _userManager = um; _signInManager = sm;
         _http = http;
         _logger = logger;
+        _config = config;
     }
 
     public sealed class RegisterDto
@@ -46,6 +51,7 @@ public class AccountController : ControllerBase
     public sealed class UpdateUserDto
     {
         [Required] public string Id { get; set; } = default!;
+        [Required] public int IdApi { get; set; } = default!;
         [Required] public string FirstName { get; set; } = default!;
         [Required] public string LastName { get; set; } = default!;
         [Required] public string Civility { get; set; } = default!; // "M" | "Mme"
@@ -54,6 +60,7 @@ public class AccountController : ControllerBase
         public string? Birthdate { get; set; } // "yyyy-MM-dd"
          public string? Pseudo { get; set; } = default!;
         [EmailAddress] public string? Email { get; set; }
+        public bool? Subscribe { get; set; }
     }
 
     public sealed class ChangePasswordDto
@@ -110,10 +117,32 @@ public class AccountController : ControllerBase
             return Conflict(new { error = "Un utilisateur avec ce nom existe déjà." });
 
         // 3) Création
-        var user = new AppUser { UserName = email, Email = email, EmailConfirmed = true };
+        var user = new AppUser { UserName = email.ToLower(), Email = email.ToLower(), EmailConfirmed = true };
         var res = await _userManager.CreateAsync(user, dto.Password);
         if (!res.Succeeded)
             return BadRequest(new { errors = res.Errors.Select(e => e.Description) });
+
+        //Ajout du rôle customer par defaut
+        //// S'assure que le rôle existe (par sécurité)
+        if (!await HttpContext.RequestServices
+                .GetRequiredService<RoleManager<IdentityRole>>()
+                .RoleExistsAsync("Customer"))
+        {
+            await HttpContext.RequestServices
+                .GetRequiredService<RoleManager<IdentityRole>>()
+                .CreateAsync(new IdentityRole("Customer"));
+        }
+
+        // Assigne le rôle "Customer" au nouvel utilisateur
+        var addToRole = await _userManager.AddToRoleAsync(user, "Customer");
+        if (!addToRole.Succeeded)
+            return BadRequest(new { errors = addToRole.Errors.Select(e => e.Description) });
+
+        // (Optionnel) si tu veux forcer un claim Role immédiatement :
+        await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, "Customer"));
+        
+        //Ajout du rôle customer par defaut
+
 
         var userId = await _userManager.GetUserIdAsync(user); // = user.Id
 
@@ -151,8 +180,10 @@ public class AccountController : ControllerBase
             IdAspNetUser = userId, // <-- on enregistre l'ID AspNetUser
             PhoneNumber = dto.Phone,
             Pseudo = null,
-            Actif = true
+            Actif = true,
+            Suscribe = true
         };
+
 
         var resp = await api.PostAsJsonAsync("customer", customer, ct);
         if (!resp.IsSuccessStatusCode)
@@ -219,6 +250,7 @@ public class AccountController : ControllerBase
             var api = ApiWithBearer(token);
             var model = new MinshpWebApp.Api.Request.CustomerRequest
             {
+                Id = dto.IdApi,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 PhoneNumber = dto.Phone,
@@ -228,6 +260,7 @@ public class AccountController : ControllerBase
                 Pseudo = dto.Pseudo,
                 Actif = dto.Actif,
                 IdAspNetUser = id,
+                Suscribe = dto.Subscribe
             };
 
             // Ton PUT /customer attend un CustomerRequest
@@ -346,6 +379,85 @@ public class AccountController : ControllerBase
         await _signInManager.SignOutAsync();
         return Ok();
     }
+
+
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest req, CancellationToken ct)
+    {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        var email = req.Email.Trim();
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null) return Ok(); // réponse neutre (pas d’info leak)
+
+        // Générer token Identity + Base64Url pour l’URL
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var tokenEncoded = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+        // Lien vers ta page React
+        var frontendBase = _config["Frontend:BaseUrl"] ?? "http://localhost:3000";
+        var link = $"{frontendBase}/reset-password?email={Uri.EscapeDataString(email)}&token={tokenEncoded}";
+
+        // Appel de TON API d’envoi d’email, via client_credentials (même pattern que /customer)
+        var apiToken = await GetClientCredentialsTokenAsync(ct);
+        if (!string.IsNullOrEmpty(apiToken))
+        {
+            var api = ApiWithBearer(apiToken);
+
+            // -> adapte le chemin si besoin. Ici: POST /mail/password-reset
+            var mailPayload = new { To = email, ResetLink = link };
+            var mailResp = await api.PostAsJsonAsync("mail/password-reset", mailPayload, ct);
+
+            if (!mailResp.IsSuccessStatusCode)
+            {
+                var body = await mailResp.Content.ReadAsStringAsync(ct);
+                _logger.LogError("Mail reset failed: {Status} {Body}", mailResp.StatusCode, body);
+                // On reste neutre côté client
+            }
+        }
+        else
+        {
+            _logger.LogError("Impossible d’obtenir un token client_credentials pour l’API (mail).");
+            // On reste neutre côté client
+        }
+
+        return Ok();
+    }
+
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest req)
+    {
+        if (!ModelState.IsValid) return ValidationProblem(ModelState);
+
+        var user = await _userManager.FindByEmailAsync(req.Email);
+        if (user is null) return BadRequest(new { error = "Utilisateur introuvable." });
+
+        string decodedToken;
+        try
+        {
+            var bytes = WebEncoders.Base64UrlDecode(req.Token);
+            decodedToken = Encoding.UTF8.GetString(bytes);
+        }
+        catch
+        {
+            return BadRequest(new { error = "Token invalide." });
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, decodedToken, req.NewPassword);
+        if (!result.Succeeded)
+            return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+
+        // (Optionnel) révoquer les refresh tokens OpenIddict ici si tu les utilises
+        // await foreach (var t in _tokenManager.FindBySubjectAsync(user.Id)) await _tokenManager.TryRevokeAsync(t);
+
+        return Ok();
+    }
+
+
 
 
 

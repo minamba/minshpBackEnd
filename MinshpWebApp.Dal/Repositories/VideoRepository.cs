@@ -96,12 +96,30 @@ namespace MinshpWebApp.Dal.Repositories
 
         public async Task<bool> DeleteVideosAsync(int idVideo)
         {
-            var VideoToDelete = await _context.Videos.FirstOrDefaultAsync(u => u.Id == idVideo);
+            var videoToDelete = await _context.Videos.FirstOrDefaultAsync(u => u.Id == idVideo);
 
-            if (VideoToDelete == null)
-                return false; // ou throw une exception;
+            if (videoToDelete == null)
+                return false;
 
-            _context.Videos.Remove(VideoToDelete);
+            if (!string.IsNullOrWhiteSpace(videoToDelete.Url))
+            {
+                try
+                {
+                    var path = videoToDelete.Url.Replace("\\", "/").TrimStart('/');
+                    var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", path);
+
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        System.IO.File.Delete(fullPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erreur suppression fichier vidéo : {ex.Message}");
+                }
+            }
+
+            _context.Videos.Remove(videoToDelete);
             await _context.SaveChangesAsync();
 
             return true;

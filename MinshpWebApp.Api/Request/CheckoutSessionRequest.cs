@@ -4,8 +4,22 @@ namespace MinshpWebApp.Api.Request
 {
     public class CheckoutSessionRequest
     {
-        //++++++++++++++++++++** CREATION DE LA COMMANDE ***********************************************************
+
+
+        //V3 COMMANDE BOXTAL *******************************************************************************************************
+        public bool? Insured { get; set; } = false;
+        public string? ExternalId { get; set; }
+        public string? LabelType { get; set; } = "PDF_A4";
+        public string? ShippingOfferId { get; set; }
+        public string? ShippingOfferCode { get; set; }
+        public DateTime? ExpectedTakingOverDate { get; set; }
+
+        public  MinshpWebApp.Domain.Models.Shipment? Shipment { get; set; }
+
+        //Infos complementaire 
+        public List<PromoUseCode>? UseCodes { get; set; }
         public int? CustomerId { get; set; }
+        public string? CustomerNumber { get; set; }
 
         public DateTime? Date { get; set; }
 
@@ -16,6 +30,36 @@ namespace MinshpWebApp.Api.Request
         public decimal? Amount { get; set; }
 
         public decimal? DeliveryAmount { get; set; }
+        public string? ContentDescription { get; set; }
+
+        public List<OrderCustomerProductRequest> OrderCustomerProducts { get; set; }
+        public string ContentCode { get; set; } = "50110";
+
+        //V3 COMMANDE BOXTAL *******************************************************************************************************
+
+
+
+
+        // REDIRECTION VERS LES PAGES DE SUCCES CANCEL OU ERREUR EN FONCTION DE L'ETAT
+        public string? SuccessUrl { get; set; }
+        public string? CancelUrl { get; set; }
+        public string? ErrorUrl { get; set; }
+
+
+
+
+        //++++++++++++++++++++** CREATION DE LA COMMANDE ***********************************************************
+        //public int? CustomerId { get; set; }
+
+        //public DateTime? Date { get; set; }
+
+        //public string? Status { get; set; }
+
+        //public string? PaymentMethod { get; set; }
+
+        //public decimal? Amount { get; set; }
+
+        //public decimal? DeliveryAmount { get; set; }
 
 
 
@@ -33,15 +77,10 @@ namespace MinshpWebApp.Api.Request
 
 
 
-        // facultatif : le front peut les laisser vides, on calcule via FrontendBaseUrl
-        public string? SuccessUrl { get; set; }
-        public string? CancelUrl { get; set; }
-
-
 
         //********************* CREATION DE ORDER PRODUCT *******************************************************
 
-        public List<OrderCustomerProductRequest> OrderCustomerProducts { get; set; }
+        //public List<OrderCustomerProductRequest> OrderCustomerProducts { get; set; }
 
 
         //+++++++++++++++++++++ CREATION DE LA LIVRAISON POUR BOXTAL +++++++++++++++++++++++++++++++++++++++++++++
@@ -50,11 +89,9 @@ namespace MinshpWebApp.Api.Request
         public string OperatorCode { get; set; } = "";        // ex: "CHRP"
         public string ServiceCode { get; set; } = "";        // ex: "ChronoShoptoShop"
 
-        public string ContentCode { get; set; } = "50110";
+        //public string ContentCode { get; set; } = "50110";
 
         public bool IsRelay { get; set; } = false;
-
-
         public string? UrlPush { get; set; }
 
         // Points relais choisis (issus de mandatory_informations dans la réponse de cotation)
@@ -62,26 +99,26 @@ namespace MinshpWebApp.Api.Request
         public string? PickupPointCode { get; set; }         // ex: "CHRP-617VA" (retrait.pointrelais)
 
         // Contenu / valeur
-        public string? ContentDescription { get; set; }       // ex: "Livre illustré pour enfants"
+        //public string? ContentDescription { get; set; }       // ex: "Livre illustré pour enfants"
         public decimal? DeclaredValue { get; set; }       // ex: 30
 
         // Colis (tu peux réutiliser ta classe Package pour poids/dims/valeur)
         public List<Package> Packages { get; set; } = new();
 
         //liste des codes utilisés dans le panier
-        public List<PromoUseCode>? UseCodes { get; set; }
+        //public List<PromoUseCode>? UseCodes { get; set; }
 
         // Destinataire
-        public string ToType { get; set; } = "particulier"; // "entreprise"|"particulier"
-        public string? ToCivility { get; set; }                  // ex: "M","Mme" (si exigé par l'offre)
-        public string? ToLastName { get; set; }
-        public string? ToFirstName { get; set; }
-        public string? ToEmail { get; set; }
-        public string? ToPhone { get; set; }
-        public string? ToAddress { get; set; }                  // ligne d'adresse
-        public string? ToZip { get; set; }
-        public string? ToCity { get; set; }
-        public string? ToCountry { get; set; } = "FR";
+        //public string ToType { get; set; } = "particulier"; // "entreprise"|"particulier"
+        //public string? ToCivility { get; set; }                  // ex: "M","Mme" (si exigé par l'offre)
+        //public string? ToLastName { get; set; }
+        //public string? ToFirstName { get; set; }
+        //public string? ToEmail { get; set; }
+        //public string? ToPhone { get; set; }
+        //public string? ToAddress { get; set; }                  // ligne d'adresse
+        //public string? ToZip { get; set; }
+        //public string? ToCity { get; set; }
+        //public string? ToCountry { get; set; } = "FR";
 
 
         // Divers
@@ -91,70 +128,4 @@ namespace MinshpWebApp.Api.Request
         public int? OrderId { get; set; }
 
     }
-
-    //public class BasketItem
-    //{
-    //    public int ProductId { get; set; }
-    //    public int Qty { get; set; }
-    //    public decimal UnitPriceTtc { get; set; }
-    //}
-
-    //public class ShipmentContext
-    //{
-    //    public List<Package> Packages { get; set; } = new(); // tu réutilises ton modèle Domain.Models.Package si tu veux
-    //    public decimal CartWeightKg { get; set; }
-    //    public decimal BaseTotal { get; set; }               // total produits TTC
-    //}
-
-    //public class ShippingSelection
-    //{
-    //    // "home" | "relay"
-    //    public string Mode { get; set; } = "home";
-    //    public decimal Price { get; set; }
-    //    public string? RateCode { get; set; }
-    //    public string? Carrier { get; set; }                 // libellé ex. "Chronopost"
-    //    public string? OperatorCode { get; set; }            // ex. CHRP (rempli côté back si null)
-    //    public string? DropOffPointCode { get; set; }        // utile pour shop-to-shop
-
-    //    public RelayInfo? Relay { get; set; }
-    //    public HomeAddressInfo? HomeAddress { get; set; }
-    //}
-
-    //public class RelayInfo
-    //{
-    //    public string? Id { get; set; }
-    //    public string? Name { get; set; }
-    //    public string? Address { get; set; }
-    //    public string? Zip { get; set; }
-    //    public string? City { get; set; }
-    //    public string? Network { get; set; }                 // ex. CHRP/MONR/UPSE/POFR
-    //}
-
-    //public class HomeAddressInfo
-    //{
-    //    public string? Address { get; set; }
-    //    public string? Zip { get; set; }
-    //    public string? City { get; set; }
-    //    public string? Country { get; set; } = "FR";
-    //}
-
-
-    // si tu as déjà Domain.Models.Package, garde-le ; sinon ce petit DTO suffit
-    //public class PackageCheckout
-    //{
-    //    public string? Id { get; set; }
-    //    public string? ContainedCode { get; set; }
-    //    public string? PackageWeight { get; set; }
-    //    public string? PackageLonger { get; set; }
-    //    public string? PackageWidth { get; set; }
-    //    public string? PackageHeight { get; set; }
-    //    public decimal? PackageValue { get; set; }
-    //    public bool PackageStackable { get; set; } = true;
-    //    public string Type { get; set; } = "PARCEL";
-    //}
-
-
-
-    //POUR LA LIVRAISON 
-
 }

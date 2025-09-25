@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>4b160e86-c4dd-4915-b4f5-fbf66ecfb080</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,8 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Templates\ForgotPassword\" />
-    <Folder Include="Templates\Payments\" />
     <Folder Include="Templates\Registrations\" />
     <Folder Include="wwwroot\images\" />
     <Folder Include="wwwroot\factures\" />

@@ -18,6 +18,7 @@ public partial class MinshpDatabaseContext : DbContext
 
 
     public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
+    public virtual DbSet<AspNetRole> AspNetRoles { get; set; }
 
     public virtual DbSet<Application> Applications { get; set; }
 
@@ -25,6 +26,8 @@ public partial class MinshpDatabaseContext : DbContext
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Customer> Customers { get; set; }
+
+    public virtual DbSet<CustomerPromotionCode> CustomerPromotionCodes { get; set; }
 
     public virtual DbSet<Feature> Features { get; set; }
 
@@ -35,6 +38,8 @@ public partial class MinshpDatabaseContext : DbContext
     public virtual DbSet<Image> Images { get; set; }
 
     public virtual DbSet<Invoice> Invoices { get; set; }
+
+    public virtual DbSet<NewLetter> NewLetters { get; set; }
 
     public virtual DbSet<Order> Orders { get; set; }
     public virtual DbSet<OrderCustomerProduct> OrderCustomerProducts { get; set; }
@@ -201,6 +206,25 @@ public partial class MinshpDatabaseContext : DbContext
         });
 
 
+        modelBuilder.Entity<CustomerPromotionCode>(entity =>
+        {
+            entity.ToTable("Customer_promotion_code");
+
+            entity.Property(e => e.IdCutomer).HasColumnName("Id_cutomer");
+            entity.Property(e => e.IdPromotion).HasColumnName("Id_promotion");
+
+            entity.HasOne(d => d.IdCutomerNavigation).WithMany(p => p.CustomerPromotionCodes)
+                .HasForeignKey(d => d.IdCutomer)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Customer_promotion_code_Customer");
+
+            entity.HasOne(d => d.IdPromotionNavigation).WithMany(p => p.CustomerPromotionCodes)
+                .HasForeignKey(d => d.IdPromotion)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_Customer_promotion_code_Promotion_code");
+        });
+
+
         modelBuilder.Entity<DeliveryAddress>(entity =>
         {
             entity.ToTable("Delivery_address");
@@ -290,6 +314,11 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Invoice_Order");
+        });
+
+        modelBuilder.Entity<NewLetter>(entity =>
+        {
+            entity.ToTable("New_letter");
         });
 
 

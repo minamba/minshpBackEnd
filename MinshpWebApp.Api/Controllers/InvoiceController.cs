@@ -52,12 +52,12 @@ namespace MinshpWebApp.Api.Controllers
         }
 
         [Authorize]
-        [HttpDelete("/invoice/{id}")]
+        [HttpDelete("/invoice")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(string), Description = "Delete a Invoice")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
-        public async Task<IActionResult> DeleteInvoiceAsync([FromRoute] int id)
+        public async Task<IActionResult> DeleteInvoiceAsync([FromBody] InvoiceRequest model)
         {
-            var result = await _InvoiceViewModelBuilder.DeleteInvoicesAsync(id);
+            var result = await _InvoiceViewModelBuilder.DeleteInvoicesAsync(model);
             return Ok(result);
         }
     }

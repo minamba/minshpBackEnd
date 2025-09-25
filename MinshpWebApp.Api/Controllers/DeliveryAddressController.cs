@@ -8,6 +8,8 @@ using System.Net;
 
 namespace MinshpWebApp.Api.Controllers
 {
+    [ApiController]
+    [Route("DeliveryAddresses")]
     public class DeliveryAddressController : Controller
     {
         IDeliveryAddressViewModelBuilder _deliveryAddressViewModelBuilder;

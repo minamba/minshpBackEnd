@@ -34,6 +34,8 @@ public partial class Customer
 
     public virtual ICollection<DeliveryAddress> DeliveryAddresses { get; set; } = new List<DeliveryAddress>();
 
+    public virtual ICollection<CustomerPromotionCode> CustomerPromotionCodes { get; set; } = new List<CustomerPromotionCode>();
+
     public virtual AspNetUser? IdAspNetUserNavigation { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();

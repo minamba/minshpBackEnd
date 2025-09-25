@@ -8,6 +8,8 @@ using System.Net;
 
 namespace MinshpWebApp.Api.Controllers
 {
+    [ApiController]
+    [Route("BillingAddresses")]
     public class BillingAddressController : Controller
     {
         IBillingAddressViewModelBuilder _billingAddressViewModelBuilder;

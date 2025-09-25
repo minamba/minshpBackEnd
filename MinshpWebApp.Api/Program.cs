@@ -21,6 +21,19 @@ QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 
+//La partie log
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();   // Terminal / dotnet run / Kestrel stdout
+builder.Logging.AddDebug();     // VS "Sortie > Déboguer"
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
+//Lecture des user secrets
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddUserSecrets<Program>(optional: true);
+}
+
+
 // Activer les logs dans la console
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -70,10 +83,13 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
 });
 
+var pcIp = "192.168.1.63"; // ex. "192.168.1.23"
+
 builder.Services.AddOpenIddict()
     .AddValidation(options =>
     {
-        options.SetIssuer("https://localhost:7183"); // ← URL EXACTE de ton IdentityServer
+        options.SetIssuer($"http://{pcIp}:5098");
+        //options.SetIssuer("https://localhost:7183"); // ← URL EXACTE de ton IdentityServer
         options.AddAudiences("api-resource");     // décommente si tu utilises une audience nommée
         options.UseSystemNetHttp();
         options.UseAspNetCore();
@@ -83,9 +99,16 @@ builder.Services.AddAuthorization();
 
 
 // CORS (déclare une policy nommée pour la réutiliser)
+
+
 const string CorsPolicy = "WebCors";
 builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p =>
-    p.WithOrigins("http://localhost:3000", "http://localhost:5173", "https://bd158b87393d.ngrok.app")
+        p.WithOrigins(
+        $"http://{pcIp}:3000",   // front vu par le téléphone
+        "http://localhost:3000", // front vu en local sur le PC
+        "http://localhost:5173", // si Vite
+        "https://bd158b87393d.ngrok.app"
+    )
      .AllowAnyHeader()
      .AllowAnyMethod()));
 
@@ -113,6 +136,9 @@ builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IOrderCustomerProductRepository, OrderCustomerProductRepository>();
 builder.Services.AddScoped<IPackageProfilRepository, PackageProfilRepository>();
 builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<ICustomerPromotionCodeRepository, CustomerPromotionCodeRepository>();
+builder.Services.AddScoped<INewLetterRepository, NewLetterRepository>();
 
 
 //scoped services
@@ -137,6 +163,9 @@ builder.Services.AddScoped<IOrderCustomerProductService, OrderCustomerProductSer
 builder.Services.AddScoped<IShippingProvider, BoxtalProvider>();
 builder.Services.AddScoped<IPackageProfilService, PackageProfilService>();
 builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<ICustomerPromotionCodeService, CustomerPromotionCodeService>();
+builder.Services.AddScoped<INewLetterService, NewLetterService>();
 
 
 
@@ -165,6 +194,12 @@ builder.Services.AddScoped<IBoxalProviderViewModelBuilder, BoxalProviderViewMode
 builder.Services.AddScoped<IPackageProfilViewModelBuilder, PackageProfilViewModelBuilder>();
 builder.Services.AddScoped<ISubCategoryViewModelBuilder, SubCategoryViewModelBuilder>();
 builder.Services.AddScoped<IMailViewModelBuilder, MailViewModelBuilder>();
+builder.Services.AddScoped<IRoleViewModelBuilder, RoleViewModelBuilder>();
+builder.Services.AddScoped<ICustomerPromotionCodeViewModelBuilder, CustomerPromotionCodeViewModelBuilder>();
+builder.Services.AddScoped<ITelegramViewModelBuilder, TelegramViewModelBuilder>();
+builder.Services.AddScoped<INewLetterViewModelBuilder, NewLetterViewModelBuilder>();
+
+
 
 //BOXTAL LIVRAISON
 // 1) BoxtalOptions ← Shipping:Boxtal
@@ -196,7 +231,10 @@ builder.Services.AddHttpClient("BoxtalV3", (sp, c) =>
     c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     c.DefaultRequestHeaders.UserAgent.ParseAdd("Minshp/1.0");
 });
+
+
 //BOXTAL LIVRAISON
+
 
 builder.Services.AddMemoryCache();
 
@@ -218,6 +256,30 @@ builder.Services.Configure<FormOptions>(options =>
 
 var app = builder.Build();
 
+//permet de voir que les users secrets sont bien lu
+if (app.Environment.IsDevelopment())
+{
+    var opt = app.Services.GetRequiredService<IOptions<BoxtalOptions>>().Value;
+    app.Logger.LogInformation(
+        "Boxtal loaded. BaseV3={BaseV3}, CallbackUrl={Callback}, SecretLen={Len}",
+        opt.BaseUrlV3,
+        opt.V3CallbackUrl,
+        opt.V3WebhookSecret?.Length ?? 0
+    );
+}
+
+
+var stripe = new StripeClient(builder.Configuration["Stripe:SecretKey"]);
+var acctSvc = new AccountService(stripe);
+
+// 👉 récupère le compte courant sans fournir d'id
+var acct = await acctSvc.GetSelfAsync();
+
+app.Logger.LogInformation("Stripe server is using Account={AccountId} Mode={Mode}",
+    acct.Id,
+    (builder.Configuration["Stripe:SecretKey"]?.StartsWith("sk_live") == true) ? "LIVE" : "TEST"
+);
+
 
 //Logger 
 app.MapGet("/", (ILogger<Program> logger) =>
@@ -237,13 +299,20 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles(); // pour wwwroot si besoin
 
-app.UseCors(builder =>
-    builder.WithOrigins("http://localhost:3000","https://bd158b87393d.ngrok.app")
-           .AllowAnyHeader()
-           .AllowAnyMethod()
-);
+//app.UseCors(builder =>
+//    builder.WithOrigins("http://localhost:3000","https://bd158b87393d.ngrok.app")
+//           .AllowAnyHeader()
+//           .AllowAnyMethod()
+//);
 
-app.UseHttpsRedirection();
+app.UseCors(CorsPolicy);
+
+//app.UseHttpsRedirection();
+// Redirige en HTTPS seulement hors dev
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -34,17 +34,32 @@ namespace MinshpWebApp.Domain.Models
 
     public class Package
     {
-        public string? Id { get; set; }
-        public string? Type { get; set; }
+        public string? Type { get; set; } = "PARCEL";
+        public string? PackageId { get; set; }
+        public String ContentCodeDefault { get; set; } = "50110";
 
-        public string? ContainedCode { get; set; }
+        public PackageValue Value { get; set; }
+        public PackageContent Content { get; set; }
         public string? PackageWeight { get; set; }
         public string? PackageLonger { get; set; }
         public string? PackageWidth { get; set; }
         public string? PackageHeight { get; set; }
         public decimal? PackageValue { get; set; }
-        public bool? PackageStackable { get; set; }
+        public bool? PackageStackable { get; set; } = true;
         public string? ExternalId { get; set; }
+    }
+
+
+    public class  PackageValue
+    {
+        public decimal? Value { get; set; }
+        public string? Currency { get; set; } = "Eur";
+    }
+
+    public class PackageContent
+    {
+        public string? Id { get; set; }
+        public string? Description { get; set; }
     }
 
 

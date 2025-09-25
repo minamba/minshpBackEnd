@@ -6,7 +6,7 @@ using MinshpWebApp.IdentityServer.Authentication;
 namespace MinshpWebApp.IdentityServer.Controller
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("role")]
     [Authorize(Roles = "Admin")]
     public class RolesController : ControllerBase
     {

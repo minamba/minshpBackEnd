@@ -41,16 +41,24 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(o =>
 .AddEntityFrameworkStores<AuthDbContext>()
 .AddDefaultTokenProviders();
 
+builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
+{
+    o.TokenLifespan = TimeSpan.FromHours(2);
+});
+
 // Claims factory (pour inclure les rôles dans le principal)
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, CustomUserClaimsPrincipalFactory>();
 
 // CORS — doit être AVANT Build()
-const string WebCors = "WebCors";
-builder.Services.AddCors(o => o.AddPolicy(WebCors, p =>
+var pcIp = "192.168.1.63";
+builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
     p.WithOrigins(
+        $"http://{pcIp}:3000",
+        $"http://{pcIp}:5173",
         "http://localhost:3000",
         "https://localhost:3000",
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "https://localhost:5173"
     )
     .AllowAnyHeader()
     .AllowAnyMethod()
@@ -88,6 +96,8 @@ builder.Services.AddOpenIddict()
         o.SetTokenEndpointUris("/connect/token");
         o.SetUserInfoEndpointUris("/connect/userinfo");
         o.SetEndSessionEndpointUris("/connect/logout");
+
+        o.SetIssuer(new Uri($"http://{pcIp}:5098")); //pour y acceder sur mobile
 
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowPasswordFlow();
@@ -215,19 +225,24 @@ using (var scope = app.Services.CreateScope())
 
     // admin
     var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-    var admin = await userMgr.FindByEmailAsync("contact@minshp.com");
+    var admin = await userMgr.FindByEmailAsync("minsceo@minshp.com");
     if (admin is null)
     {
-        admin = new AppUser { UserName = "mins@admin.com", Email = "contact@minshp.com", EmailConfirmed = true };
+        admin = new AppUser { UserName = "mins@admin.com", Email = "minsceo@minshp.com", EmailConfirmed = true };
         await userMgr.CreateAsync(admin, "cdjeneba19882025");
         await userMgr.AddToRoleAsync(admin, "Admin");
     }
 }
 
 // ------- pipeline (ordre important)
-app.UseHttpsRedirection();
+// Redirige en HTTPS seulement hors dev
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseRouting();
-app.UseCors(WebCors);
+app.UseCors("WebCors");
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -12,6 +12,6 @@ namespace MinshpWebApp.Domain.Services
         Task<IEnumerable<Invoice>> GetInvoicesAsync();
         Task<Invoice> UpdateInvoicesAsync(Invoice model);
         Task<Invoice> AddInvoicesAsync(Domain.Models.Invoice model);
-        Task<bool> DeleteInvoicesAsync(int idInvoice);
+        Task<bool> DeleteInvoicesAsync(Domain.Models.Invoice model);
     }
 }

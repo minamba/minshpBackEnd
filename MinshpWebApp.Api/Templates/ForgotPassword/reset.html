@@ -1,0 +1,100 @@
+﻿<html>
+
+<head>
+    <meta />
+    <meta content="width=device-width, initial-scale=1.0" />
+    <title>Réinitialisation de mot de passe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #111827;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+            .header img {
+                max-height: 200px; /* augmente la hauteur max */
+                width: 200px; /* conserve les proportions */
+                display: inline-block;
+            }
+
+        .content {
+            padding: 30px;
+            color: #374151;
+        }
+
+            .content h2 {
+                margin-top: 0;
+                font-size: 18px;
+                color: #111827;
+            }
+
+        .btn {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff !important;
+            background: #2563eb;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+            .btn:hover {
+                background: #1d4ed8;
+            }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{BASE_URL}}" alt="Min's Shop" />
+        </div>
+        <div class="content">
+            <h2>Réinitialisation de votre mot de passe</h2>
+            <p>Bonjour,</p>
+            <p>
+                Vous avez demandé à réinitialiser votre mot de passe.
+                Cliquez sur le bouton ci-dessous pour définir un nouveau mot de passe :
+            </p>
+            <p style="text-align: center;">
+                <a class="btn" href="{{RESET_LINK}}" target="_blank">Réinitialiser mon mot de passe</a>
+            </p>
+            <p>
+                Ce lien est valable pendant <strong>2 heures</strong>.
+                Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer ce message.
+            </p>
+            <p>À bientôt,<br />L’équipe Min’s Shop</p>
+        </div>
+        <div class="footer">
+            © {{CURRENT_YEAR}} Min's Shop. Tous droits réservés.
+        </div>
+    </div>
+</body>
+
+</html>

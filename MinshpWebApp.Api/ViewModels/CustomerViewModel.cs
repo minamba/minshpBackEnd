@@ -1,4 +1,6 @@
-﻿namespace MinshpWebApp.Api.ViewModels
+﻿using MinshpWebApp.Dal.Entities;
+
+namespace MinshpWebApp.Api.ViewModels
 {
     public class CustomerViewModel
     {
@@ -23,6 +25,7 @@
         public DateTime? BirthDate { get; set; }
 
         public string? Pseudo { get; set; }
+        public List<AspNetRoleViewModel> Roles { get; set; }
 
         public BillingAddressViewModel? BillingAddress { get; set; }
 

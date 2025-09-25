@@ -28,4 +28,6 @@ public partial class Customer
     public string? Pseudo { get; set; }
 
     public string? ClientNumber1 { get; set; }
+
+    public List<AspNetRole> Roles { get; set; }
 }

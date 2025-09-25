@@ -1,138 +1,116 @@
-﻿<!DOCTYPE html>
-<html lang="fr">
+﻿<html>
+
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>L'Ultime Destination</title>
+    <meta />
+    <meta content="width=device-width, initial-scale=1.0" />
+    <title>Confirmation d'inscription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #111827;
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+        }
+
+            .header img {
+                width: 200px;
+                height: auto;
+                display: inline-block;
+            }
+
+        .content {
+            padding: 30px;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+            .content h2 {
+                margin-top: 0;
+                font-size: 20px;
+                color: #111827;
+            }
+
+        .btn {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff !important;
+            background: #2563eb;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+            .btn:hover {
+                background: #1d4ed8;
+            }
+
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 0; background-color:#022c33; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; ">
 
-    <center style="width: 100%; background-color:#eaeded;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-                <td align="center">
+<div class="container">
 
-                    <!-- Container -->
-                    <table role="presentation" width="100%" style="max-width:600px;">
+    <div class="header">
+        <img src="{{BASE_URL}}" alt="Min's Shop" />
+    </div>
 
-                        <!-- Header -->
-                        <tr>
-                            <td style="background-color:#022c33; padding:30px 20px; text-align:center; color:#ffffff;">
-                                <h2 style="margin:0; font-size:24px;">بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ</h2>
-                                <p style="margin:10px 0 20px; font-size:18px;">UN NOUVEAU SÉMINAIRE avec مُعَلِّم Hatim Al Maliki</p>
-                                <img src="https://i.imgur.com/SD3I8mW.jpeg" alt="Qui es-tu auprès d'Allah ?'" style="width:100%; max-width:400px; height:auto; border:0;" />
-                            </td>
-                        </tr>
 
-                        <!-- Content -->
-                        <tr>
-                            <td style="padding:30px 20px; color:#000000; background-color:#ffffff;">
-                                <p style="margin:0 0 15px; font-size:16px;"><strong>Assalam aleykoum wa rahmatu'LLAHI wa baarakatuhu.</strong><br />Ma sœur, mon frère,</p>
+    <div class="content">
+        <h2>Bienvenue chez Min’s Shop 🎉</h2>
+        <p>Bonjour <strong>{{FIRSTNAME}} {{LASTNAME}}</strong>,</p>
+        <p>
+            Merci de vous être inscrit(e) sur <strong>Min’s Shop</strong> !
+            Votre compte a bien été créé et vous pouvez dès maintenant accéder à nos services.
+        </p>
 
-                                <p style="margin:0 0 15px; font-size:16px;"><strong>Du samedi 8 juin au samedi 15 juin</strong></p>
+        <p style="text-align: center;">
+            <a class="btn" href="{{LOGIN_LINK}}" target="_blank">Accéder à mon compte</a>
+        </p>
 
-                                <p style="margin:0 0 15px; font-size:16px;">Au <strong>Jour du Jugement</strong>, chaque âme sera confrontée à son <strong>ultime</strong> destinée.</p>
+        <p>
+            Voici quelques avantages réservés à nos membres :
+        </p>
+        <ul>
+            <li>Suivi de vos commandes en temps réel 📦</li>
+            <li>Offres exclusives et réductions 💸</li>
+            <li>Support client prioritaire 🤝</li>
+        </ul>
 
-                                <p style="margin:0 0 15px; font-size:16px;"><strong>Où serons-nous ?</strong></p>
+        <p>
+            Nous sommes ravis de vous compter parmi nous et avons hâte de vous accompagner.
+        </p>
 
-                                <p style="margin:0 0 15px; font-size:16px;">
-                                    🔥 <strong>Les châtiments terrifiants de l'Enfer</strong> – un rappel glaçant<br />
-                                    🌿 <strong>Les délices incomparables du Paradis</strong> – une promesse divine
-                                </p>
+        <p>À très bientôt,<br />L’équipe Min’s Shop</p>
+    </div>
 
-                                <p style="margin:0 0 15px; font-size:16px;">📖 À travers le Coran et la Sunna 🤲🏼, nous explorerons ces réalités.</p>
 
-                                <p style="text-align:center; font-size:18px; margin:20px 0;"><strong>👇👇👇</strong></p>
+    <div class="footer">
+        © {{CURRENT_YEAR}} Min's Shop. Tous droits réservés.
+    </div>
+</div>
 
-                                <div style="text-align:center;">
-                                    <a href="https://tonlien-inscription.com"
-                                       style="background-color:#00b9ae; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block; font-size:16px;">
-                                        S'INSCRIRE
-                                    </a>
-                                </div>
-                                <div style="margin-top:30px; text-align:center; font-size:14px; color:#444444;">
-                                    <p style="margin: 15px 0;">
-                                        Qu'ALLAH vous ouvre les portes de la science,<br />
-                                        qu'Il nous guide et nous accorde la paix intérieure.
-                                    </p>
-                                    <p style="margin: 5px 0;">
-                                        Fraternellement,<br />
-                                        <strong>Institut Malik Ibn Anas</strong>
-                                    </p>
-                                </div>
-                                <!-- Icônes sociales -->
-                                <table role="presentation" align="center" style="margin-top:30px; margin-bottom:20px;">
-                                    <tr>
-                                        <td style="padding: 0 10px;">
-                                            <a href="https://facebook.com" target="_blank">
-                                                <img src="https://cdn-icons-png.flaticon.com/24/145/145802.png" alt="Facebook" width="24" style="display:block;">
-                                            </a>
-                                        </td>
-                                        <td style="padding: 0 10px;">
-                                            <a href="https://instagram.com" target="_blank">
-                                                <img src="https://cdn-icons-png.flaticon.com/24/174/174855.png" alt="Instagram" width="24" style="display:block;">
-                                            </a>
-                                        </td>
-                                        <td style="padding: 0 10px;">
-                                            <a href="https://youtube.com" target="_blank">
-                                                <img src="https://cdn-icons-png.flaticon.com/24/1384/1384060.png" alt="YouTube" width="24" style="display:block;">
-                                            </a>
-                                        </td>
-                     
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
-
-                    </table>
-                </td>
-            </tr>
-            <tr>
-                <td style="background-color:#222222; color:#cccccc; padding:30px 20px; text-align:center; font-size:12px;">
-
-                    <!-- Icônes sociales -->
-                    <table role="presentation" align="center" style="margin-bottom:20px;">
-                        <tr>
-                            <td style="padding: 0 10px;">
-                                <a href="https://facebook.com" target="_blank">
-                                    <img src="https://cdn-icons-png.flaticon.com/24/145/145802.png" alt="Facebook" width="24" style="display:block;">
-                                </a>
-                            </td>
-                            <td style="padding: 0 10px;">
-                                <a href="https://instagram.com" target="_blank">
-                                    <img src="https://cdn-icons-png.flaticon.com/24/174/174855.png" alt="Instagram" width="24" style="display:block;">
-                                </a>
-                            </td>
-                            <td style="padding: 0 10px;">
-                                <a href="https://youtube.com" target="_blank">
-                                    <img src="https://cdn-icons-png.flaticon.com/24/1384/1384060.png" alt="YouTube" width="24" style="display:block;">
-                                </a>
-                            </td>
-                            <td style="padding: 0 10px;">
-                                <a href="https://tonsite.com" target="_blank">
-                                    <img src="https://cdn-icons-png.flaticon.com/24/25/25284.png" alt="Site Web" width="24" style="display:block;">
-                                </a>
-                            </td>
-                        </tr>
-                    </table>
-
-                    <hr style="border:0; border-top:1px solid #444; width:80%; margin:20px auto;" />
-
-                    <p style="margin:5px 0;">Copyright © Institut Malik Ibn Anas, Tous droits réservés.</p>
-                    <p style="margin:5px 0;">
-                        Notre adresse mail : <a href="mailto:contact@institut-malik.fr" style="color:#00b9ae; text-decoration:none;">contact@institut-malik.fr</a>
-                    </p>
-
-                    <p style="margin:10px 0;">
-                        Vous souhaitez ne plus recevoir ces e-mails ?<br />
-                        <a href="https://tonlien-unsubscribe.com" style="color:#999; text-decoration:underline;">Se désinscrire</a> ou
-                        <a href="https://tonlien-preferences.com" style="color:#999; text-decoration:underline;">mettre à jour vos préférences</a>
-                    </p>
-
-                </td>
-            </tr>
-        </table>
-    </center>
-
-</body>
 </html>

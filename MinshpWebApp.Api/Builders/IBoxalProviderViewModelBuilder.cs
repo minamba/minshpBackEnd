@@ -9,11 +9,16 @@ namespace MinshpWebApp.Api.Builders
     {
         Task<List<RateViewModel>> GetRatesAsync(OrderDetailsRequest request);
         Task<List<Relay>> GetRelaysAsync(string zip, string country, int limit = 20);
-        //Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmd cmd); //pour la v3
-        Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd);
+        Task<ShipmentResultV3> CreateShipmentAsync(CreateShipmentCmd cmd); //pour la v3
+        //Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd);
 
         Task<List<RelaysAddressViewModel>> GetRelaysByAddressAsync(RelaysAddressRequest q);
 
         Task<CodeCategoriesViewModel> GetContentCategoriesAsync();
+
+        Task<Tracking> GetShippingTrackingAsync(string shippingBoxtalReference);
+
+        Task<LiveTracking> CreateSubscriptionAsync(string evenType);
+        Task<LiveTracking> GetSubscriptionAsync();
     }
 }

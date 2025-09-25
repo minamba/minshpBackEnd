@@ -1,0 +1,230 @@
+﻿<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta content="width=device-width, initial-scale=1.0" />
+    <title>Confirmation de commande</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.05);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #111827;
+            text-align: center;
+            padding: 20px;
+        }
+
+            .header img {
+                width: 200px;
+                height: auto;
+                display: inline-block;
+            }
+
+        .content {
+            padding: 24px 30px;
+            color: #374151;
+            line-height: 1.6;
+        }
+
+        h2 {
+            margin: 0 0 8px;
+            font-size: 20px;
+            color: #111827;
+        }
+
+        .meta {
+            margin: 10px 0 18px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .pill {
+            display: inline-block;
+            background: #eef2ff;
+            color: #3730a3;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+            .table th {
+                text-align: left;
+                background: #f3f4f6;
+                color: #111827;
+                padding: 10px;
+                font-size: 13px;
+            }
+
+            .table td {
+                padding: 10px;
+                border-bottom: 1px solid #f1f5f9;
+                vertical-align: top;
+                font-size: 13px;
+            }
+
+        .price {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .total-box {
+            margin-top: 14px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            font-size: 14px;
+        }
+
+            .total-row.total {
+                font-weight: bold;
+                font-size: 16px;
+            }
+
+        .addresses {
+            display: block;
+            margin-top: 18px;
+        }
+
+        .addr {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+
+        .btn {
+            display: inline-block;
+            margin: 20px 0 0;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff !important;
+            background: #2563eb;
+            border-radius: 6px;
+            text-decoration: none;
+        }
+
+            .btn:hover {
+                background: #1d4ed8;
+            }
+
+        .footer {
+            padding: 18px 20px;
+            text-align: center;
+            font-size: 13px;
+            color: #6b7280;
+            background: #f3f4f6;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <img src="{{BASE_URL}}" alt="Min's Shop" />
+        </div>
+
+        <!-- Contenu -->
+        <div class="content">
+            <h2>Merci pour votre commande, {{CUSTOMER_FIRSTNAME}} {{CUSTOMER_LASTNAME}} 🎉</h2>
+            <div class="meta">
+                <div><strong>Commande :</strong> #{{ORDER_NUMBER}}</div>
+                <div><strong>Date :</strong> {{ORDER_DATE}}</div>
+                <!--<div><span class="pill">{{ORDER_STATUS}}</span></div>-->
+            </div>
+
+            <p>Voici le récapitulatif de votre commande. Vous recevrez une notification dès son expédition.</p>
+
+            <!-- Tableau des articles -->
+            <table class="table" role="presentation" cellspacing="0" cellpadding="0">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Qté</th>
+                        <th>Remise</th>
+                        <th class="price">Prix HT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ORDER_LINES}}
+                </tbody>
+            </table>
+
+            <!-- Totaux -->
+            <div class="total-box">
+                <div class="total-row"><span>Sous-total HT</span> &nbsp;<span>{{SUBTOTAL}}</span>&nbsp;€</div>
+                <div class="total-row"><span>Eco-participation</span> &nbsp;<span>{{ECO_PARTICIPATION}}</span>&nbsp;€</div>
+                <div class="total-row"><span>TVA</span>&nbsp;<span>{{TAX_TOTAL}}</span>&nbsp;%</div>
+                <!--<div class="total-row" style="{{DISCOUNT_VISIBILITY}}"><span>Remise</span><span>-{{DISCOUNT_TOTAL}}</span></div>-->
+            <div class="total-row total"><span>Total</span>&nbsp;<span>{{ORDER_TOTAL}}</span>&nbsp;€</div>
+            </div>
+
+            <!-- Adresses -->
+            <div class="addresses">
+                <div class="addr">
+                    <strong>Adresse de livraison</strong><br />
+                    {{SHIP_NAME}}<br />
+                    {{SHIP_ADDRESS1}}<br />
+                    {{SHIP_ZIP}} {{SHIP_CITY}}<br />
+                    {{SHIP_COUNTRY}}
+                </div>
+
+                <div class="addr">
+                    <strong>Adresse de facturation</strong><br />
+                    {{BILL_NAME}}<br />
+                    {{BILL_ADDRESS1}}<br />
+                    {{BILL_ZIP}} {{BILL_CITY}}<br />
+                    {{BILL_COUNTRY}}
+                </div>
+            </div>
+
+            <!-- Paiement -->
+            <!--<p class="small" style="margin-top:14px;">
+                <strong>Paiement :</strong> {{PAYMENT_METHOD}} — Réf : {{PAYMENT_REFERENCE}}
+            </p>-->
+
+            <!-- Lien commande -->
+            <p style="text-align:center;">
+                <a class="btn" href="{{ORDER_LINK}}" target="_blank">Voir ma commande</a>
+            </p>
+
+            <p style="margin-top:14px;">
+                Une question ? Répondez à cet email ou contactez notre support : <a href="mailto:{{SUPPORT_EMAIL}}">{{SUPPORT_EMAIL}}</a>.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            © {{CURRENT_YEAR}} Min's Shop. Tous droits réservés.
+        </div>
+    </div>
+</body>
+</html>

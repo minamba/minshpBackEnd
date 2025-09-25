@@ -11,5 +11,7 @@
         public string? Representative { get; set; }
 
         public string? InvoiceLink { get; set; }
+
+        public bool? HardDelete { get; set; } = false;
     }
 }

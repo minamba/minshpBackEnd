@@ -16,15 +16,17 @@ namespace MinshpWebApp.Api.Builders.impl
         private IDeliveryAddressViewModelBuilder _deliveryAddressService;
         private IBillingAddressViewModelBuilder _billingAddressService;
         private IMailViewModelBuilder _mailViewModelBuilder;
+        private INewLetterViewModelBuilder _newLetterViewModelBuilder;
 
 
-        public CustomerViewModelBuilder(ICustomerService customerService, IDeliveryAddressViewModelBuilder deliveryAddressService, IBillingAddressViewModelBuilder billingAddressService, IMailViewModelBuilder mailViewModelBuilder, IMapper mapper)
+        public CustomerViewModelBuilder(ICustomerService customerService, IDeliveryAddressViewModelBuilder deliveryAddressService, IBillingAddressViewModelBuilder billingAddressService, IMailViewModelBuilder mailViewModelBuilder, IMapper mapper, INewLetterViewModelBuilder newLetterViewModelBuilder)
         {
             _mapper = mapper;
             _customerService = customerService;
             _deliveryAddressService = deliveryAddressService;
             _billingAddressService = billingAddressService;
             _mailViewModelBuilder = mailViewModelBuilder;
+            _newLetterViewModelBuilder = newLetterViewModelBuilder;
         }
 
         public async Task<Customer> AddCustomersAsync(CustomerRequest model)
@@ -35,7 +37,10 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
             if (result != null)
-                _mailViewModelBuilder.SendMailRegistration("minamba.c@gmail.com");
+            {
+                await _newLetterViewModelBuilder.AddNewLettersAsync(new NewLetterRequest { Mail = model.Email, Suscribe = true });
+                _mailViewModelBuilder.SendMailRegistration(model.Email);
+            }
 
             return result;
         }
@@ -68,7 +73,18 @@ namespace MinshpWebApp.Api.Builders.impl
 
         public async Task<Customer> UpdateCustomersAsync(CustomerRequest model)
         {
+            var getNeLetter = new NewLetterRequest();
             var customer = _mapper.Map<Customer>(model);
+            var getCustomer = (await _customerService.GetCustomersAsync()).FirstOrDefault(c => c.Id == model.Id);
+            if(getCustomer != null)
+            {
+               var newLetter = (await _newLetterViewModelBuilder.GetNewLetterssAsync()).FirstOrDefault(n => n.Mail == getCustomer.Email);
+
+                if(newLetter != null)
+                    await _newLetterViewModelBuilder.UpdateNewLettersAsync(new NewLetterRequest { Id = newLetter.Id, Mail = model.Email, OldMAil= getCustomer.Email, Suscribe = model.Suscribe });
+            }
+         
+           
             return await _customerService.UpdateCustomersAsync(customer);
         }
     }

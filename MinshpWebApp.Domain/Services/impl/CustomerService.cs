@@ -29,6 +29,7 @@ namespace MinshpWebApp.Domain.Services.impl
             return await _repository.DeleteCustomersAsync(idCustomer);
         }
 
+
         public async Task<IEnumerable<Customer>> GetCustomersAsync()
         {
             return await _repository.GetCustomersAsync();

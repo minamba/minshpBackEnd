@@ -9,6 +9,6 @@ namespace MinshpWebApp.Api.Builders
         Task<IEnumerable<InvoiceViewModel>> GetInvoicesAsync();
         Task<Invoice> UpdateInvoicesAsync(InvoiceRequest model);
         Task<Invoice> AddInvoicesAsync(InvoiceRequest model);
-        Task<bool> DeleteInvoicesAsync(int idInvoice);
+        Task<bool> DeleteInvoicesAsync(InvoiceRequest model);
     }
 }

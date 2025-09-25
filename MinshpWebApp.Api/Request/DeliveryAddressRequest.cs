@@ -23,6 +23,8 @@
 
         public string? Phone { get; set; }
 
+        public string? Civilite { get; set; }
+
 
     }
 }

@@ -17,12 +17,15 @@
         public string? ClientNumber { get; set; }
 
         public string? Email { get; set; }
+        public string? OldEmail { get; set; }
 
         public string? IdAspNetUser { get; set; }
 
         public string? BirthDate { get; set; }
 
         public string? Pseudo { get; set; }
+
+        public bool? Suscribe { get; set; }
 
 
     }

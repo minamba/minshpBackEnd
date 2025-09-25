@@ -35,7 +35,8 @@ namespace MinshpWebApp.Dal.Repositories
                 SocietyName = p.SocietyName,
                 SocietyAddress = p.SocietyAddress,
                 SocietyCity = p.SocietyCity,
-                SocietyZipCode = p.SocietyZipCode
+                SocietyZipCode = p.SocietyZipCode,
+                IsMaintenance = p.IsMaintenance
             }).ToListAsync();
 
             return ApplicationEntities;
@@ -61,6 +62,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.SocietyAddress != null) ApplicationToUpdate.SocietyAddress = model.SocietyAddress;
             if (model.SocietyZipCode != null) ApplicationToUpdate.SocietyZipCode = model.SocietyZipCode;
             if (model.SocietyCity != null) ApplicationToUpdate.SocietyCity = model.SocietyCity;
+            if (model.IsMaintenance != null) ApplicationToUpdate.IsMaintenance = model.IsMaintenance;
 
 
 
@@ -77,6 +79,7 @@ namespace MinshpWebApp.Dal.Repositories
                 DefaultDropOffMondialRelay = ApplicationToUpdate.DefaultDropOffMondialRelay,
                 DefaultDropOffUps = ApplicationToUpdate.DefaultDropOffUps,
                 DefaultDropLaposte = ApplicationToUpdate.DefaultDropLaposte,
+                IsMaintenance = ApplicationToUpdate.IsMaintenance,
             };
         }
 
@@ -85,7 +88,6 @@ namespace MinshpWebApp.Dal.Repositories
         {
             var newApplication = new Dal.Entities.Application
             {
-                Id = model.Id,
                 DisplayNewProductNumber = model.DisplayNewProductNumber,
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
@@ -96,7 +98,8 @@ namespace MinshpWebApp.Dal.Repositories
                 SocietyName = model.SocietyName,
                 SocietyAddress = model.SocietyAddress,
                 SocietyZipCode = model.SocietyZipCode,
-                SocietyCity = model.SocietyCity
+                SocietyCity = model.SocietyCity,
+                IsMaintenance = model.IsMaintenance
             };
 
             _context.Applications.Add(newApplication);
@@ -115,7 +118,8 @@ namespace MinshpWebApp.Dal.Repositories
                 SocietyName = model.SocietyName,
                 SocietyAddress = model.SocietyAddress,
                 SocietyZipCode = model.SocietyZipCode,
-                SocietyCity = model.SocietyCity
+                SocietyCity = model.SocietyCity,
+                IsMaintenance = newApplication.IsMaintenance
             };
         }
 

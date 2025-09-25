@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Customer = MinshpWebApp.Domain.Models.Customer;
+using AspNetRole = MinshpWebApp.Domain.Models.AspNetRole;
 
 namespace MinshpWebApp.Dal.Repositories
 {
@@ -37,9 +38,14 @@ namespace MinshpWebApp.Dal.Repositories
                 Email = p.Email,
                 IdAspNetUser = p.IdAspNetUser,
                 Pseudo = p.Pseudo,
-                
-               
             }).ToListAsync();
+
+
+            foreach (var customer in CustomerEntities)
+            {
+                customer.Roles = await GetCustomerRolesAsync(customer.IdAspNetUser);
+            }
+
 
             return CustomerEntities;
         }
@@ -95,7 +101,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Actif = model.Actif,
                 BirthDate = model.BirthDate,
                 Civilite = model.Civilite,
-                Email = model.Email,
+                Email = model.Email.ToLower(),
                 IdAspNetUser = model.IdAspNetUser,
                 Pseudo = model.Pseudo
             };
@@ -133,5 +139,27 @@ namespace MinshpWebApp.Dal.Repositories
 
             return true;
         }
+
+
+
+        public async Task<List<AspNetRole>> GetCustomerRolesAsync(string aspUid)
+        {
+            var user = await _context.AspNetUsers
+                .AsNoTracking()
+                .Include(u => u.Roles)               // <- indispensable ici
+                .SingleOrDefaultAsync(u => u.Id == aspUid);
+
+            return user?.Roles
+                .Select(r => new AspNetRole
+                {
+                    Id = r.Id,
+                    Name = r.Name!,
+                    NormalizedName = r.NormalizedName
+                })
+                .ToList() ?? new List<AspNetRole>();
+
+        }
+
+
     }
 }

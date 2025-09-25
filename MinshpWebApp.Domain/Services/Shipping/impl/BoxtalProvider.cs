@@ -8,14 +8,15 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-//using CreateShipmentCmdModel = MinshpWebApp.Domain.Models.CreateShipmentCmd; //pour la v3
-using CreateShipmentV1Cmd = MinshpWebApp.Domain.Models.CreateShipmentV1Cmd;
+using CreateShipmentCmdModel = MinshpWebApp.Domain.Models.CreateShipmentCmd; //pour la v3
+//using CreateShipmentV1Cmd = MinshpWebApp.Domain.Models.CreateShipmentV1Cmd;
 
 using Package = MinshpWebApp.Domain.Models.Package;
 
@@ -73,8 +74,16 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
     {
         public string BaseUrlV3 { get; set; } = "https://api.boxtal.build";
         public string BaseUrlV1 { get; set; } = "https://test.envoimoinscher.com/api/v1";
+
+        //v1
         public string V1PushUrlBase { get; set; } = "";
         public string V1PushToken { get; set; } = "";
+
+        //v3
+        public string? V3CallbackUrl { get; set; }
+        public string? V3WebhookSecret { get; set; }        // secret partagé pour la signature
+        public string? V3SignatureHeader { get; set; } = "X-Webhook-Signature"; // si le provider a un nom d’en-tête spécifique
+
 
         // v3 (app) - non utilisés ici car l’auth se fait via Basic portail
         public string AppId { get; set; } = "";
@@ -155,10 +164,10 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
             string codeHighTech = null;
             var packagesLst = orderDetails.Packages.ToList();
 
-            bool b = packagesLst.Any(c => c.ContainedCode == "50110");
+            bool b = packagesLst.Any(c => c.ContentCodeDefault == "50110");
 
             if(b)
-                codeHighTech = packagesLst?.FirstOrDefault(c => c.ContainedCode == "50110").ContainedCode ?? null;
+                codeHighTech = packagesLst?.FirstOrDefault(c => c.ContentCodeDefault == "50110").ContentCodeDefault ?? null;
 
 
             var qs = new Dictionary<string, string?>
@@ -173,7 +182,7 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
                 ["destinataire.code_postal"] = orderDetails.RecipientZipCode,
                 ["destinataire.type"] = orderDetails.RecipientType.ToLower(),
 
-                ["code_contenu"] = codeHighTech ?? packagesLst[0].ContainedCode,
+                ["code_contenu"] = codeHighTech ?? packagesLst[0].ContentCodeDefault,
             };
 
 
@@ -347,7 +356,7 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
         }
 
 
-
+        //GET CONTENT CATEGORIES EX : 50110 POUR LES OBJETS HIGH TECH
         public async Task<CodeCategories> GetContentCategoriesAsync()
         {
             var token = await GetTokenV3Async();
@@ -383,7 +392,177 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
         }
 
 
-        /* -------- RELAYS v3 -------- */
+        // SOUSCRIPTION AU SERVICE POUR AVOIR TRACKING EN LIVE 
+        public async Task<LiveTracking> CreateSubscriptionAsync(string evType)
+        {
+            // 1) Récup auth + client
+            var token = await GetTokenV3Async();
+            var client = _httpFactory.CreateClient("BoxtalV3");
+
+            // 2) Validation config
+            if (string.IsNullOrWhiteSpace(_opt.V3CallbackUrl))
+                throw new InvalidOperationException("Boxtal:V3CallbackUrl n'est pas configuré.");
+            if (string.IsNullOrWhiteSpace(_opt.V3WebhookSecret))
+                throw new InvalidOperationException("Boxtal:V3WebhookSecret n'est pas configuré.");
+
+            // 3) Payload de souscription
+            var payload = new
+            {
+                eventType = evType,
+                callbackUrl = _opt.V3CallbackUrl,
+                webhookSecret = _opt.V3WebhookSecret
+            };
+
+            // 4) Appel HTTP
+            var url = "/shipping/v3.1/subscription";
+            var req = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContent.Create(payload)
+            };
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var resp = await client.SendAsync(req);
+            var json = await resp.Content.ReadAsStringAsync();
+
+            if (!resp.IsSuccessStatusCode)
+                throw new InvalidOperationException($"/subscription failed {(int)resp.StatusCode} {json}");
+
+            // 5) Désérialisation -> content est un OBJET (pas un array)
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var result = JsonSerializer.Deserialize<LiveTracking>(json, options);
+
+            if (result is null)
+                throw new InvalidOperationException("Réponse de souscription vide ou invalide.");
+
+            return result;
+        }
+
+
+        public async Task<LiveTracking> GetSubscriptionAsync()
+        {
+            var token = await GetTokenV3Async();
+            var client = _httpFactory.CreateClient("BoxtalV3");
+
+            var req = new HttpRequestMessage(HttpMethod.Get, "/shipping/v3.1/subscription");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var resp = await client.SendAsync(req);
+            var json = await resp.Content.ReadAsStringAsync();
+
+            if (!resp.IsSuccessStatusCode)
+                throw new InvalidOperationException($"/subscription failed {(int)resp.StatusCode} {json}");
+
+            var result = new LiveTracking(); // Content reste vide comme tu veux
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            // status / timestamp (optionnel, mais ça ne gêne pas)
+            if (root.TryGetProperty("status", out var st) && st.ValueKind == JsonValueKind.Number)
+                result.Status = st.GetInt32();
+
+            if (root.TryGetProperty("timestamp", out var ts) &&
+                ts.ValueKind == JsonValueKind.String &&
+                DateTimeOffset.TryParse(ts.GetString(), out var dto))
+                result.Timestamp = dto;
+
+
+            result.Content = null;
+
+            // content -> on remplit UNIQUEMENT la liste
+            var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            if (root.TryGetProperty("content", out var contentEl))
+            {
+                if (contentEl.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var el in contentEl.EnumerateArray())
+                    {
+                        var item = JsonSerializer.Deserialize<SubscriptionContent>(el.GetRawText(), opts);
+                        if (item != null) result.Contents.Add(item);
+                    }
+                }
+                else if (contentEl.ValueKind == JsonValueKind.Object)
+                {
+                    var item = JsonSerializer.Deserialize<SubscriptionContent>(contentEl.GetRawText(), opts);
+                    if (item != null) result.Contents.Add(item);
+                }
+            }
+
+            return result;
+        }
+
+
+
+
+
+        //GET SHIIPING TRACKING
+        public async Task<Tracking> GetShippingTrackingAsync(string shippingBoxtalReference)
+        {
+            var token = await GetTokenV3Async();
+            var client = _httpFactory.CreateClient("BoxtalV3");
+
+            var url = $"/shipping/v3.1/shipping-order/{shippingBoxtalReference}/tracking";
+            var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var resp = await client.SendAsync(req);
+            var json = await resp.Content.ReadAsStringAsync();
+            if (!resp.IsSuccessStatusCode)
+                throw new InvalidOperationException($"/tracking failed {(int)resp.StatusCode} {json}");
+
+            // Parse selon: { content: [ { distanceFromSearchLocation, parcelPoint { ... } }, ... ] }
+            using var doc = JsonDocument.Parse(json);
+
+            // doc est ton JsonDocument
+            if (doc.RootElement.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.Array)
+            {
+                // ici je prends le 1er package; adapte si tu veux tous les packages
+                var pkg = content.GetArrayLength() > 0 ? content[0] : default;
+
+                if (pkg.ValueKind == JsonValueKind.Object)
+                {
+                    var tracking = new Tracking
+                    {
+                        PackageId = pkg.TryGetProperty("packageId", out var p1) ? p1.GetString() ?? "" : "",
+                        PackageExternalId = pkg.TryGetProperty("packageExternalId", out var p2) ? p2.GetString() ?? "" : "",
+                        TrackingNumber = pkg.TryGetProperty("trackingNumber", out var p3) ? p3.GetString() ?? "" : "",
+                        PackageTrackingUrl = pkg.TryGetProperty("packageTrackingUrl", out var p4) ? p4.GetString() ?? "" : "",
+                        TrackingDateTime = pkg.TryGetProperty("trackingDateTime", out var p5) &&
+                                             DateTime.TryParse(p5.GetString(), out var dt) ? dt : default,
+                        Status = pkg.TryGetProperty("status", out var p6) ? p6.GetString() ?? "" : "",
+                        Message = pkg.TryGetProperty("message", out var p7) ? p7.GetString() ?? "" : "",
+                        IsFinal = pkg.TryGetProperty("isFinal", out var p8) && p8.ValueKind == JsonValueKind.True,
+                        History = new List<History>()
+                    };
+
+                    // === Remplir la liste History ===
+                    if (pkg.TryGetProperty("history", out var hist) && hist.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var h in hist.EnumerateArray())
+                        {
+                            var item = new History
+                            {
+                                TrackingDateTime = h.TryGetProperty("trackingDateTime", out var h1) &&
+                                                   DateTime.TryParse(h1.GetString(), out var hdt) ? hdt : default,
+                                Status = h.TryGetProperty("status", out var h2) ? h2.GetString() ?? "" : "",
+                                Message = h.TryGetProperty("message", out var h3) ? h3.GetString() ?? "" : "",
+                                IsFinal = h.TryGetProperty("isFinal", out var h4) && h4.ValueKind == JsonValueKind.True
+                            };
+
+                            tracking.History.Add(item);
+                        }
+                    }
+
+                    return tracking;
+                }
+            }
+
+            return null;
+        }
+
+
+        /* -------- RELAYS v3 EN VRAI JE NE SAIS PAS A QUOI SERT CETTE METHODE. TODO : VERIFIER AVANT DE LA CLEANER -------- */
 
         // Recherche par CP/pays (structure simple), on tente de récupérer openingDays si présent
         public async Task<List<Relay>> GetRelaysAsync(string zip, string country, int limit = 20)
@@ -436,186 +615,186 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
 
 
         // RECHERCHE RELAYS PAR ADRESSE POUR LA V3
-        //public async Task<List<Relay>> GetRelaysByAddressAsync(RelaysAddress q)
-        //{
-        //    var token = await GetTokenV3Async();
-        //    var client = _httpFactory.CreateClient("BoxtalV3");
-
-        //    // QS
-        //    var qs = new List<string>();
-        //    void Add(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) qs.Add($"{Uri.EscapeDataString(k)}={Uri.EscapeDataString(v)}"); }
-
-        //    Add("number", q.Number);
-        //    Add("street", q.Street);
-        //    Add("city", q.City);
-        //    Add("postalCode", q.PostalCode);
-        //    Add("state", q.State);
-        //    Add("countryIsoCode", q.CountryIsoCode);
-        //    if (q.Limit > 0) Add("limit", q.Limit.ToString(CultureInfo.InvariantCulture));
-        //    if (q.SearchNetworks != null)
-        //        foreach (var n in q.SearchNetworks.Where(s => !string.IsNullOrWhiteSpace(s)))
-        //            Add("searchNetworks", n.Trim()); // clé répétée
-
-        //    var url = "/shipping/v3.1/parcel-point?" + string.Join("&", qs);
-
-        //    // Call
-        //    var req = new HttpRequestMessage(HttpMethod.Get, url);
-        //    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        //    var resp = await client.SendAsync(req);
-        //    var json = await resp.Content.ReadAsStringAsync();
-        //    if (!resp.IsSuccessStatusCode)
-        //        throw new InvalidOperationException($"/parcel-point failed {(int)resp.StatusCode} {json}");
-
-        //    // Parse selon: { content: [ { distanceFromSearchLocation, parcelPoint { ... } }, ... ] }
-        //    using var doc = JsonDocument.Parse(json);
-        //    var list = new List<Relay>();
-
-        //    if (doc.RootElement.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.Array)
-        //    {
-        //        foreach (var item in content.EnumerateArray())
-        //        {
-        //            if (!item.TryGetProperty("parcelPoint", out var p) || p.ValueKind != JsonValueKind.Object)
-        //                continue;
-
-        //            // distance AU NIVEAU ITEM
-        //            int distance = 0;
-        //            if (item.TryGetProperty("distanceFromSearchLocation", out var dEl) && dEl.ValueKind == JsonValueKind.Number)
-        //                distance = dEl.GetInt32();
-
-        //            // location + position
-        //            var loc = p.TryGetProperty("location", out var l) ? l : default;
-        //            var pos = (loc.ValueKind == JsonValueKind.Object && loc.TryGetProperty("position", out var ps)) ? ps : default;
-
-        //            double lat = 0, lng = 0;
-        //            if (pos.ValueKind == JsonValueKind.Object)
-        //            {
-        //                if (pos.TryGetProperty("latitude", out var la)) lat = la.GetDouble();
-        //                if (pos.TryGetProperty("longitude", out var lo)) lng = lo.GetDouble();
-        //            }
-        //            if (lat == 0 && p.TryGetProperty("latitude", out var la2)) lat = la2.GetDouble();
-        //            if (lng == 0 && p.TryGetProperty("longitude", out var lo2)) lng = lo2.GetDouble();
-
-        //            var opening = ParseOpeningDays(p);
-
-        //            list.Add(new Relay(
-        //                id: p.Val("id", "code") ?? Guid.NewGuid().ToString("N"),
-        //                name: p.Val("name", "label") ?? "Point relais",
-        //                address: loc.Val("street") ?? "",
-        //                zip: loc.Val("postalCode") ?? "",
-        //                city: loc.Val("city") ?? "",
-        //                lat: lat,
-        //                lng: lng,
-        //                distance: distance,                 // ✅ correct
-        //                network: p.Val("network") ?? "",
-        //                openingDays: opening
-        //            ));
-        //        }
-        //    }
-
-        //    return list;
-        //}
-
-
-
-        // RECHERCHE RELAYS PAR ADRESSE POUR LA V1 (XML)
         public async Task<List<Relay>> GetRelaysByAddressAsync(RelaysAddress q)
         {
-            var client = _httpFactory.CreateClient("BoxtalV1");
-            var basic = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_opt.V1UserName}:{_opt.V1Password}"));
+            var token = await GetTokenV3Async();
+            var client = _httpFactory.CreateClient("BoxtalV3");
 
-            // Adresse "numéro + rue"
-            string? fullAddress = null;
-            if (!string.IsNullOrWhiteSpace(q.Number) || !string.IsNullOrWhiteSpace(q.Street))
-                fullAddress = $"{q.Number ?? ""} {q.Street ?? ""}".Trim();
-
-            // ---- QS V1 /listpoints ----
-            // collecte = "dest" (points pour le destinataire) ou "exp" (points pour l'expéditeur).
+            // QS
             var qs = new List<string>();
             void Add(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) qs.Add($"{Uri.EscapeDataString(k)}={Uri.EscapeDataString(v)}"); }
 
-            Add("collecte", "dest"); // mets "exp" si tu cherches un point de dépôt
-            Add("pays", string.IsNullOrWhiteSpace(q.CountryIsoCode) ? "FR" : q.CountryIsoCode);
-            Add("ville", q.City);
-            Add("cp", q.PostalCode);
-            Add("adresse", fullAddress);
-
-            var network = q.SearchNetworks.ToList();
-            string[] namesOfNewtowrk = Enum.GetNames<CarrierEnum>();
-
-
-            // carriers[N]=MONR|CHRP|COPR|SOGP|UPSE
-            if (network.Count() == 0)
-            {
-                network.AddRange(namesOfNewtowrk);
-                q.SearchNetworks = network;
-            }
-
+            Add("number", q.Number);
+            Add("street", q.Street);
+            Add("city", q.City);
+            Add("postalCode", q.PostalCode);
+            Add("state", q.State);
+            Add("countryIsoCode", q.CountryIsoCode);
+            if (q.Limit > 0) Add("limit", q.Limit.ToString(CultureInfo.InvariantCulture));
             if (q.SearchNetworks != null)
-            {
-                int i = 0;
-                foreach (var raw in q.SearchNetworks.Where(s => !string.IsNullOrWhiteSpace(s)))
-                {
-                    var code = raw.Trim().ToUpperInvariant();
-                    qs.Add($"{Uri.EscapeDataString($"carriers[{i}]")}={Uri.EscapeDataString(code)}");
-                    i++;
-                }
-            }
+                foreach (var n in q.SearchNetworks.Where(s => !string.IsNullOrWhiteSpace(s)))
+                    Add("searchNetworks", n.Trim()); // clé répétée
 
-            var url = "listpoints" + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
+            var url = "/shipping/v3.1/parcel-point?" + string.Join("&", qs);
 
+            // Call
             var req = new HttpRequestMessage(HttpMethod.Get, url);
-            req.Headers.Authorization = new AuthenticationHeaderValue("Basic", basic);
-            req.Headers.Accept.ParseAdd("application/xml");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var resp = await client.SendAsync(req);
-            var text = await resp.Content.ReadAsStringAsync();
+            var json = await resp.Content.ReadAsStringAsync();
             if (!resp.IsSuccessStatusCode)
-                throw new InvalidOperationException($"/listpoints failed {(int)resp.StatusCode} {resp.ReasonPhrase}\n{text}");
+                throw new InvalidOperationException($"/parcel-point failed {(int)resp.StatusCode} {json}");
 
-            // ---- Parse XML ----
-            var relays = new List<Relay>();
-            var x = XDocument.Parse(text);
+            // Parse selon: { content: [ { distanceFromSearchLocation, parcelPoint { ... } }, ... ] }
+            using var doc = JsonDocument.Parse(json);
+            var list = new List<Relay>();
 
-            // <carriers><carrier><operator>MONR</operator><points><point>...</point></points></carrier>...
-            var carriers = x.Descendants().Where(e => e.Name.LocalName.Equals("carrier", StringComparison.OrdinalIgnoreCase));
-            foreach (var carrier in carriers)
+            if (doc.RootElement.TryGetProperty("content", out var content) && content.ValueKind == JsonValueKind.Array)
             {
-                var operatorCode = carrier.ElementAny("operator")?.Value ?? ""; // ex: MONR / CHRP / ...
-                var pointsNode = carrier.ElementAny("points");
-                if (pointsNode == null) continue;
-
-                foreach (var p in pointsNode.Elements().Where(e => e.Name.LocalName.Equals("point", StringComparison.OrdinalIgnoreCase)))
+                foreach (var item in content.EnumerateArray())
                 {
-                    string id = p.ElementAny("code", "id")?.Value ?? Guid.NewGuid().ToString("N");
-                    string name = p.ElementAny("name", "label", "nom")?.Value ?? "Point relais";
-                    string addr = p.ElementAny("address", "adresse", "line1", "street")?.Value ?? "";
-                    string zip = p.ElementAny("zipcode", "zipCode", "code_postal")?.Value ?? "";
-                    string city = p.ElementAny("city", "ville")?.Value ?? "";
+                    if (!item.TryGetProperty("parcelPoint", out var p) || p.ValueKind != JsonValueKind.Object)
+                        continue;
+
+                    // distance AU NIVEAU ITEM
+                    int distance = 0;
+                    if (item.TryGetProperty("distanceFromSearchLocation", out var dEl) && dEl.ValueKind == JsonValueKind.Number)
+                        distance = dEl.GetInt32();
+
+                    // location + position
+                    var loc = p.TryGetProperty("location", out var l) ? l : default;
+                    var pos = (loc.ValueKind == JsonValueKind.Object && loc.TryGetProperty("position", out var ps)) ? ps : default;
 
                     double lat = 0, lng = 0;
-                    double.TryParse((p.ElementAny("latitude", "lat")?.Value ?? "").Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out lat);
-                    double.TryParse((p.ElementAny("longitude", "lng")?.Value ?? "").Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out lng);
+                    if (pos.ValueKind == JsonValueKind.Object)
+                    {
+                        if (pos.TryGetProperty("latitude", out var la)) lat = la.GetDouble();
+                        if (pos.TryGetProperty("longitude", out var lo)) lng = lo.GetDouble();
+                    }
+                    if (lat == 0 && p.TryGetProperty("latitude", out var la2)) lat = la2.GetDouble();
+                    if (lng == 0 && p.TryGetProperty("longitude", out var lo2)) lng = lo2.GetDouble();
 
-                    var opening = ParseOpeningDays_ListPoints(p); // horaires <schedule><day>...
+                    var opening = ParseOpeningDays(p);
 
-                    relays.Add(new Relay(
-                        id: id,
-                        name: name,
-                        address: addr,
-                        zip: zip,
-                        city: city,
+                    list.Add(new Relay(
+                        id: p.Val("id", "code") ?? Guid.NewGuid().ToString("N"),
+                        name: p.Val("name", "label") ?? "Point relais",
+                        address: loc.Val("street") ?? "",
+                        zip: loc.Val("postalCode") ?? "",
+                        city: loc.Val("city") ?? "",
                         lat: lat,
                         lng: lng,
-                        distance: 0,                 // /listpoints ne renvoie pas la distance
-                        network: operatorCode,       // ex: MONR, CHRP, ...
+                        distance: distance,                 // ✅ correct
+                        network: p.Val("network") ?? "",
                         openingDays: opening
                     ));
                 }
             }
 
-            return relays;
+            return list;
         }
+
+
+
+        // RECHERCHE RELAYS PAR ADRESSE POUR LA V1 (XML)
+        //public async Task<List<Relay>> GetRelaysByAddressAsync(RelaysAddress q)
+        //{
+        //    var client = _httpFactory.CreateClient("BoxtalV1");
+        //    var basic = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_opt.V1UserName}:{_opt.V1Password}"));
+
+        //    // Adresse "numéro + rue"
+        //    string? fullAddress = null;
+        //    if (!string.IsNullOrWhiteSpace(q.Number) || !string.IsNullOrWhiteSpace(q.Street))
+        //        fullAddress = $"{q.Number ?? ""} {q.Street ?? ""}".Trim();
+
+        //    // ---- QS V1 /listpoints ----
+        //    // collecte = "dest" (points pour le destinataire) ou "exp" (points pour l'expéditeur).
+        //    var qs = new List<string>();
+        //    void Add(string k, string? v) { if (!string.IsNullOrWhiteSpace(v)) qs.Add($"{Uri.EscapeDataString(k)}={Uri.EscapeDataString(v)}"); }
+
+        //    Add("collecte", "dest"); // mets "exp" si tu cherches un point de dépôt
+        //    Add("pays", string.IsNullOrWhiteSpace(q.CountryIsoCode) ? "FR" : q.CountryIsoCode);
+        //    Add("ville", q.City);
+        //    Add("cp", q.PostalCode);
+        //    Add("adresse", fullAddress);
+
+        //    var network = q.SearchNetworks.ToList();
+        //    string[] namesOfNewtowrk = Enum.GetNames<CarrierEnum>();
+
+
+        //    // carriers[N]=MONR|CHRP|COPR|SOGP|UPSE
+        //    if (network.Count() == 0)
+        //    {
+        //        network.AddRange(namesOfNewtowrk);
+        //        q.SearchNetworks = network;
+        //    }
+
+        //    if (q.SearchNetworks != null)
+        //    {
+        //        int i = 0;
+        //        foreach (var raw in q.SearchNetworks.Where(s => !string.IsNullOrWhiteSpace(s)))
+        //        {
+        //            var code = raw.Trim().ToUpperInvariant();
+        //            qs.Add($"{Uri.EscapeDataString($"carriers[{i}]")}={Uri.EscapeDataString(code)}");
+        //            i++;
+        //        }
+        //    }
+
+        //    var url = "listpoints" + (qs.Count > 0 ? "?" + string.Join("&", qs) : "");
+
+        //    var req = new HttpRequestMessage(HttpMethod.Get, url);
+        //    req.Headers.Authorization = new AuthenticationHeaderValue("Basic", basic);
+        //    req.Headers.Accept.ParseAdd("application/xml");
+
+        //    var resp = await client.SendAsync(req);
+        //    var text = await resp.Content.ReadAsStringAsync();
+        //    if (!resp.IsSuccessStatusCode)
+        //        throw new InvalidOperationException($"/listpoints failed {(int)resp.StatusCode} {resp.ReasonPhrase}\n{text}");
+
+        //    // ---- Parse XML ----
+        //    var relays = new List<Relay>();
+        //    var x = XDocument.Parse(text);
+
+        //    // <carriers><carrier><operator>MONR</operator><points><point>...</point></points></carrier>...
+        //    var carriers = x.Descendants().Where(e => e.Name.LocalName.Equals("carrier", StringComparison.OrdinalIgnoreCase));
+        //    foreach (var carrier in carriers)
+        //    {
+        //        var operatorCode = carrier.ElementAny("operator")?.Value ?? ""; // ex: MONR / CHRP / ...
+        //        var pointsNode = carrier.ElementAny("points");
+        //        if (pointsNode == null) continue;
+
+        //        foreach (var p in pointsNode.Elements().Where(e => e.Name.LocalName.Equals("point", StringComparison.OrdinalIgnoreCase)))
+        //        {
+        //            string id = p.ElementAny("code", "id")?.Value ?? Guid.NewGuid().ToString("N");
+        //            string name = p.ElementAny("name", "label", "nom")?.Value ?? "Point relais";
+        //            string addr = p.ElementAny("address", "adresse", "line1", "street")?.Value ?? "";
+        //            string zip = p.ElementAny("zipcode", "zipCode", "code_postal")?.Value ?? "";
+        //            string city = p.ElementAny("city", "ville")?.Value ?? "";
+
+        //            double lat = 0, lng = 0;
+        //            double.TryParse((p.ElementAny("latitude", "lat")?.Value ?? "").Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out lat);
+        //            double.TryParse((p.ElementAny("longitude", "lng")?.Value ?? "").Replace(',', '.'), NumberStyles.Any, CultureInfo.InvariantCulture, out lng);
+
+        //            var opening = ParseOpeningDays_ListPoints(p); // horaires <schedule><day>...
+
+        //            relays.Add(new Relay(
+        //                id: id,
+        //                name: name,
+        //                address: addr,
+        //                zip: zip,
+        //                city: city,
+        //                lat: lat,
+        //                lng: lng,
+        //                distance: 0,                 // /listpoints ne renvoie pas la distance
+        //                network: operatorCode,       // ex: MONR, CHRP, ...
+        //                openingDays: opening
+        //            ));
+        //        }
+        //    }
+
+        //    return relays;
+        //}
 
         // ---- helper horaires pour /listpoints (weekday + open_am/pm, close_am/pm) ----
         private static Dictionary<string, List<OpeningInterval>>? ParseOpeningDays_ListPoints(XElement point)
@@ -664,208 +843,46 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
 
 
         /* -------- CREATE SHIPMENT v3 -------- */
-        //public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentCmdModel cmd)
-        //{
-        //    var token = await GetTokenV3Async();
-        //    var client = _httpFactory.CreateClient("BoxtalV3");
-
-        //    // ----- MAP Shipment (C# → schéma attendu Boxtal v3) -----
-        //    var srcShipment = cmd.Shipment ?? new Shipment();
-        //    var srcPackages = srcShipment.Packages;
-
-        //    // Fallback sur le 1er colis pour dimensions/poids si besoin
-        //    var p0 = srcPackages.FirstOrDefault();
-
-        //    var fallbackWidth = cmd.PackageWidth ?? SafeInt(p0?.PackageWidth, 15);
-        //    var fallbackHeight = cmd.PackageHeight ?? SafeInt(p0?.PackageHeight, 11);
-        //    var fallbackLength = cmd.PackageLength ?? SafeInt(p0?.PackageLonger, 16);
-        //    var fallbackWeight = cmd.WeightKg.HasValue ? (double)cmd.WeightKg.Value : SafeDouble(p0?.PackageWeight, 0.25);
-
-        //    var mappedPackages = (srcPackages).Select(p => new
-        //    {
-        //        type = string.IsNullOrWhiteSpace(p.Type) ? "PARCEL" : p.Type,
-        //        weight = SafeDouble(p.PackageWeight, fallbackWeight),
-        //        width = SafeInt(p.PackageWidth, fallbackWidth),
-        //        height = SafeInt(p.PackageHeight, fallbackHeight),
-        //        length = SafeInt(p.PackageLonger, fallbackLength),
-        //        value = (p.PackageValue.HasValue && p.PackageValue.Value > 0)
-        //                    ? new { value = p.PackageValue.Value, currency = "EUR" }
-        //                    : null,
-        //        content = (string.IsNullOrWhiteSpace(cmd.ContentId) && string.IsNullOrWhiteSpace(cmd.ContentDescription))
-        //                    ? null
-        //                    : new { id = cmd.ContentId, description = cmd.ContentDescription },
-        //        stackable = p.PackageStackable ?? true,
-        //        externalId = !string.IsNullOrWhiteSpace(p.ExternalId)
-        //                        ? p.ExternalId
-        //                        : (!string.IsNullOrWhiteSpace(cmd.PackageExternalId) ? cmd.PackageExternalId : cmd.OrderExternalId)
-        //    }).ToArray();
-
-        //    // Types d’adresses en VAL v3
-        //    string ToType(string? t) =>
-        //        string.Equals(t, "BUSINESS", StringComparison.OrdinalIgnoreCase) ||
-        //        string.Equals(t, "entreprise", StringComparison.OrdinalIgnoreCase)
-        //            ? "BUSINESS" : "RESIDENTIAL";
-
-        //    var mappedShipment = new
-        //    {
-        //        packages = mappedPackages,
-
-        //        toAddress = new
-        //        {
-        //            type = ToType(srcShipment.ToAddress?.Type),
-        //            contact = new
-        //            {
-        //                email = cmd.ToEmail ?? srcShipment.ToAddress?.Contact?.Email,
-        //                phone = cmd.ToPhone ?? srcShipment.ToAddress?.Contact?.Phone,
-        //                lastName = cmd.ToLastName ?? srcShipment.ToAddress?.Contact?.LastName,
-        //                firstName = cmd.ToFirstName ?? srcShipment.ToAddress?.Contact?.FirstName
-        //            },
-        //            location = new
-        //            {
-        //                city = cmd.ToCity ?? srcShipment.ToAddress?.Location?.City,
-        //                number = (int?)null, // si tu as un numéro précis sinon null
-        //                street = cmd.ToStreet ?? srcShipment.ToAddress?.Location?.Street,
-        //                postalCode = cmd.ToZip ?? srcShipment.ToAddress?.Location?.PostalCode,
-        //                countryIsoCode = string.IsNullOrWhiteSpace(cmd.ToCountry)
-        //                                    ? (srcShipment.ToAddress?.Location?.CountryIsoCode ?? "FR")
-        //                                    : cmd.ToCountry
-        //            }
-        //        },
-
-        //        externalId = cmd.OrderExternalId ?? srcShipment.ExternalId,
-
-        //        fromAddress = new
-        //        {
-        //            type = "BUSINESS",
-        //            contact = new
-        //            {
-        //                email = _opt.FromEmail,
-        //                phone = _opt.FromPhone,
-        //                company = _opt.FromCompany,
-        //                lastName = _opt.FromLastName,
-        //                firstName = _opt.FromFirstName
-        //            },
-        //            location = new
-        //            {
-        //                city = _opt.FromCity,
-        //                number = _opt.FromNumber,
-        //                street = _opt.FromStreet,
-        //                postalCode = _opt.FromZip,
-        //                countryIsoCode = _opt.FromCountry
-        //            },
-        //            additionalInformation = _opt.FromAdditionalInfo
-        //        },
-
-        //        returnAddress = new
-        //        {
-        //            type = "BUSINESS",
-        //            contact = new
-        //            {
-        //                email = _opt.FromEmail,
-        //                phone = _opt.FromPhone,
-        //                company = _opt.FromCompany,
-        //                lastName = _opt.FromLastName,
-        //                firstName = _opt.FromFirstName
-        //            },
-        //            location = new
-        //            {
-        //                city = _opt.FromCity,
-        //                number = _opt.FromNumber,
-        //                street = _opt.FromStreet,
-        //                postalCode = _opt.FromZip,
-        //                countryIsoCode = _opt.FromCountry
-        //            },
-        //            additionalInformation = _opt.ReturnAdditionalInfo
-        //        },
-
-        //        pickupPointCode = (cmd.IsRelay == true) ? (cmd.RelayId ?? srcShipment.PickupPointCode) : null,
-        //        dropOffPointCode = cmd.DropOffPointCode ?? srcShipment.DropOffPointCode
-        //    };
-
-        //    // ----- BODY RACINE (v3) -----
-        //    var expectedDate = !string.IsNullOrWhiteSpace(cmd.ExpectedTakingOverDate)
-        //        ? DateTime.Parse(cmd.ExpectedTakingOverDate, CultureInfo.InvariantCulture).ToString("yyyy-MM-dd")
-        //        : DateTime.UtcNow.ToString("yyyy-MM-dd");
-
-        //    var body = new
-        //    {
-        //        insured = cmd.Insured ?? false,
-        //        labelType = string.IsNullOrWhiteSpace(cmd.LabelType) ? "PDF_A4" : cmd.LabelType,
-
-        //        // v3 exige AU MOINS un des deux :
-        //        shippingOfferCode = "CHRP-Chrono2ShopDirect", //string.IsNullOrWhiteSpace(cmd.ServiceCode) ? null : cmd.ServiceCode,
-        //        //shippingOfferId = "CHRP-736BX",//string.IsNullOrWhiteSpace(cmd.ShippingOfferId) ? null : cmd.ShippingOfferId,
-
-        //        expectedTakingOverDate = expectedDate,
-
-        //        shipment = mappedShipment
-        //    };
-
-        //    var jsonOpts = new JsonSerializerOptions
-        //    {
-        //        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        //        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        //    };
-
-        //    var req = new HttpRequestMessage(HttpMethod.Post, "/shipping/v3.1/shipping-order");
-        //    req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        //    req.Content = new StringContent(JsonSerializer.Serialize(body, jsonOpts), Encoding.UTF8, "application/json");
-
-        //    var resp = await client.SendAsync(req);
-        //    var text = await resp.Content.ReadAsStringAsync();
-
-        //    if (!resp.IsSuccessStatusCode)
-        //        throw new InvalidOperationException($"/shipping-order failed {(int)resp.StatusCode} {text}");
-
-        //    using var doc = JsonDocument.Parse(text);
-        //    var r = doc.RootElement;
-
-        //    return new ShipmentResult(
-        //        providerShipmentId: r.TryGetProperty("id", out var id) ? id.GetString()! : "",
-        //        carrier: r.TryGetProperty("carrierCode", out var cc) ? (cc.GetString() ?? "Boxtal") : "Boxtal",
-        //        serviceCode: r.Val("productCode", "serviceCode") ?? "",
-        //        trackingNumber: r.TryGetProperty("trackingNumber", out var tr) ? tr.GetString() ?? "" : "",
-        //        labelUrl: r.TryGetProperty("labelUrl", out var lu) ? lu.GetString() ?? "" : ""
-        //    );
-        //}
-
-
-
-
-
-        /* -------- CREATE SHIPMENT v1 -------- */
-        public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd)
+        public async Task<ShipmentResultV3> CreateShipmentAsync(CreateShipmentCmd cmd)
         {
-            var client = _httpFactory.CreateClient("BoxtalV1");
-            var basic = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_opt.V1UserName}:{_opt.V1Password}"));
+            var token = await GetTokenV3Async();
+            var client = _httpFactory.CreateClient("BoxtalV3");
 
-            var form = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+            // ----- MAP Shipment (C# → schéma attendu Boxtal v3) -----
+            var srcShipment = cmd.Shipment ?? new Shipment();
+            var srcPackages = srcShipment.Packages;
 
+            // Fallback sur le 1er colis pour dimensions/poids si besoin
+            var p0 = srcPackages.FirstOrDefault();
 
-            // --- Expéditeur ---
-            var fromCountry = string.IsNullOrWhiteSpace(cmd.FromCountry) ? _opt.FromCountry : cmd.FromCountry;
-            var fromPhone = string.IsNullOrWhiteSpace(cmd.FromPhone) ? _opt.FromPhone : cmd.FromPhone;
-            form["expediteur.tel"] = NormalizeBoxtalPhone(fromPhone, fromCountry);
+            var fallbackWidth = SafeInt(p0?.PackageWidth, 5);
+            var fallbackHeight = SafeInt(p0?.PackageHeight,5);
+            var fallbackLength = SafeInt(p0?.PackageLonger, 5);
+            var fallbackWeight = SafeDouble(p0?.PackageWeight, 0.25);
 
-
-            // --- Destinataire ---
-            var toCountry = string.IsNullOrWhiteSpace(cmd.ToCountry) ? "FR" : cmd.ToCountry;
-            var toPhone = string.IsNullOrWhiteSpace(cmd.ToPhone) ? "" : cmd.ToPhone;
-            var ToPhone = NormalizeBoxtalPhone(toPhone, toCountry);
-
-
-            // --- url_push (requis) ---
-            if (!string.IsNullOrWhiteSpace(_opt.V1PushUrlBase) && !string.IsNullOrWhiteSpace(_opt.V1PushToken))
+            var mappedPackages = (srcPackages).Select(p => new
             {
-                var qpOrder = Uri.EscapeDataString(cmd.ExternalOrderId ?? "");
-                var qpToken = Uri.EscapeDataString(_opt.V1PushToken ?? "");
-                var sep = _opt.V1PushUrlBase.Contains('?') ? "&" : "?";
-                form["url_push"] = $"{_opt.V1PushUrlBase}{sep}orderId={qpOrder}&token={qpToken}";
-            }
+                type = string.IsNullOrWhiteSpace(p.Type) ? "PARCEL" : p.Type,
+                weight = SafeDouble(p.PackageWeight, fallbackWeight),
+                width = SafeInt(p.PackageWidth, fallbackWidth),
+                height = SafeInt(p.PackageHeight, fallbackHeight),
+                length = SafeInt(p.PackageLonger, fallbackLength),
+                value = (p.PackageValue.HasValue && p.PackageValue.Value > 0)
+                            ? new { value = p.PackageValue.Value, currency = "EUR" }
+                            : null,
+                content = (p?.Content == null || (string.IsNullOrWhiteSpace(p.Content.Id) && string.IsNullOrWhiteSpace(p.Content.Description)))
+        ? null
+        : new { id = p.Content.Id, description = p.Content.Description },
+                stackable = p.PackageStackable ?? true,
+                externalId = string.IsNullOrWhiteSpace(p.ExternalId) ? null : p.ExternalId,
+            }).ToArray();
 
-            // --- Offre (requis) ---
-            form["operator"] = cmd.OperatorCode;     // ex: CHRP
-            form["service"] = cmd.ServiceCode;      // ex: Chrono2ShopDirect
+            // Types d’adresses en VAL v3
+            string ToType(string? t) =>
+                string.Equals(t, "BUSINESS", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(t, "entreprise", StringComparison.OrdinalIgnoreCase)
+                    ? "BUSINESS" : "RESIDENTIAL";
+
 
             var application = (await _applicationService.GetApplicationAsync()).ToList();
             string defaultDropOffMondialRelay = application[0].DefaultDropOffMondialRelay ?? "";
@@ -883,130 +900,308 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
                 CarrierEnum.POFR => defaultDropOffLaposte
             };
 
-     
-            if (!string.IsNullOrWhiteSpace(cmd.DropOffPointCode)) form["depot.pointrelais"] = cmd.IsRelay ? defaultDropOff : cmd.DropOffPointCode;
-            if (!string.IsNullOrWhiteSpace(cmd.PickupPointCode)) form["retrait.pointrelais"] = cmd.PickupPointCode;
 
-            // --- Expéditeur (plusieurs requis) ---
-            form["expediteur.type"] = (cmd.FromType ?? "entreprise").ToLowerInvariant();
-            if (!string.IsNullOrWhiteSpace(cmd.FromCivility)) form["expediteur.civilite"] = cmd.FromCivility;
-            form["expediteur.nom"] = string.IsNullOrWhiteSpace(cmd.FromLastName) ? _opt.FromLastName : cmd.FromLastName;
-            form["expediteur.prenom"] = string.IsNullOrWhiteSpace(cmd.FromFirstName) ? _opt.FromFirstName : cmd.FromFirstName;
-            form["expediteur.societe"] = string.IsNullOrWhiteSpace(cmd.FromCompany) ? _opt.FromCompany : cmd.FromCompany;
-            form["expediteur.email"] = string.IsNullOrWhiteSpace(cmd.FromEmail) ? _opt.FromEmail : cmd.FromEmail;
-            form["expediteur.tel"] = NormalizeBoxtalPhone(fromPhone, fromCountry);
-            form["expediteur.adresse"] = string.IsNullOrWhiteSpace(cmd.FromAddress) ? _opt.FromStreet : cmd.FromAddress;
-            form["expediteur.code_postal"] = string.IsNullOrWhiteSpace(cmd.FromZip) ? _opt.FromZip : cmd.FromZip;
-            form["expediteur.ville"] = string.IsNullOrWhiteSpace(cmd.FromCity) ? _opt.FromCity : cmd.FromCity;
-            form["expediteur.pays"] = string.IsNullOrWhiteSpace(cmd.FromCountry) ? _opt.FromCountry : cmd.FromCountry;
-
-            // --- Destinataire (plusieurs requis) ---
-            form["destinataire.type"] = (cmd.ToType ?? "particulier").ToLowerInvariant();
-            if (!string.IsNullOrWhiteSpace(cmd.ToCivility)) form["destinataire.civilite"] = cmd.ToCivility;
-            if (!string.IsNullOrWhiteSpace(cmd.ToLastName)) form["destinataire.nom"] = cmd.ToLastName;
-            if (!string.IsNullOrWhiteSpace(cmd.ToFirstName)) form["destinataire.prenom"] = cmd.ToFirstName;
-            if (!string.IsNullOrWhiteSpace(cmd.ToEmail)) form["destinataire.email"] = cmd.ToEmail;
-            form["destinataire.tel"] = NormalizeBoxtalPhone(toPhone, toCountry);
-            if (!string.IsNullOrWhiteSpace(cmd.ToAddress)) form["destinataire.adresse"] = cmd.ToAddress;
-            if (!string.IsNullOrWhiteSpace(cmd.ToZip)) form["destinataire.code_postal"] = cmd.ToZip;
-            if (!string.IsNullOrWhiteSpace(cmd.ToCity)) form["destinataire.ville"] = cmd.ToCity;
-            if (!string.IsNullOrWhiteSpace(cmd.ToCountry)) form["destinataire.pays"] = cmd.ToCountry;
-
-            // --- Contenu colis (requis) ---
-            // code_contenu (requis) -> DOIT venir du front ou d’un mapping interne
-            if (cmd.ContentCode != null)
-                form["code_contenu"] = cmd.ContentCode.ToString(CultureInfo.InvariantCulture);
-            else
-                form["code_contenu"] = "50110"; // ⚠️ fallback de test : remplace par un vrai code
-
-            // description (requis)
-            form["colis.description"] = string.IsNullOrWhiteSpace(cmd.ContentDescription)
-                ? $"Commande {cmd.ExternalOrderId}"
-                : cmd.ContentDescription;
-
-
-            //if (cmd.Packages?.Count == 1)
-                //form["colis.valeur"] = cmd.DeclaredValue.Value.ToString(CultureInfo.InvariantCulture);
-
-
-            // --- Colis N ---
-            var pkgs = cmd.Packages?.Count > 0 ? cmd.Packages : new List<Package>();
-            for (int i = 0; i < pkgs.Count; i++)
+            var mappedShipment = new
             {
-                var p = pkgs[i]; var n = i + 1; var prefix = $"colis_{n}";
-                if (!string.IsNullOrWhiteSpace(p.PackageWeight)) form[$"{prefix}.poids"] = p.PackageWeight!.Replace(',', '.');
-                if (!string.IsNullOrWhiteSpace(p.PackageLonger)) form[$"{prefix}.longueur"] = p.PackageLonger;
-                if (!string.IsNullOrWhiteSpace(p.PackageWidth)) form[$"{prefix}.largeur"] = p.PackageWidth;
-                if (!string.IsNullOrWhiteSpace(p.PackageHeight)) form[$"{prefix}.hauteur"] = p.PackageHeight;
-                if (p.PackageValue.HasValue) form[$"{prefix}.valeur"] = p.PackageValue.Value.ToString(CultureInfo.InvariantCulture);
-            }
-            // Fallback minimal si aucun colis renseigné (évite 400)
-            if (!form.Keys.Any(k => k.StartsWith("colis_", StringComparison.Ordinal)))
+                packages = mappedPackages,
+
+                toAddress = new
+                {
+                    type = ToType(srcShipment.ToAddress?.Type),
+                    contact = new
+                    {
+                        email = srcShipment.ToAddress?.Contact?.Email,
+                        phone = srcShipment.ToAddress?.Contact?.Phone,
+                        lastName = srcShipment.ToAddress?.Contact?.LastName,
+                        firstName =  srcShipment.ToAddress?.Contact?.FirstName
+                    },
+                    location = new
+                    {
+                        city = srcShipment.ToAddress?.Location?.City,
+                        number = (int?)null, // si tu as un numéro précis sinon null
+                        street = srcShipment.ToAddress?.Location?.Street,
+                        postalCode = srcShipment.ToAddress?.Location?.PostalCode,
+                        countryIsoCode = srcShipment.ToAddress.Location.CountryIsoCode
+                    }
+                },
+
+                externalId = srcShipment.ExternalId,
+
+                fromAddress = new
+                {
+                    type = "BUSINESS",
+                    contact = new
+                    {
+                        email = _opt.FromEmail,
+                        phone = _opt.FromPhone,
+                        company = _opt.FromCompany,
+                        lastName = _opt.FromLastName,
+                        firstName = _opt.FromFirstName
+                    },
+                    location = new
+                    {
+                        city = _opt.FromCity,
+                        number = _opt.FromNumber,
+                        street = _opt.FromStreet,
+                        postalCode = _opt.FromZip,
+                        countryIsoCode = _opt.FromCountry
+                    },
+                    additionalInformation = _opt.FromAdditionalInfo
+                },
+
+                returnAddress = new
+                {
+                    type = "BUSINESS",
+                    contact = new
+                    {
+                        email = _opt.FromEmail,
+                        phone = _opt.FromPhone,
+                        company = _opt.FromCompany,
+                        lastName = _opt.FromLastName,
+                        firstName = _opt.FromFirstName
+                    },
+                    location = new
+                    {
+                        city = _opt.FromCity,
+                        number = _opt.FromNumber,
+                        street = _opt.FromStreet,
+                        postalCode = _opt.FromZip,
+                        countryIsoCode = _opt.FromCountry
+                    },
+                    additionalInformation = _opt.ReturnAdditionalInfo
+                },
+
+                pickupPointCode = cmd.PickupPointCode,
+                dropOffPointCode = defaultDropOff,
+            };
+
+            // ----- BODY RACINE (v3) -----
+            var expectedDate = cmd.ExpectedTakingOverDate?.ToString("yyyy-MM-dd");
+
+            var body = new
             {
-                form["colis_1.poids"] = "0.25";
-                form["colis_1.longueur"] = "20";
-                form["colis_1.largeur"] = "15";
-                form["colis_1.hauteur"] = "10";
-            }
+                insured = cmd.Insured ?? false,
+                labelType = string.IsNullOrWhiteSpace(cmd.LabelType) ? "PDF_A4" : cmd.LabelType,
+                shippingOfferCode = cmd.OperatorCode+"-"+cmd.ServiceCode,
+                expectedTakingOverDate = expectedDate,
+                shipment = mappedShipment
+            };
 
-            // --- Collecte (requis) ---
-            var collect = /*cmd.CollectDate ?? cmd.TakeOverDate ??*/ DateTime.UtcNow.Date;
-            form["collecte"] = collect.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var jsonOpts = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
 
-            // --- Référence externe (nom V1) ---
-            if (!string.IsNullOrWhiteSpace(cmd.ExternalOrderId))
-                form["reference_externe"] = cmd.ExternalOrderId; // <-- remplace "external.id"
-
-            // (facultatif) assurance / raison export
-            //if (cmd.InsuranceSelection.HasValue) form["assurance.selection"] = cmd.InsuranceSelection.Value ? "true" : "false";
-            //if (!string.IsNullOrWhiteSpace(cmd.Reason)) form["raison"] = cmd.Reason;
-
-            // --- POST /order ---
-            var payload = form.Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
-                              .ToDictionary(k => k.Key, v => v.Value!);
-
-            // (Debug utile) : log des paires envoyées
-            // foreach (var kv in payload) Console.WriteLine($"{kv.Key} = {kv.Value}");
-
-            var req = new HttpRequestMessage(HttpMethod.Post, "order")
-            { Content = new FormUrlEncodedContent(payload) };
-            req.Headers.Authorization = new AuthenticationHeaderValue("Basic", basic);
-            req.Headers.Accept.ParseAdd("application/xml");
+            var req = new HttpRequestMessage(HttpMethod.Post, "/shipping/v3.1/shipping-order");
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            req.Content = new StringContent(JsonSerializer.Serialize(body, jsonOpts), Encoding.UTF8, "application/json");
 
             var resp = await client.SendAsync(req);
             var text = await resp.Content.ReadAsStringAsync();
 
             if (!resp.IsSuccessStatusCode)
-                throw new InvalidOperationException($"/order failed {(int)resp.StatusCode} {resp.ReasonPhrase}\n{text}");
-
-            try
             {
-                var x = XDocument.Parse(text);
-                string? shipmentId = x.Descendants().FirstOrDefault(e => e.Name.LocalName is "id" or "shipment_id" or "expedition_id" or "reference")?.Value;
-                string? tracking = x.Descendants().FirstOrDefault(e => e.Name.LocalName is "tracking" or "tracking_number" or "numero_suivi")?.Value;
-                string? labelUrl = x.Descendants().FirstOrDefault(e => e.Name.LocalName is "labelUrl" or "etiquette_url" or "url_etiquette")?.Value;
+                // utile pour corréler avec Boxtal
+                var reqId = resp.Headers.TryGetValues("x-amzn-RequestId", out var ids) ? string.Join(",", ids) : "n/a";
 
-                return new ShipmentResult(
-                    providerShipmentId: shipmentId ?? "",
-                    carrier: cmd.OperatorCode,
-                    serviceCode: cmd.ServiceCode,
-                    trackingNumber: tracking ?? "",
-                    labelUrl: labelUrl ?? ""
-                );
+                try
+                {
+                    using var j = JsonDocument.Parse(text);
+                    var pretty = JsonSerializer.Serialize(j, new JsonSerializerOptions { WriteIndented = true });
+                    Console.WriteLine("Boxtal 400 (RequestId={ReqId})\n{Json}", reqId, pretty);
+                }
+                catch
+                {
+                    Console.WriteLine("Boxtal 400 (RequestId={ReqId}) raw: {Body}", reqId, text);
+                }
+
+                throw new InvalidOperationException($"/shipping-order failed {(int)resp.StatusCode} {text}");
             }
-            catch
-            {
-                using var doc = JsonDocument.Parse(text);
-                var r = doc.RootElement;
-                return new ShipmentResult(
-                    providerShipmentId: r.Val("id", "shipmentId") ?? "",
-                    carrier: r.Val("carrier", "operator", "carrierCode") ?? "Boxtal",
-                    serviceCode: cmd.ServiceCode,
-                    trackingNumber: r.Val("trackingNumber", "tracking") ?? "",
-                    labelUrl: r.Val("labelUrl", "label") ?? ""
-                );
-            }
+
+            // ✅ Parser v3 centralisé (wrapper content ou pas)
+            var result = BoxtalResponseParser.MapShipmentResultV3(text);
+            return result;
         }
+
+
+
+
+
+        ///* -------- CREATE SHIPMENT v1 -------- */
+        //public async Task<ShipmentResult> CreateShipmentAsync(CreateShipmentV1Cmd cmd)
+        //{
+        //    var client = _httpFactory.CreateClient("BoxtalV1");
+        //    var basic = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_opt.V1UserName}:{_opt.V1Password}"));
+
+        //    var form = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+
+
+        //    // --- Expéditeur ---
+        //    var fromCountry = string.IsNullOrWhiteSpace(cmd.FromCountry) ? _opt.FromCountry : cmd.FromCountry;
+        //    var fromPhone = string.IsNullOrWhiteSpace(cmd.FromPhone) ? _opt.FromPhone : cmd.FromPhone;
+        //    form["expediteur.tel"] = NormalizeBoxtalPhone(fromPhone, fromCountry);
+
+
+        //    // --- Destinataire ---
+        //    var toCountry = string.IsNullOrWhiteSpace(cmd.ToCountry) ? "FR" : cmd.ToCountry;
+        //    var toPhone = string.IsNullOrWhiteSpace(cmd.ToPhone) ? "" : cmd.ToPhone;
+        //    var ToPhone = NormalizeBoxtalPhone(toPhone, toCountry);
+
+
+        //    // --- url_push (requis) ---
+        //    if (!string.IsNullOrWhiteSpace(_opt.V1PushUrlBase) && !string.IsNullOrWhiteSpace(_opt.V1PushToken))
+        //    {
+        //        var qpOrder = Uri.EscapeDataString(cmd.ExternalOrderId ?? "");
+        //        var qpToken = Uri.EscapeDataString(_opt.V1PushToken ?? "");
+        //        var sep = _opt.V1PushUrlBase.Contains('?') ? "&" : "?";
+        //        form["url_push"] = $"{_opt.V1PushUrlBase}{sep}orderId={qpOrder}&token={qpToken}";
+        //    }
+
+        //    // --- Offre (requis) ---
+        //    form["operator"] = cmd.OperatorCode;     // ex: CHRP
+        //    form["service"] = cmd.ServiceCode;      // ex: Chrono2ShopDirect
+
+        //    var application = (await _applicationService.GetApplicationAsync()).ToList();
+        //    string defaultDropOffMondialRelay = application[0].DefaultDropOffMondialRelay ?? "";
+        //    string defaultDropOffUps = application[0].DefaultDropOffUps ?? "";
+        //    string defaultDropOffChronoPost = application[0].DefaultDropOffChronoPost ?? "";
+        //    string defaultDropOffLaposte = application[0].DefaultDropLaposte ?? "";
+
+        //    CarrierEnum getcarrierFromRequest = Enum.Parse<CarrierEnum>(cmd.OperatorCode.ToUpper());
+
+        //    string defaultDropOff = getcarrierFromRequest switch
+        //    {
+        //        CarrierEnum.MONR => defaultDropOffMondialRelay,
+        //        CarrierEnum.UPSE => defaultDropOffUps,
+        //        CarrierEnum.CHRP => defaultDropOffChronoPost,
+        //        CarrierEnum.POFR => defaultDropOffLaposte
+        //    };
+
+
+        //    if (!string.IsNullOrWhiteSpace(cmd.DropOffPointCode)) form["depot.pointrelais"] = cmd.IsRelay ? defaultDropOff : cmd.DropOffPointCode;
+        //    if (!string.IsNullOrWhiteSpace(cmd.PickupPointCode)) form["retrait.pointrelais"] = cmd.PickupPointCode;
+
+        //    // --- Expéditeur (plusieurs requis) ---
+        //    form["expediteur.type"] = (cmd.FromType ?? "entreprise").ToLowerInvariant();
+        //    if (!string.IsNullOrWhiteSpace(cmd.FromCivility)) form["expediteur.civilite"] = cmd.FromCivility;
+        //    form["expediteur.nom"] = string.IsNullOrWhiteSpace(cmd.FromLastName) ? _opt.FromLastName : cmd.FromLastName;
+        //    form["expediteur.prenom"] = string.IsNullOrWhiteSpace(cmd.FromFirstName) ? _opt.FromFirstName : cmd.FromFirstName;
+        //    form["expediteur.societe"] = string.IsNullOrWhiteSpace(cmd.FromCompany) ? _opt.FromCompany : cmd.FromCompany;
+        //    form["expediteur.email"] = string.IsNullOrWhiteSpace(cmd.FromEmail) ? _opt.FromEmail : cmd.FromEmail;
+        //    form["expediteur.tel"] = NormalizeBoxtalPhone(fromPhone, fromCountry);
+        //    form["expediteur.adresse"] = string.IsNullOrWhiteSpace(cmd.FromAddress) ? _opt.FromStreet : cmd.FromAddress;
+        //    form["expediteur.code_postal"] = string.IsNullOrWhiteSpace(cmd.FromZip) ? _opt.FromZip : cmd.FromZip;
+        //    form["expediteur.ville"] = string.IsNullOrWhiteSpace(cmd.FromCity) ? _opt.FromCity : cmd.FromCity;
+        //    form["expediteur.pays"] = string.IsNullOrWhiteSpace(cmd.FromCountry) ? _opt.FromCountry : cmd.FromCountry;
+
+        //    // --- Destinataire (plusieurs requis) ---
+        //    form["destinataire.type"] = (cmd.ToType ?? "particulier").ToLowerInvariant();
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToCivility)) form["destinataire.civilite"] = cmd.ToCivility;
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToLastName)) form["destinataire.nom"] = cmd.ToLastName;
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToFirstName)) form["destinataire.prenom"] = cmd.ToFirstName;
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToEmail)) form["destinataire.email"] = cmd.ToEmail;
+        //    form["destinataire.tel"] = NormalizeBoxtalPhone(toPhone, toCountry);
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToAddress)) form["destinataire.adresse"] = cmd.ToAddress;
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToZip)) form["destinataire.code_postal"] = cmd.ToZip;
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToCity)) form["destinataire.ville"] = cmd.ToCity;
+        //    if (!string.IsNullOrWhiteSpace(cmd.ToCountry)) form["destinataire.pays"] = cmd.ToCountry;
+
+        //    // --- Contenu colis (requis) ---
+        //    // code_contenu (requis) -> DOIT venir du front ou d’un mapping interne
+        //    if (cmd.ContentCode != null)
+        //        form["code_contenu"] = cmd.ContentCode.ToString(CultureInfo.InvariantCulture);
+        //    else
+        //        form["code_contenu"] = "50110"; // ⚠️ fallback de test : remplace par un vrai code
+
+        //    // description (requis)
+        //    form["colis.description"] = string.IsNullOrWhiteSpace(cmd.ContentDescription)
+        //        ? $"Commande {cmd.ExternalOrderId}"
+        //        : cmd.ContentDescription;
+
+
+        //    //if (cmd.Packages?.Count == 1)
+        //        //form["colis.valeur"] = cmd.DeclaredValue.Value.ToString(CultureInfo.InvariantCulture);
+
+
+        //    // --- Colis N ---
+        //    var pkgs = cmd.Packages?.Count > 0 ? cmd.Packages : new List<Package>();
+        //    for (int i = 0; i < pkgs.Count; i++)
+        //    {
+        //        var p = pkgs[i]; var n = i + 1; var prefix = $"colis_{n}";
+        //        if (!string.IsNullOrWhiteSpace(p.PackageWeight)) form[$"{prefix}.poids"] = p.PackageWeight!.Replace(',', '.');
+        //        if (!string.IsNullOrWhiteSpace(p.PackageLonger)) form[$"{prefix}.longueur"] = p.PackageLonger;
+        //        if (!string.IsNullOrWhiteSpace(p.PackageWidth)) form[$"{prefix}.largeur"] = p.PackageWidth;
+        //        if (!string.IsNullOrWhiteSpace(p.PackageHeight)) form[$"{prefix}.hauteur"] = p.PackageHeight;
+        //        if (p.PackageValue.HasValue) form[$"{prefix}.valeur"] = p.PackageValue.Value.ToString(CultureInfo.InvariantCulture);
+        //    }
+        //    // Fallback minimal si aucun colis renseigné (évite 400)
+        //    if (!form.Keys.Any(k => k.StartsWith("colis_", StringComparison.Ordinal)))
+        //    {
+        //        form["colis_1.poids"] = "0.25";
+        //        form["colis_1.longueur"] = "20";
+        //        form["colis_1.largeur"] = "15";
+        //        form["colis_1.hauteur"] = "10";
+        //    }
+
+        //    // --- Collecte (requis) ---
+        //    var collect = /*cmd.CollectDate ?? cmd.TakeOverDate ??*/ DateTime.UtcNow.Date;
+        //    form["collecte"] = collect.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        //    // --- Référence externe (nom V1) ---
+        //    if (!string.IsNullOrWhiteSpace(cmd.ExternalOrderId))
+        //        form["reference_externe"] = cmd.ExternalOrderId; // <-- remplace "external.id"
+
+        //    // (facultatif) assurance / raison export
+        //    //if (cmd.InsuranceSelection.HasValue) form["assurance.selection"] = cmd.InsuranceSelection.Value ? "true" : "false";
+        //    //if (!string.IsNullOrWhiteSpace(cmd.Reason)) form["raison"] = cmd.Reason;
+
+        //    // --- POST /order ---
+        //    var payload = form.Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+        //                      .ToDictionary(k => k.Key, v => v.Value!);
+
+        //    // (Debug utile) : log des paires envoyées
+        //    // foreach (var kv in payload) Console.WriteLine($"{kv.Key} = {kv.Value}");
+
+        //    var req = new HttpRequestMessage(HttpMethod.Post, "order")
+        //    { Content = new FormUrlEncodedContent(payload) };
+        //    req.Headers.Authorization = new AuthenticationHeaderValue("Basic", basic);
+        //    req.Headers.Accept.ParseAdd("application/xml");
+
+        //    var resp = await client.SendAsync(req);
+        //    var text = await resp.Content.ReadAsStringAsync();
+
+        //    if (!resp.IsSuccessStatusCode)
+        //        throw new InvalidOperationException($"/order failed {(int)resp.StatusCode} {resp.ReasonPhrase}\n{text}");
+
+        //    try
+        //    {
+        //        var x = XDocument.Parse(text);
+        //        string? shipmentId = x.Descendants().FirstOrDefault(e => e.Name.LocalName is "id" or "shipment_id" or "expedition_id" or "reference")?.Value;
+        //        string? tracking = x.Descendants().FirstOrDefault(e => e.Name.LocalName is "tracking" or "tracking_number" or "numero_suivi")?.Value;
+        //        string? labelUrl = x.Descendants().FirstOrDefault(e => e.Name.LocalName is "labelUrl" or "etiquette_url" or "url_etiquette")?.Value;
+
+        //        return new ShipmentResult(
+        //            providerShipmentId: shipmentId ?? "",
+        //            carrier: cmd.OperatorCode,
+        //            serviceCode: cmd.ServiceCode,
+        //            trackingNumber: tracking ?? "",
+        //            labelUrl: labelUrl ?? ""
+        //        );
+        //    }
+        //    catch
+        //    {
+        //        using var doc = JsonDocument.Parse(text);
+        //        var r = doc.RootElement;
+        //        return new ShipmentResult(
+        //            providerShipmentId: r.Val("id", "shipmentId") ?? "",
+        //            carrier: r.Val("carrier", "operator", "carrierCode") ?? "Boxtal",
+        //            serviceCode: cmd.ServiceCode,
+        //            trackingNumber: r.Val("trackingNumber", "tracking") ?? "",
+        //            labelUrl: r.Val("labelUrl", "label") ?? ""
+        //        );
+        //    }
+        //}
 
 
 
@@ -1142,4 +1337,42 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
             => ElementAny(e, names)?.Value;
     }
 
- }
+
+    internal static class BoxtalResponseParser
+    {
+        static Money? MoneyOf(JsonElement parent, string prop)
+        {
+            if (!parent.TryGetProperty(prop, out var e)) return null;
+            var value = e.TryGetProperty("value", out var v) ? v.GetDecimal() : (decimal?)null;
+            var curr = e.TryGetProperty("currency", out var c) ? c.GetString() : null;
+            return (value is null && curr is null) ? null : new Money { Value = value, Currency = curr };
+        }
+
+        static DateTimeOffset? DateOf(JsonElement parent, string prop)
+        {
+            return parent.TryGetProperty(prop, out var e) && e.ValueKind == JsonValueKind.String
+                && DateTimeOffset.TryParse(e.GetString(), out var dt) ? dt : null;
+        }
+
+        static string? Str(JsonElement parent, string prop)
+            => parent.TryGetProperty(prop, out var e) ? e.GetString() : null;
+
+        public static ShipmentResultV3 MapShipmentResultV3(string json)
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var body = root.TryGetProperty("content", out var content) ? content : root;
+
+            return new ShipmentResultV3
+            {
+                ShipmentId = Str(body, "id"),
+                ShippingOrderId = Str(body, "shipmentId"),
+                Status = Str(body, "status"),
+                EstimatedDeliveryDate = DateOf(body, "estimatedDeliveryDate"),
+                ExpectedTakingOverDate = DateOf(body, "expectedTakingOverDate")
+            };
+        }
+    }
+
+}

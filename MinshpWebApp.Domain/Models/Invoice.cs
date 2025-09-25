@@ -22,5 +22,7 @@ namespace MinshpWebApp.Domain.Models
 
         public string? InvoiceLink { get; set; }
 
+        public bool? HardDelete { get; set; } = false;
+
     }
 }

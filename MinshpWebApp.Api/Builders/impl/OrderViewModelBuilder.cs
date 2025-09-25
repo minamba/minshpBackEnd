@@ -5,6 +5,7 @@ using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
 using MinshpWebApp.Domain.Services.impl;
+using MinshpWebApp.Domain.Services.Shipping;
 
 namespace MinshpWebApp.Api.Builders.impl
 {
@@ -15,15 +16,17 @@ namespace MinshpWebApp.Api.Builders.impl
         private IOrderCustomerProductViewModelBuilder _orderCustomerProductViewModelBuilder;
         private ICustomerViewModelBuilder _customerViewModelBuilder;
         private IProductViewModelBuilder _productViewModelBuilder;
+        private IShippingProvider _shippingProvider;
 
 
-        public OrderViewModelBuilder(IOrderService orderService,  IMapper mapper, IOrderCustomerProductViewModelBuilder orderCustomerProductVm, ICustomerViewModelBuilder customerVm, IProductViewModelBuilder productVm)
+        public OrderViewModelBuilder(IOrderService orderService,  IMapper mapper, IOrderCustomerProductViewModelBuilder orderCustomerProductVm, ICustomerViewModelBuilder customerVm, IProductViewModelBuilder productVm, IShippingProvider shippingProvider)
         {
             _mapper = mapper;
             _orderService = orderService;
             _productViewModelBuilder = productVm;
             _customerViewModelBuilder = customerVm;
             _orderCustomerProductViewModelBuilder = orderCustomerProductVm;
+            _shippingProvider = shippingProvider;
         }
 
         public async Task<Order> AddOrdersAsync(OrderRequest model)
@@ -99,15 +102,27 @@ namespace MinshpWebApp.Api.Builders.impl
                 customer = customers.FirstOrDefault(c => c.Id == Order.CustomerId);
 
 
-                if (customer.DeliveryAddresses.Count() > 0)
+                //mis a jour des differentes informations de tracking et du status, dans le cas ou ça n'a pas pu etre recupéré lors de la creation de commande
+                if (Order.TrackingLink == null && Order.BoxtalShipmentId != null)
                 {
-                    var customerDeliveryAdress = customer.DeliveryAddresses.FirstOrDefault(d => d.Favorite == true);
-                    trackingLink = TrackingLink.Build(Order.Carrier, Order.TrackingNumber, customerDeliveryAdress.PostalCode.ToString());
+                    var tracking = await _shippingProvider.GetShippingTrackingAsync(Order.BoxtalShipmentId);
+
+                    if (tracking != null)
+                    {
+                        var trackingStatus = TrackingStatus.GetTrackingStatus(tracking.Status);
+
+                        if (Order.TrackingNumber == null || Order.TrackingLink == null)
+                        {
+                            Order.TrackingNumber = tracking.TrackingNumber;
+                            Order.TrackingLink = tracking.PackageTrackingUrl;
+                            Order.Status = trackingStatus;
+                            _orderService.UpdateOrdersAsync(Order);
+                        }
+
+                    }
                 }
 
-       
-                
-                Console.WriteLine("fock");
+
                 var ordervm = new OrderViewModel
                     {
                         Id = Order.Id,
@@ -127,7 +142,7 @@ namespace MinshpWebApp.Api.Builders.impl
                         RelayId = Order.RelayId,
                         RelayLabel = Order.RelayLabel,
                         ServiceCode = Order.ServiceCode,
-                        TrackingLink = trackingLink
+                        TrackingLink = Order.TrackingLink
                 };
                     orderVmList.Add(ordervm);
                     ProductVmList = new List<ProductVIewModel>();

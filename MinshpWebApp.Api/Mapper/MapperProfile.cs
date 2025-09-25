@@ -157,6 +157,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.PhoneNumber, dest => dest.MapFrom(x => x.PhoneNumber))
               .ForMember(x => x.Actif, dest => dest.MapFrom(x => x.Actif))
               .ForMember(x => x.IdAspNetUser, dest => dest.MapFrom(x => x.IdAspNetUser))
+              .ForMember(x => x.Roles, dest => dest.MapFrom(x => x.Roles))
               .ForMember(x => x.BirthDate, dest => dest.MapFrom(x => x.BirthDate));
 
 
@@ -215,6 +216,7 @@ namespace MinshpWebApp.Api.Mapper
              .ForMember(x => x.CustomerId, dest => dest.MapFrom(x => x.CustomerId))
              .ForMember(x => x.OrderId, dest => dest.MapFrom(x => x.OrderId))
              .ForMember(x => x.InvoiceLink, dest => dest.MapFrom(x => x.InvoiceLink))
+             .ForMember(x => x.HardDelete, dest => dest.MapFrom(x => x.HardDelete))
              .ForMember(x => x.Representative, dest => dest.MapFrom(x => x.Representative));
 
 
@@ -311,6 +313,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.SocietyAddress, dest => dest.MapFrom(x => x.SocietyAddress))
               .ForMember(x => x.SocietyZipCode, dest => dest.MapFrom(x => x.SocietyZipCode))
               .ForMember(x => x.SocietyCity, dest => dest.MapFrom(x => x.SocietyCity))
+              .ForMember(x => x.IsMaintenance, dest => dest.MapFrom(x => x.IsMaintenance))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
 
 
@@ -325,6 +328,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.SocietyAddress, dest => dest.MapFrom(x => x.SocietyAddress))
               .ForMember(x => x.SocietyZipCode, dest => dest.MapFrom(x => x.SocietyZipCode))
               .ForMember(x => x.SocietyCity, dest => dest.MapFrom(x => x.SocietyCity))
+              .ForMember(x => x.IsMaintenance, dest => dest.MapFrom(x => x.IsMaintenance))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate));
 
 
@@ -360,6 +364,7 @@ namespace MinshpWebApp.Api.Mapper
                 .ForMember(x => x.LastName, dest => dest.MapFrom(x => x.LastName))
                 .ForMember(x => x.FirstName, dest => dest.MapFrom(x => x.FirstName))
                 .ForMember(x => x.Phone, dest => dest.MapFrom(x => x.Phone))
+                .ForMember(x => x.Civilite, dest => dest.MapFrom(x => x.Civilite))
                 .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode));
 
 
@@ -374,6 +379,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.LastName, dest => dest.MapFrom(x => x.LastName))
               .ForMember(x => x.FirstName, dest => dest.MapFrom(x => x.FirstName))
               .ForMember(x => x.Phone, dest => dest.MapFrom(x => x.Phone))
+              .ForMember(x => x.Civilite, dest => dest.MapFrom(x => x.Civilite))
               .ForMember(x => x.PostalCode, dest => dest.MapFrom(x => x.PostalCode));
 
 
@@ -446,8 +452,8 @@ namespace MinshpWebApp.Api.Mapper
 
 
             CreateMap<PackageRequest, Package>()
-               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-               .ForMember(x => x.ContainedCode, dest => dest.MapFrom(x => x.ContainedCode))
+               .ForMember(x => x.PackageId, dest => dest.MapFrom(x => x.Id))
+               .ForMember(x => x.ContentCodeDefault, dest => dest.MapFrom(x => x.ContainedCode))
                .ForMember(x => x.PackageValue, dest => dest.MapFrom(x => x.PackageValue))
                .ForMember(x => x.PackageWidth, dest => dest.MapFrom(x => x.PackageWidth))
                .ForMember(x => x.PackageWeight, dest => dest.MapFrom(x => x.PackageWeight))
@@ -526,6 +532,37 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
+
+
+            CreateMap<AspNetRole, AspNetRoleViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.NormalizedName, dest => dest.MapFrom(x => x.NormalizedName));
+
+
+            CreateMap<CustomerPromotionCode, CustomerPromotionCodeViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.IdCutomer, dest => dest.MapFrom(x => x.IdCutomer))
+              .ForMember(x => x.IsUsed, dest => dest.MapFrom(x => x.IsUsed));
+
+            CreateMap<CustomerPromotionCodeRequest, CustomerPromotionCode>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.IdCutomer, dest => dest.MapFrom(x => x.IdCutomer))
+              .ForMember(x => x.IsUsed, dest => dest.MapFrom(x => x.IsUsed));
+
+
+            CreateMap<NewLetter, NewLetterViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Mail, dest => dest.MapFrom(x => x.Mail))
+              .ForMember(x => x.Suscribe, dest => dest.MapFrom(x => x.Suscribe));
+
+
+            CreateMap<NewLetterRequest, NewLetter>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.Mail, dest => dest.MapFrom(x => x.Mail))
+              .ForMember(x => x.OldMAil, dest => dest.MapFrom(x => x.OldMAil))
+              .ForMember(x => x.Suscribe, dest => dest.MapFrom(x => x.Suscribe));
+
         }
     }
 }
