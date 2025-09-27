@@ -6,6 +6,7 @@ using MinshpWebApp.Api.Builders.impl;
 using MinshpWebApp.Api.Options;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
+using MinshpWebApp.Domain.Models;
 using Stripe;
 using Stripe.BillingPortal;
 using Stripe.Checkout;
@@ -43,6 +44,16 @@ namespace MinshpWebApp.Api.Controllers
         {
             var result = await _orderViewModelBuilder.GetOrdersAsync();
             return Ok(result);
+        }
+
+
+        [HttpGet("/ordersPagination")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(PageResult<OrderViewModel>), Description = "Paged list of orders")]
+        public async Task<IActionResult> GetOrdersPaginationAsync([FromQuery] PageRequest req, CancellationToken ct)
+        {
+            var page = await _orderViewModelBuilder.PageOrderIdsAsync(req, ct);
+
+            return Ok(page);
         }
 
 

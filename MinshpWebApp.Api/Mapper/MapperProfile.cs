@@ -24,6 +24,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
             CreateMap<ProductDto, Product>()
@@ -39,6 +40,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory));
 
 

@@ -2,18 +2,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Dal.Utils;
+using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
-using Product = MinshpWebApp.Domain.Models.Product;
-using MinshpWebApp.Dal.Entities;
-using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using static System.Net.Mime.MediaTypeNames;
+using Product = MinshpWebApp.Domain.Models.Product;
 
 namespace MinshpWebApp.Dal.Repositories
 {
@@ -45,7 +47,8 @@ namespace MinshpWebApp.Dal.Repositories
                 ModificationDate = p.ModificationDate,
                 IdPromotionCode = p.IdPromotionCode,
                 IdPackageProfil = p.IdPackageProfil,
-                IdSubCategory = p.IdSubCategory
+                IdSubCategory = p.IdSubCategory,
+                Display = p.Display
 
                 }).ToListAsync();
 
@@ -71,6 +74,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.Brand != null) ProductToUpdate.Brand = model.Brand;
             if (model.Model != null) ProductToUpdate.Model = model.Model;
             if (model.ModificationDate != null) ProductToUpdate.ModificationDate = model.ModificationDate;
+            if (model.Display != null) ProductToUpdate.Display = model.Display;
             ProductToUpdate.IdPackageProfil = model.IdPackageProfil;
             ProductToUpdate.IdSubCategory = model.IdSubCategory;
 
@@ -106,7 +110,8 @@ namespace MinshpWebApp.Dal.Repositories
                 CreationDate = model.CreationDate,
                 IdPromotionCode = model.IdPromotionCode,
                 IdPackageProfil = model.IdPackageProfil,
-                IdSubCategory = model.IdSubCategory
+                IdSubCategory = model.IdSubCategory,
+                Display = model.Display
             };
         }
 
@@ -125,7 +130,8 @@ namespace MinshpWebApp.Dal.Repositories
                 CreationDate= DateTime.Now,
                 IdPromotionCode = model.IdPromotionCode,
                 IdPackageProfil = model.IdPackageProfil,
-                IdSubCategory = model.IdSubCategory
+                IdSubCategory = model.IdSubCategory,
+                Display = model.Display
             };
 
             _context.Products.Add(newProduct);
@@ -157,7 +163,8 @@ namespace MinshpWebApp.Dal.Repositories
                 ModificationDate= null,
                 IdPromotionCode = model.IdPromotionCode,
                 IdPackageProfil = model.IdPackageProfil,
-                IdSubCategory = model.IdSubCategory
+                IdSubCategory = model.IdSubCategory,
+                Display = model.Display
             };
         }
 
@@ -173,6 +180,78 @@ namespace MinshpWebApp.Dal.Repositories
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+
+
+        // cette methode est a cleaner car elle ne sert plus du tout. tu pourras l'enlever de partout
+        public async Task<IEnumerable<Product>> GetProductsByIdsAsync(IEnumerable<int> ids)
+        {
+            var idList = ids.Distinct().ToList();
+            var productEntities = await _context.Products
+                .AsNoTracking()
+                .Where(p => idList.Contains(p.Id))
+                .OrderByDescending(p => p.CreationDate)
+                .Select(p => new Product
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description,
+                    IdCategory = p.Id_Category,
+                    Price = p.Price,
+                    Main = p.Main,
+                    Brand = p.Brand,
+                    Model = p.Model,
+                    CreationDate = p.CreationDate,
+                    ModificationDate = p.ModificationDate,
+                    IdPromotionCode = p.IdPromotionCode,
+                    IdPackageProfil = p.IdPackageProfil,
+                    IdSubCategory = p.IdSubCategory,
+                    Display = p.Display
+                })
+                .ToListAsync();
+
+            // Remet l'ordre des IDs paginés (important pour garder le tri)
+            var order = idList.Select((id, i) => new { id, i }).ToDictionary(x => x.id, x => x.i);
+            return productEntities.OrderBy(p => order[p.Id]).ToList();
+        }
+
+
+
+        public async Task<PageResult<int>> PageProductIdsAsync(PageRequest req, CancellationToken ct = default)
+        {
+            var q = _context.Products.AsNoTracking();
+
+            // champs de recherche génériques
+            var search = new Expression<Func<Dal.Entities.Product, string?>>[]
+            {
+        p => p.Name, p => p.Description, p => p.Brand, p => p.Model, p => p.Main.ToString()
+            };
+
+            // filtres génériques (clé = Filter.<Key> côté front)
+            var filters = new Dictionary<string, Func<IQueryable<Dal.Entities.Product>, string, IQueryable<Dal.Entities.Product>>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["IdCategory"] = (qq, v) => int.TryParse(v, out var id) ? qq.Where(p => p.Id_Category == id) : qq,
+                ["IdSubCategory"] = (qq, v) => int.TryParse(v, out var id) ? qq.Where(p => p.IdSubCategory == id) : qq,
+                ["Main"] = (qq, v) => bool.TryParse(v, out var b) ? qq.Where(p => p.Main == b) : qq,
+                ["Brand"] = (qq, v) => qq.Where(p => p.Brand == v),
+                ["Model"] = (qq, v) => qq.Where(p => p.Model == v),
+                ["PriceMin"] = (qq, v) => decimal.TryParse(v, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var min) ? qq.Where(p => p.Price >= min) : qq,
+                ["PriceMax"] = (qq, v) => decimal.TryParse(v, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var max) ? qq.Where(p => p.Price <= max) : qq,
+            };
+
+            // On page d'abord sur les IDs (rapide + stable), tri par défaut
+            var page = await PagedQuery.ExecuteAsync<Dal.Entities.Product, int>(
+                query: q,
+                req: req,
+                searchFields: search,
+                filterHandlers: filters,
+                defaultSort: "CreationDate:desc,Name:asc",
+                selector: p => p.Id,
+                ct: ct
+            );
+
+            return page;
         }
     }
 }

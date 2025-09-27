@@ -71,6 +71,7 @@ namespace MinshpWebApp.Api.Builders.impl
 
         }
 
+
         public async Task<Customer> UpdateCustomersAsync(CustomerRequest model)
         {
             var getNeLetter = new NewLetterRequest();
@@ -86,6 +87,39 @@ namespace MinshpWebApp.Api.Builders.impl
          
            
             return await _customerService.UpdateCustomersAsync(customer);
+        }
+
+
+        public async Task<IEnumerable<Customer>> GetCustomersByIdsAsync(IEnumerable<int> ids)
+        {
+            return await _customerService.GetCustomersByIdsAsync(ids);
+        }
+
+        public async Task<PageResult<CustomerViewModel>> PageCustomerIdsAsync(PageRequest req, CancellationToken ct = default)
+        {
+            // 1) page d’IDs via service
+            var idPage = await _customerService.PageCustomerIdsAsync(req, ct);
+            if (idPage.Items.Count == 0)
+                return null;
+
+            // 2) charge les Domain.Models.Product pour ces IDs
+            var customers = (await _customerService.GetCustomersByIdsAsync(idPage.Items)).ToList();
+
+
+            var resulat = _mapper.Map<IEnumerable<CustomerViewModel>>(customers);
+
+
+            // respect de l’ordre paginé
+            var customer = idPage.Items.Select((id, i) => new { id, i }).ToDictionary(x => x.id, x => x.i);
+            resulat = resulat.OrderBy(vm => customer[vm.Id]).ToList();
+
+            return new PageResult<CustomerViewModel>
+            {
+                Items = (IReadOnlyList<CustomerViewModel>)resulat,
+                TotalCount = idPage.TotalCount,
+                Page = idPage.Page,
+                PageSize = idPage.PageSize
+            };
         }
     }
 }

@@ -1,11 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Dal.Utils;
+using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
 using MinshpWebApp.Domain.Services.Shipping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -222,6 +225,77 @@ namespace MinshpWebApp.Dal.Repositories
             }
 
             return null;
+        }
+
+
+
+        public async Task<IEnumerable<Order>> GetOrdersByIdsAsync(IEnumerable<int> ids)
+        {
+            var idList = ids.Distinct().ToList();
+            var orderEntities = await _context.Orders
+                .AsNoTracking()
+                .Where(p => idList.Contains(p.Id))
+                .OrderByDescending(p => p.Date)
+                .Select(p => new Order
+                {
+                    Id = p.Id,
+                    Date = p.Date,
+                    OrderNumber = p.OrderNumber,
+                    Status = p.Status,
+                    CustomerId = p.CustomerId,
+                    Amount = p.Amount,
+                    PaymentMethod = p.PaymentMethod,
+                    DeliveryAmount = p.DeliveryAmount,
+                    TrackingNumber = p.TrackingNumber,
+                    BoxtalShipmentId = p.BoxtalShipmentId,
+                    DeliveryMode = p.DeliveryMode,
+                    LabelUrl = p.LabelUrl,
+                    Carrier = p.Carrier,
+                    RelayLabel = p.RelayLabel,
+                    RelayId = p.RelayId,
+                    ServiceCode = p.ServiceCode,
+                    TrackingLink = p.TrackingLink
+                })
+                .ToListAsync();
+
+            // Remet l'ordre des IDs paginés (important pour garder le tri)
+            var order = idList.Select((id, i) => new { id, i }).ToDictionary(x => x.id, x => x.i);
+            return orderEntities.OrderBy(p => order[p.Id]).ToList();
+        }
+
+
+
+        public async Task<PageResult<int>> PageOrderIdsAsync(PageRequest req, CancellationToken ct = default)
+        {
+            var q = _context.Orders.AsNoTracking().OrderByDescending( o => o.Date);
+
+            // champs de recherche génériques
+            var search = new Expression<Func<Dal.Entities.Order, string?>>[]
+            {
+                p => p.OrderNumber, p => p.Status, p => p.Customer.ClientNumber1, p => p.Customer.LastName, p => p.Customer.FirstName, p => p.Customer.Email
+            };
+
+
+
+            // filtres génériques (clé = Filter.<Key> côté front)
+            var filters = new Dictionary<string, Func<IQueryable<Dal.Entities.Order>, string, IQueryable<Dal.Entities.Order>>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["OrderNumber"] = (qq, v) => string.IsNullOrWhiteSpace(v) ? qq : qq.Where(p => p.OrderNumber != null && p.OrderNumber.Equals(v, StringComparison.OrdinalIgnoreCase)),
+                ["Status"] = (qq, v) => string.IsNullOrWhiteSpace(v) ? qq : qq.Where(p => p.Status != null && p.Status.Equals(v, StringComparison.OrdinalIgnoreCase)),
+            };
+
+            // On page d'abord sur les IDs (rapide + stable), tri par défaut
+            var page = await PagedQuery.ExecuteAsync<Dal.Entities.Order, int>(
+                query: q,
+                req: req,
+                searchFields: search,
+                filterHandlers: filters,
+                defaultSort: "Date:desc",
+                selector: p => p.Id,
+                ct: ct
+            );
+
+            return page;
         }
 
     }

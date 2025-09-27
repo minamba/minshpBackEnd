@@ -31,6 +31,9 @@ public partial class Product
 
     public int? IdSubCategory { get; set; }
 
+    public bool? Display { get; set; }
+    
+
     public virtual Category? IdCategoryNavigation { get; set; }
 
     public virtual ICollection<ProductFeature> ProductFeatures { get; set; } = new List<ProductFeature>();

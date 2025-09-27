@@ -13,5 +13,8 @@ namespace MinshpWebApp.Api.Builders
 
         Task<Order> FindByShipmentIdAsync(string providerShipmentId);
         Task<Order> GetByIdAsync(string id);
+
+        Task<IEnumerable<Order>> GetOrdersByIdsAsync(IEnumerable<int> ids);
+        Task<PageResult<OrderViewModel>> PageOrderIdsAsync(PageRequest req, CancellationToken ct = default);
     }
 }

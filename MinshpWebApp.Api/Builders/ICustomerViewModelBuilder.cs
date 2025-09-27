@@ -10,5 +10,8 @@ namespace MinshpWebApp.Api.Builders
         Task<Customer> UpdateCustomersAsync(CustomerRequest model);
         Task<Customer> AddCustomersAsync(CustomerRequest model);
         Task<bool> DeleteCustomersAsync(int idCustomer);
+
+        Task<IEnumerable<Customer>> GetCustomersByIdsAsync(IEnumerable<int> ids);
+        Task<PageResult<CustomerViewModel>> PageCustomerIdsAsync(PageRequest req, CancellationToken ct = default);
     }
 }

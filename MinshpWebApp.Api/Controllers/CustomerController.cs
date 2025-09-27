@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MinshpWebApp.Api.Builders;
+using MinshpWebApp.Api.Builders.impl;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
+using MinshpWebApp.Domain.Models;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
 
@@ -28,6 +30,17 @@ namespace MinshpWebApp.Api.Controllers
             var result = await _customerViewModelBuilder.GetCustomersAsync();
             return Ok(result);
         }
+
+
+
+        [HttpGet("/customersPagination")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(PageResult<InvoiceViewModel>), Description = "Paged list of invoice")]
+        public async Task<IActionResult> GetCustomersPaginationAsync([FromQuery] PageRequest req, CancellationToken ct)
+        {
+            var page = await _customerViewModelBuilder.PageCustomerIdsAsync(req, ct);
+            return Ok(page);
+        }
+
 
 
         [Authorize]

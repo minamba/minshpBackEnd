@@ -14,5 +14,7 @@ namespace MinshpWebApp.Domain.Services
         Task<Product> UpdateProductsAsync(Product model);
         Task<Product> AddProductsAsync(Product model);
         Task<bool> DeleteProductsAsync(int idProduct);
+        Task<IEnumerable<Product>> GetProductsByIdsAsync(IEnumerable<int> ids);
+        Task<PageResult<int>> PageProductIdsAsync(PageRequest req, CancellationToken ct = default);
     }
 }

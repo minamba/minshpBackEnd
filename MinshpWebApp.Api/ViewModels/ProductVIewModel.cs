@@ -30,6 +30,8 @@
         public int? IdPackageProfil { get; set; }
         public string? ContainedCode { get; set; }
 
+        public bool? Display { get; set; }
+
         public int? IdSubCategory { get; set; }
         public PackageProfilViewModel? PackageProfil { get; set; }
         public IEnumerable<PromotionViewModel>? Promotions { get; set; }

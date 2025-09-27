@@ -24,13 +24,21 @@ namespace MinshpWebApp.Api.Controllers
         }
 
 
-        [HttpGet("/products")]
+        [HttpGet("/productsWithoutPagination")]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(IEnumerable<ProductVIewModel>), Description = "list of products")]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> GetProductsAsync()
         {
             var result = await _productViewModelBuilder.GetProductsAsync();
             return Ok(result);
+        }
+
+        [HttpGet("/products")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(PageResult<ProductVIewModel>), Description = "Paged list of products")]
+        public async Task<IActionResult> GetProductsAsync([FromQuery] PageRequest req, CancellationToken ct)
+        {
+            var page = await _productViewModelBuilder.PageProductIdsAsync(req, ct);
+            return Ok(page);
         }
 
 

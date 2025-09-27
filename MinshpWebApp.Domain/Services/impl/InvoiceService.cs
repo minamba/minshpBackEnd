@@ -32,6 +32,16 @@ namespace MinshpWebApp.Domain.Services.impl
            return await _repository.GetInvoicesAsync();
         }
 
+        public async Task<IEnumerable<Invoice>> GetInvoicesByIdsAsync(IEnumerable<int> ids)
+        {
+            return await _repository.GetInvoicesByIdsAsync(ids);
+        }
+
+        public async Task<PageResult<int>> PageInvoiceIdsAsync(PageRequest req, CancellationToken ct = default)
+        {
+            return await _repository.PageInvoiceIdsAsync(req, ct);
+        }
+
         public async Task<Invoice> UpdateInvoicesAsync(Invoice model)
         {
            return await _repository.UpdateInvoicesAsync(model);

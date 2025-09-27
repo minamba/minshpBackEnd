@@ -32,4 +32,6 @@ public partial class Product
     public int? IdPackageProfil { get; set; }
 
     public int? IdSubCategory { get; set; }
+
+    public bool? Display { get; set; }
 }

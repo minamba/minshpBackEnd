@@ -41,6 +41,16 @@ namespace MinshpWebApp.Domain.Services.impl
             return await _repository.GetOrdersAsync();
         }
 
+        public async Task<IEnumerable<Order>> GetOrdersByIdsAsync(IEnumerable<int> ids)
+        {
+            return await _repository.GetOrdersByIdsAsync(ids);
+        }
+
+        public async Task<PageResult<int>> PageOrderIdsAsync(PageRequest req, CancellationToken ct = default)
+        {
+            return await _repository.PageOrderIdsAsync(req, ct);
+        }
+
         public async Task<Order> UpdateOrdersAsync(Order model)
         {
            return await _repository.UpdateOrdersAsync(model);

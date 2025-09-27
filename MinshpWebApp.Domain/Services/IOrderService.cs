@@ -17,5 +17,8 @@ namespace MinshpWebApp.Domain.Services
 
         Task<Order> FindByShipmentIdAsync(string providerShipmentId);
         Task<Order> GetByIdAsync(string id);
+
+        Task<IEnumerable<Order>> GetOrdersByIdsAsync(IEnumerable<int> ids);
+        Task<PageResult<int>> PageOrderIdsAsync(PageRequest req, CancellationToken ct = default);
     }
 }

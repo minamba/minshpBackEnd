@@ -10,5 +10,7 @@ namespace MinshpWebApp.Api.Builders
         Task<Invoice> UpdateInvoicesAsync(InvoiceRequest model);
         Task<Invoice> AddInvoicesAsync(InvoiceRequest model);
         Task<bool> DeleteInvoicesAsync(InvoiceRequest model);
+        Task<PageResult<InvoiceViewModel>> PageInvoiceIdsAsync(PageRequest req, CancellationToken ct = default);
+        Task<IEnumerable<Invoice>> GetInvoicesByIdsAsync(IEnumerable<int> ids);
     }
 }

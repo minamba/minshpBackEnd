@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using MinshpWebApp.Dal.Entities;
+using MinshpWebApp.Dal.Utils;
+using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Invoice = MinshpWebApp.Domain.Models.Invoice;
@@ -131,6 +134,76 @@ namespace MinshpWebApp.Dal.Repositories
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+
+        public async Task<IEnumerable<Invoice>> GetInvoicesByIdsAsync(IEnumerable<int> ids)
+        {
+            var idList = ids.Distinct().ToList();
+            var productEntities = await _context.Invoices
+                .AsNoTracking()
+                .Where(p => idList.Contains(p.Id))
+                .OrderByDescending(p => p.DateCreation)
+                .Select(p => new Invoice
+                {
+                    Id = p.Id,
+                    CustomerId = p.CustomerId,
+                    InvoiceNumber = p.InvoiceNumber,
+                    DateCreation = p.DateCreation,
+                    OrderId = p.OrderId,
+                    Representative = p.Representative,
+                    InvoiceLink = p.InvoiceLink
+                })
+                .ToListAsync();
+
+            // Remet l'ordre des IDs paginés (important pour garder le tri)
+            var order = idList.Select((id, i) => new { id, i }).ToDictionary(x => x.id, x => x.i);
+            return productEntities.OrderBy(p => order[p.Id]).ToList();
+        }
+
+
+
+
+        public async Task<PageResult<int>> PageInvoiceIdsAsync(PageRequest req, CancellationToken ct = default)
+        {
+            var q = _context.Invoices.AsNoTracking();
+
+            // champs de recherche génériques (ok)
+            var search = new Expression<Func<Dal.Entities.Invoice, string?>>[]
+            {
+        p => p.InvoiceNumber,
+        p => p.Order.OrderNumber
+            };
+
+            // ✅ filtres traduisibles par EF
+            var filters = new Dictionary<string, Func<IQueryable<Dal.Entities.Invoice>, string, IQueryable<Dal.Entities.Invoice>>>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["OrderId"] = (qq, v) => int.TryParse(v, out var id) ? qq.Where(p => p.OrderId == id) : qq,
+                ["CustomerId"] = (qq, v) => int.TryParse(v, out var id) ? qq.Where(p => p.CustomerId == id) : qq,
+
+                // --- EXACT (insensible à la casse) ---
+                // ["InvoiceNumber"] = (qq, v) => string.IsNullOrWhiteSpace(v)
+                //     ? qq
+                //     : qq.Where(p => p.InvoiceNumber != null && p.InvoiceNumber.ToLower() == v.ToLower())
+
+                // --- CONTIENT (insensible à la casse) ---
+                ["InvoiceNumber"] = (qq, v) => string.IsNullOrWhiteSpace(v)
+                    ? qq
+                    : qq.Where(p => p.InvoiceNumber != null && EF.Functions.Like(p.InvoiceNumber, $"%{v}%")),
+            };
+
+            // ✅ champs existants uniquement
+            var page = await PagedQuery.ExecuteAsync<Dal.Entities.Invoice, int>(
+                query: q,
+                req: req,
+                searchFields: search,
+                filterHandlers: filters,
+                defaultSort: "DateCreation:desc,Id:asc",
+                selector: p => p.Id,
+                ct: ct
+            );
+
+            return page;
         }
     }
 }

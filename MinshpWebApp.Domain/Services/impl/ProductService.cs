@@ -39,6 +39,16 @@ namespace MinshpWebApp.Domain.Services.impl
             return result;
         }
 
+        public async Task<IEnumerable<Product>> GetProductsByIdsAsync(IEnumerable<int> ids)
+        {
+            return await _repository.GetProductsByIdsAsync(ids);
+        }
+
+        public async Task<PageResult<int>> PageProductIdsAsync(PageRequest req, CancellationToken ct = default)
+        {
+            return await _repository.PageProductIdsAsync(req, ct);
+        }
+
         public async Task<Product> UpdateProductsAsync(Product model)
         {
             return await _repository.UpdateProductsAsync(model);

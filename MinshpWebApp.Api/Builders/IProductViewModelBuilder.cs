@@ -10,5 +10,7 @@ namespace MinshpWebApp.Api.Builders
         Task<Product> AddProductsAsync(ProductRequest model);
         Task<Product> UpdateProductsAsync(ProductRequest model);
         Task<bool> DeleteProductsAsync(int idProduct);
+        Task<IEnumerable<ProductVIewModel>> GetProductsByIdsAsync(IEnumerable<int> ids);
+        Task<PageResult<MinshpWebApp.Api.ViewModels.ProductVIewModel>> PageProductIdsAsync(PageRequest req, CancellationToken ct = default);
     }
 }

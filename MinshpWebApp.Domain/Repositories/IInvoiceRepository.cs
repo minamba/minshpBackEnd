@@ -13,5 +13,7 @@ namespace MinshpWebApp.Domain.Repositories
         Task<Invoice> UpdateInvoicesAsync(Invoice model);
         Task<Invoice> AddInvoicesAsync(Domain.Models.Invoice model);
         Task<bool> DeleteInvoicesAsync(Domain.Models.Invoice model);
+        Task<PageResult<int>> PageInvoiceIdsAsync(PageRequest req, CancellationToken ct = default);
+        Task<IEnumerable<Invoice>> GetInvoicesByIdsAsync(IEnumerable<int> ids);
     }
 }
