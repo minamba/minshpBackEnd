@@ -14,7 +14,7 @@ namespace MinshpWebApp.Domain.Services.impl
 
         public OrderService(IOrderRepository repository)
         {
-            _repository = repository;
+             _repository = repository;
         }
         public async Task<Order> AddOrdersAsync(Order model)
         {
