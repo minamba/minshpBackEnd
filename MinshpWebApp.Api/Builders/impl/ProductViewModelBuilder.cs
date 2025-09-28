@@ -64,6 +64,7 @@ namespace MinshpWebApp.Api.Builders.impl
             var categories = await _categoryService.GetCategoriesAsync();
             var featuresProduct = await _productFeature.GetProductFeaturesAsync();
             var stocks = await _stockService.GetStocksAsync();
+            var subCategories = await _subCategoryService.GetSubCategoriesAsync();
 
             var productVmList = new List<ProductVIewModel>();
 
@@ -71,6 +72,8 @@ namespace MinshpWebApp.Api.Builders.impl
             {
 
                 var categoryName = categories.Where(c => c.Id == p.IdCategory).Select(c => c.Name).FirstOrDefault();
+                var category = categories.FirstOrDefault(c => c.Id == p.IdCategory);
+                var subCategory = subCategories.FirstOrDefault(c => c.Id == p.IdSubCategory);
 
                 //get features
                 var featuresForProduct = (from fp in featuresProduct
@@ -96,6 +99,9 @@ namespace MinshpWebApp.Api.Builders.impl
                 //GetHashCode videos
                 var videosForProduct = videos.Where(i => i.IdProduct == p.Id).ToList();
                 var videosList = _mapper.Map<IEnumerable<VideoViewModel>>(videosForProduct);
+
+                var categoryVm = _mapper.Map<CategoryViewModel>(category);
+                var subCategoryVm = _mapper.Map<SubCategoryViewModel>(subCategory);
 
                 var productVm = new ProductVIewModel()
                 {
@@ -128,7 +134,9 @@ namespace MinshpWebApp.Api.Builders.impl
                     PackageProfil = await GetPackageProfil(p.IdPackageProfil, p),
                     ContainedCode = await GetContainedCode(p),
                     IdSubCategory = p.IdSubCategory,
-                    Display = p.Display
+                    Display = p.Display,
+                    CategoryVm = categoryVm,
+                    SubCategoryVm = subCategoryVm
                 };
 
 
@@ -157,12 +165,16 @@ namespace MinshpWebApp.Api.Builders.impl
             var categories = await _categoryService.GetCategoriesAsync();
             var featuresProduct = await _productFeature.GetProductFeaturesAsync();
             var stocks = await _stockService.GetStocksAsync();
+            var subCategories = await _subCategoryService.GetSubCategoriesAsync();
 
             var vms = new List<ProductVIewModel>();
 
             foreach (var p in products)
             {
                 var categoryName = categories.Where(c => c.Id == p.IdCategory).Select(c => c.Name).FirstOrDefault();
+                var category = categories.FirstOrDefault(c => c.Id == p.IdCategory);
+                var subCategory = subCategories.FirstOrDefault(c => c.Id == p.IdSubCategory);
+                var promotionCodes = await _promotionCodeService.GetPromotionCodesAsync();
 
                 var fps = featuresProduct.Where(fp => fp.IdProduct == p.Id).ToList();
                 var feats = features.Where(f => fps.Select(x => x.IdFeature).Contains(f.Id)).ToList();
@@ -172,6 +184,27 @@ namespace MinshpWebApp.Api.Builders.impl
                 var promotionList = _mapper.Map<IEnumerable<PromotionViewModel>>(promotions.Where(i => i.IdProduct == p.Id).ToList());
                 var stockVm = _mapper.Map<StockViewModel>(stocks.FirstOrDefault(i => i.IdProduct == p.Id));
                 var videosList = _mapper.Map<IEnumerable<VideoViewModel>>(videos.Where(i => i.IdProduct == p.Id).ToList());
+                var categoryVm = _mapper.Map<CategoryViewModel>(category);
+                var subCategoryVm = _mapper.Map<SubCategoryViewModel>(subCategory);
+
+                List<Domain.Models.PromotionCode> promotionCatCodeLst = null;
+                List<Domain.Models.PromotionCode> promotionSubCatCodeLst = null;
+
+
+                if (categoryVm.IdPromotionCode != null)
+                {
+                    promotionCatCodeLst = promotionCodes.Where(p => p.Id == categoryVm.IdPromotionCode).ToList();
+                    categoryVm.PromotionCodes = _mapper.Map<IEnumerable<PromotionCodeViewModel>>(promotionCatCodeLst);
+                }
+
+                if (subCategoryVm != null)
+                {
+                    if (subCategoryVm.IdPromotionCode != null)
+                    {
+                        promotionSubCatCodeLst = promotionCodes.Where(p => p.Id == subCategoryVm.IdPromotionCode).ToList();
+                        subCategoryVm.PromotionCodes = _mapper.Map<IEnumerable<PromotionCodeViewModel>>(promotionSubCatCodeLst);
+                    }
+                }
 
                 var vm = new ProductVIewModel
                 {
@@ -204,7 +237,12 @@ namespace MinshpWebApp.Api.Builders.impl
                     PackageProfil = await GetPackageProfilV2(p.IdPackageProfil, p),
                     ContainedCode = await GetContainedCodeV2(p),
                     IdSubCategory = p.IdSubCategory,
-                    Display = p.Display
+                    Display = p.Display,
+                    CategoryVm = categoryVm,
+                    SubCategoryVm = subCategoryVm,
+
+
+
                 };
 
                 vms.Add(vm);

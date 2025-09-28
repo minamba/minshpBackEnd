@@ -639,12 +639,25 @@ namespace MinshpWebApp.Api.Controllers
                 if (product != null)
                 {
                     var stock = stocks.FirstOrDefault(s => s.IdProduct == product.Id);
+                    var newQuantity = (stocks.FirstOrDefault(s => s.IdProduct == i.Id)?.Quantity ?? 0) - i.Quantity;
                     await _stockViewModelBuilder.UpdateStocksAsync(new StockRequest
                     {
+
                         Id = stock.Id,
                         IdProduct = i.Id,
-                        Quantity = (stocks.FirstOrDefault(s => s.IdProduct == i.Id)?.Quantity ?? 0) - i.Quantity
+                        Quantity = newQuantity
                     });
+
+                    if (newQuantity == 0)
+                    {
+                        await _telegramViewModelBuilder.SendStockAlertMessage(new TelegramRequest
+                        {
+                            Brand = product.Brand,
+                            Model = product.Model,
+                            Date = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
+                        });
+
+                    }
                 }
             }
         }

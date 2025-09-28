@@ -7,5 +7,6 @@ namespace MinshpWebApp.Api.Builders
     {
         Task<HttpResponseMessage> SendErrorMessage(TelegramRequest user);
         Task<HttpResponseMessage> SendSuccesMessage(TelegramRequest user);
+        Task<HttpResponseMessage> SendStockAlertMessage(TelegramRequest request);
     }
 }

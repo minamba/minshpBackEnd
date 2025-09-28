@@ -12,18 +12,14 @@ namespace MinshpWebApp.Api.Builders.impl
         private IMapper _mapper;
         private ISubCategoryService _subCategoryService;
         private ITaxeService _taxeService;
+        private IPromotionCodeService _promotionCodeService;
 
 
-        public SubCategoryViewModelBuilder(ISubCategoryService subCategoryService, IMapper mapper)
+        public SubCategoryViewModelBuilder(ISubCategoryService subCategoryService, IMapper mapper, IPromotionCodeService promotionCodeService, ITaxeService taxeService)
         {
             _mapper = mapper;
             _subCategoryService = subCategoryService;
-        }
-
-        public SubCategoryViewModelBuilder(ISubCategoryService SubCategoryService, ITaxeService taxeService, IMapper mapper)
-        {
-            _mapper = mapper;
-            _subCategoryService = SubCategoryService;
+            _promotionCodeService = promotionCodeService;
             _taxeService = taxeService;
         }
 
@@ -46,7 +42,8 @@ namespace MinshpWebApp.Api.Builders.impl
 
             foreach (var item in list)
             {
-
+                var promotionCodeLst = (await _promotionCodeService.GetPromotionCodesAsync()).Where(p => p.Id == item.IdPromotionCode).ToList();
+                item.PromotionCodes = _mapper.Map<IEnumerable<PromotionCodeViewModel>>(promotionCodeLst);
                 item.TaxeName = await GetTaxeName(item.IdTaxe);
 
             }
@@ -69,14 +66,17 @@ namespace MinshpWebApp.Api.Builders.impl
                                       .ToList();
 
             List<string> finalTaxesNames = new List<string>();
+            Taxe tax = null;
+            var taxesLst  = await _taxeService.GetTaxesAsync();
 
             foreach (var t in taxes)
             {
                 var number = int.Parse(t);
-                var tax = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == number);
 
+                tax = taxesLst.FirstOrDefault(t => t.Id == number);
                 //tax.Name = tax.Name.Split(':')[0].Trim();
                 finalTaxesNames.Add(tax.Name + ", ");
+
             }
 
             return finalTaxesNames;

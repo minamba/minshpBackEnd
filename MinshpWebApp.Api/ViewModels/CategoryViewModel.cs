@@ -13,5 +13,7 @@
 
         public int? ContentCode { get; set; }
         public PackageProfilViewModel? PackageProfil { get; set; }
+
+        public IEnumerable<PromotionCodeViewModel> PromotionCodes { get; set; }
     }
 }

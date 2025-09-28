@@ -60,5 +60,28 @@ namespace MinshpWebApp.Api.Builders.impl
 
             return await _httpClient.PostAsync(url, new FormUrlEncodedContent(payload));
         }
+
+
+        public async Task<HttpResponseMessage> SendStockAlertMessage(TelegramRequest request)
+        {
+            var botToken = _config["TelegramAlertStock:BotToken"];
+            var chatId = _config["TelegramAlertStock:GroupChatId"];
+
+            var message = $"💰 *Rupture de stock* :\n" +
+                          $"- Marque : {request.Brand}\n" +
+                          $"- Modèl : {request.Model}\n" +
+                          $"- Date : {request.Date}\n";
+
+          var url = $"https://api.telegram.org/bot{botToken}/sendMessage";
+
+            var payload = new Dictionary<string, string>
+        {
+            { "chat_id", chatId },
+            { "text", message },
+            { "parse_mode", "Markdown" }
+        };
+
+            return await _httpClient.PostAsync(url, new FormUrlEncodedContent(payload));
+        }
     }
 }

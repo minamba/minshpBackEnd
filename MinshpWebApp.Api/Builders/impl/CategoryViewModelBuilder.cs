@@ -13,13 +13,15 @@ namespace MinshpWebApp.Api.Builders.impl
         private IMapper _mapper;
         private ICategoryService _categoryService;
         private ITaxeService _taxeService;
+        private IPromotionCodeService _promotionCodeService;
 
 
-        public CategoryViewModelBuilder(ICategoryService categoryService, ITaxeService taxeService, IMapper mapper)
+        public CategoryViewModelBuilder(ICategoryService categoryService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IMapper mapper)
         {
             _mapper = mapper;
             _categoryService = categoryService;
             _taxeService = taxeService;
+            _promotionCodeService = promotionCodeService;
         }
 
         public async Task<Category> AddCategorysAsync(CategoryRequest model)
@@ -39,8 +41,9 @@ namespace MinshpWebApp.Api.Builders.impl
 
             var list =  _mapper.Map<IEnumerable<CategoryViewModel>>(result);
 
-            foreach (var item in list) { 
-            
+            foreach (var item in list) {
+                var promotionCodeLst = (await _promotionCodeService.GetPromotionCodesAsync()).Where(p => p.Id == item.IdPromotionCode).ToList();
+                item.PromotionCodes = _mapper.Map<IEnumerable<PromotionCodeViewModel>>(promotionCodeLst) ;
                 item.TaxeName = await GetTaxeName(item.TaxeId);
             
             }

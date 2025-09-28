@@ -16,6 +16,7 @@
 
         public int? ContentCode { get; set; }
 
+        public IEnumerable<PromotionCodeViewModel> PromotionCodes { get; set; }
 
     }
 }

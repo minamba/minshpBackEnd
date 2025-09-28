@@ -33,6 +33,8 @@
         public bool? Display { get; set; }
 
         public int? IdSubCategory { get; set; }
+        public CategoryViewModel CategoryVm { get; set; }
+        public SubCategoryViewModel SubCategoryVm { get; set; }
         public PackageProfilViewModel? PackageProfil { get; set; }
         public IEnumerable<PromotionViewModel>? Promotions { get; set; }
         public IEnumerable<FeatureViewModel>? Features { get; set; }
