@@ -109,7 +109,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     Name = p.Name,
                     Description = p.Description,
                     Price = Math.Round((decimal)p.Price, 2),
-                    PriceTtc = await GetPriceTtc(p.IdCategory, p.Price),
+                    PriceTtc = await GetPriceTtc(p.IdCategory, p.IdSubCategory, p.Price),
                     PriceHtPromoted = await GetPriceHtPromoted(p, promotionList),
                     PriceHtCategoryCodePromoted = await GetPriceHtCategoryCodePromoted(p),
                     PriceHtSubCategoryCodePromoted = await GetPriceHtSubCategoryCodePromoted(p),
@@ -212,7 +212,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     Name = p.Name,
                     Description = p.Description,
                     Price = Math.Round((decimal)(p.Price ?? 0), 2),
-                    PriceTtc = await GetPriceTtc(p.IdCategory, p.Price),
+                    PriceTtc = await GetPriceTtc(p.IdCategory, p.IdSubCategory, p.Price),
                     PriceHtPromoted = await GetPriceHtPromotedV2(p, promotionList),
                     PriceHtCategoryCodePromoted = await GetPriceHtCategoryCodePromotedV2(p),
                     PriceHtSubCategoryCodePromoted = await GetPriceHtSubCategoryCodePromotedV2(p),
@@ -293,23 +293,49 @@ namespace MinshpWebApp.Api.Builders.impl
         }
 
 
-        private async Task<decimal?> GetPriceTtc(int? idCategory,decimal? price)
+        private async Task<decimal?> GetPriceTtc(int? idCategory, int? idSubCategory ,decimal? price)
         {
             decimal? priceTtc = 0;
+            MinshpWebApp.Domain.Models.SubCategory getFocusSubCategory = null;
+            List<string> subCategoryTaxes = new List<string>();
+            var texesFromDb = await _taxeService.GetTaxesAsync();
+
             var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
 
-            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
+            if (idSubCategory != null)
+            {
+                getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idSubCategory);
+
+               subCategoryTaxes = getFocusSubCategory.IdTaxe.Split(',')
+                          .Select(x => x.Trim()) // Supprime les espaces éventuels
+                          .ToList();
+            }
+
+
+            List<string> categoryTaxes = getFocusCategory.IdTaxe.Split(',')
                                       .Select(x => x.Trim()) // Supprime les espaces éventuels
                                       .ToList();
 
             List<Taxe> taxesList = new List<Taxe>();
 
-            foreach (var t in taxes) 
+            // j'ajoute les taxes de la category + TVA
+            foreach (var t in categoryTaxes) 
             {
                 var idTaxe = int.Parse(t);
-                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+                var getTaxe = texesFromDb.FirstOrDefault(t => t.Id == idTaxe);
 
                 taxesList.Add(getTaxe);
+            }
+
+
+            // j'ajoute les taxes de la sous category sans la tva (un produit d'une sous category beneficie deja de la TVA de la category mère)
+            foreach (var t in subCategoryTaxes)
+            {
+                var idTaxe = int.Parse(t);
+                var getTaxe = texesFromDb.FirstOrDefault(t => t.Id == idTaxe);
+
+                if(getTaxe.Name.ToLower() != "tva")
+                    taxesList.Add(getTaxe);
             }
 
             foreach (var t in taxesList) 

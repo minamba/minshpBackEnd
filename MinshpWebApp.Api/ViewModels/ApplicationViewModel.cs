@@ -23,5 +23,7 @@
 
         public bool? IsMaintenance { get; set; } = false;
 
+        public List<string> PromoMessages { get; set; }
+
     }
 }
