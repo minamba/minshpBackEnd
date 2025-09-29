@@ -104,6 +104,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory))
               .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
 
 
@@ -115,6 +116,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
               .ForMember(x => x.IdCategory, dest => dest.MapFrom(x => x.IdCategory))
               .ForMember(x => x.IdSubCategory, dest => dest.MapFrom(x => x.IdSubCategory))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description));
 
             CreateMap<VideoRequest, Video>()
@@ -123,6 +125,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
 
 
@@ -133,6 +136,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
               .ForMember(x => x.Position, dest => dest.MapFrom(x => x.Position))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct));
 
             CreateMap<CustomerRequest, Customer>()

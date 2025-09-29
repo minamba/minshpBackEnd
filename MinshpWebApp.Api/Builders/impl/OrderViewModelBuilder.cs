@@ -105,7 +105,7 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
                 //mis a jour des differentes informations de tracking et du status, dans le cas ou ça n'a pas pu etre recupéré lors de la creation de commande
-                if (Order.TrackingLink == null && Order.BoxtalShipmentId != null)
+                if (Order != null && Order.BoxtalShipmentId != null)
                 {
                     var tracking = await _shippingProvider.GetShippingTrackingAsync(Order.BoxtalShipmentId);
 
@@ -113,14 +113,10 @@ namespace MinshpWebApp.Api.Builders.impl
                     {
                         var trackingStatus = TrackingStatus.GetTrackingStatus(tracking.Status);
 
-                        if (Order.TrackingNumber == null || Order.TrackingLink == null)
-                        {
-                            Order.TrackingNumber = tracking.TrackingNumber;
-                            Order.TrackingLink = tracking.PackageTrackingUrl;
-                            Order.Status = trackingStatus;
-                            _orderService.UpdateOrdersAsync(Order);
-                        }
-
+                         Order.TrackingNumber = tracking.TrackingNumber;
+                         Order.TrackingLink = tracking.PackageTrackingUrl;
+                         Order.Status = trackingStatus;
+                         _orderService.UpdateOrdersAsync(Order);
                     }
                 }
 
@@ -254,21 +250,21 @@ namespace MinshpWebApp.Api.Builders.impl
                 var customer = customers.FirstOrDefault(c => c.Id == order.CustomerId);
 
                 // tracking identique à ta version non-paginée
-                if (order.TrackingLink == null && order.BoxtalShipmentId != null)
+
+                if (order != null && order.BoxtalShipmentId != null)
                 {
                     var tracking = await _shippingProvider.GetShippingTrackingAsync(order.BoxtalShipmentId);
                     if (tracking != null)
                     {
                         var trackingStatus = TrackingStatus.GetTrackingStatus(tracking.Status);
-                        if (order.TrackingNumber == null || order.TrackingLink == null)
-                        {
-                            order.TrackingNumber = tracking.TrackingNumber;
-                            order.TrackingLink = tracking.PackageTrackingUrl;
-                            order.Status = trackingStatus;
-                            await _orderService.UpdateOrdersAsync(order); // ct si dispo
-                        }
+   
+                        order.TrackingNumber = tracking.TrackingNumber;
+                        order.TrackingLink = tracking.PackageTrackingUrl;
+                        order.Status = trackingStatus;
+                        await _orderService.UpdateOrdersAsync(order); // ct si dispo
                     }
                 }
+                
 
                 var vm = new OrderViewModel
                 {

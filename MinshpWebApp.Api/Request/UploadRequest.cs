@@ -14,5 +14,7 @@
         public int? Position { get; set; }
 
         public string? Title { get; set; }
+
+        public bool? Display { get; set; }
     }
 }

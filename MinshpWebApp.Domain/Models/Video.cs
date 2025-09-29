@@ -17,4 +17,6 @@ public partial class Video
 
     public int? Position { get; set; }
 
+    public bool? Display { get; set; }
+
 }

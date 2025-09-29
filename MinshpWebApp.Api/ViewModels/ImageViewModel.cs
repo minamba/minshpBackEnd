@@ -14,6 +14,8 @@
 
         public int? Position { get; set; }
 
+        public bool? Display { get; set; }
+
         public int? IdCategory { get; set; }
 
         public int? IdSubCategory { get; set; }

@@ -129,7 +129,8 @@ namespace MinshpWebApp.Api.Controllers
                         Url = relativePath, // <<— RELATIF
                         IdProduct = request.IdProduct,
                         Title = request.Title,
-                        Position = request.Position
+                        Position = request.Position,
+                        Display = request.Display
                     });
                 }
                 else
@@ -141,7 +142,8 @@ namespace MinshpWebApp.Api.Controllers
                         Url = relativePath, // <<— RELATIF (ou laisse null si tu ne remplaces pas le fichier)
                         IdProduct = request.IdProduct,
                         Title = request.Title,
-                        Position = request.Position
+                        Position = request.Position,
+                        Display = request.Display
                     });
                 }
             }
@@ -155,7 +157,8 @@ namespace MinshpWebApp.Api.Controllers
                         Url = relativePath, // <<— RELATIF
                         IdProduct = request.IdProduct,
                         Title = request.Title,
-                        Position = request.Position
+                        Position = request.Position,
+                        Display = request.Display
                     });
                 }
                 else
@@ -167,7 +170,8 @@ namespace MinshpWebApp.Api.Controllers
                         Url = relativePath, // <<— RELATIF
                         IdProduct = request.IdProduct,
                         Title = request.Title,
-                        Position = request.Position
+                        Position = request.Position,
+                        Display = request.Display
                     });
                 }
             }
