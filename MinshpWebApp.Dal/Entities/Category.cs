@@ -15,6 +15,7 @@ public partial class Category
     public int? IdPackageProfil { get; set; }
 
     public int? ContentCode { get; set; }
+    public bool? Display { get; set; }
 
     public virtual ICollection<Feature> Features { get; set; } = new List<Feature>();
 

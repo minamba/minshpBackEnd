@@ -138,7 +138,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 }
             }
 
-            promoMessages.Add("Envoie rapide sous 24h");
+            promoMessages.Add("Envoi rapide sous 24h");
 
             return promoMessages;
         }

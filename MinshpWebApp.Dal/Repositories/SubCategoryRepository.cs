@@ -30,7 +30,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = p.IdTaxe,
                 IdPromotionCode = p.IdPromotionCode,
                 ContentCode = p.ContentCode,
-                IdCategory = p.IdCategory
+                IdCategory = p.IdCategory,
+                Display = p.Display
             }).ToListAsync();
 
             return SubCategoryEntities;
@@ -51,6 +52,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.IdTaxe != null) SubCategoryToUpdate.IdTaxe = model.IdTaxe;
             if (model.ContentCode != null) SubCategoryToUpdate.ContentCode = model.ContentCode;
             if (model.IdCategory != null) SubCategoryToUpdate.IdCategory = model.IdCategory;
+            if (model.Display != null) SubCategoryToUpdate.Display = model.Display;
 
 
             if (GetPromotion != null)
@@ -71,7 +73,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
                 IdCategory = model.IdCategory,
-                ContentCode = model.ContentCode
+                ContentCode = model.ContentCode,
+                Display = model.Display
             };
         }
 
@@ -85,7 +88,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
                 IdCategory = model.IdCategory,
-                ContentCode = model.ContentCode
+                ContentCode = model.ContentCode,
+                Display = model.Display
             };
 
             _context.SubCategories.Add(newSubCategory);
@@ -98,7 +102,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
                 IdCategory = model.IdCategory,
-                ContentCode = model.ContentCode
+                ContentCode = model.ContentCode,
+                Display = model.Display
             };
         }
 

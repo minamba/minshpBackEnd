@@ -15,6 +15,7 @@
         public List<string>? TaxeName { get; set; }
 
         public int? ContentCode { get; set; }
+        public bool? Display { get; set; }
 
         public IEnumerable<PromotionCodeViewModel> PromotionCodes { get; set; }
 

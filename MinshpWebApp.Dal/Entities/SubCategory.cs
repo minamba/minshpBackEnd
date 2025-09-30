@@ -17,6 +17,8 @@ public partial class SubCategory
 
     public int? ContentCode { get; set; }
 
+    public bool? Display { get; set; }
+
     public virtual Category? IdCategoryNavigation { get; set; }
 
 }

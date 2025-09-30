@@ -14,4 +14,5 @@ public partial class Category
     public int? IdPackageProfil { get; set; }
 
     public int? ContentCode { get; set; }
+    public bool? Display { get; set; }
 }

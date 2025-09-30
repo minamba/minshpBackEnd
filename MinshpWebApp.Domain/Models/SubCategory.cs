@@ -19,5 +19,7 @@ namespace MinshpWebApp.Domain.Models
         public string? IdTaxe { get; set; }
 
         public int? ContentCode { get; set; }
+
+        public bool? Display { get; set; }
     }
 }

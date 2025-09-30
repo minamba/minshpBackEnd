@@ -79,6 +79,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
               .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
             CreateMap<Category, CategoryViewModel>()
@@ -87,6 +88,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
               .ForMember(x => x.IdPackageProfil, dest => dest.MapFrom(x => x.IdPackageProfil))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
 
@@ -528,6 +530,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
 
@@ -537,6 +540,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.IdTaxe, dest => dest.MapFrom(x => x.IdTaxe))
               .ForMember(x => x.IdPromotionCode, dest => dest.MapFrom(x => x.IdPromotionCode))
               .ForMember(x => x.ContentCode, dest => dest.MapFrom(x => x.ContentCode))
+              .ForMember(x => x.Display, dest => dest.MapFrom(x => x.Display))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name));
 
 

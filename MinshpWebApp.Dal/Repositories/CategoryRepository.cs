@@ -30,7 +30,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = p.IdTaxe,
                 IdPromotionCode = p.IdPromotionCode,
                 IdPackageProfil = p.IdPackageProfil,
-                ContentCode = p.ContentCode
+                ContentCode = p.ContentCode,
+                Display = p.Display
             }).ToListAsync();
 
             return CategoryEntities;
@@ -51,6 +52,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.IdTaxe != null) CategoryToUpdate.IdTaxe = model.IdTaxe;
             if (model.IdPackageProfil != null) CategoryToUpdate.IdPackageProfil = model.IdPackageProfil;
             if (model.ContentCode != null) CategoryToUpdate.ContentCode = model.ContentCode;
+            if (model.Display != null) CategoryToUpdate.Display = model.Display;
 
 
             if (GetPromotion != null)
@@ -71,7 +73,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
                 IdPackageProfil = model.IdPackageProfil,
-                ContentCode = model.ContentCode
+                ContentCode = model.ContentCode,
+                Display = model.Display
             };
         }
 
@@ -85,7 +88,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
                 IdPackageProfil = model.IdPackageProfil,
-                ContentCode = model.ContentCode
+                ContentCode = model.ContentCode,
+                Display = model.Display
             };
 
             _context.Categories.Add(newCategory);
@@ -98,7 +102,8 @@ namespace MinshpWebApp.Dal.Repositories
                 IdTaxe = model.IdTaxe,
                 IdPromotionCode = model.IdPromotionCode,
                 IdPackageProfil = model.IdPackageProfil,
-                ContentCode = model.ContentCode
+                ContentCode = model.ContentCode,
+                Display = model.Display
             };
         }
 
