@@ -83,9 +83,6 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 if (model.IdPromotionCode != null) ProductToUpdate.IdPromotionCode = model.IdPromotionCode;
             }
-            else
-                ProductToUpdate.IdPromotionCode = null;
-
              
             await _context.SaveChangesAsync();
 

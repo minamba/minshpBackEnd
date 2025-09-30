@@ -41,6 +41,16 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(o =>
 .AddEntityFrameworkStores<AuthDbContext>()
 .AddDefaultTokenProviders();
 
+
+builder.Services.Configure<IdentityOptions>(opts =>
+{
+    // Exemple de politique
+    opts.Lockout.AllowedForNewUsers = true;
+    opts.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15); // durée du blocage
+    opts.Lockout.MaxFailedAccessAttempts = 5;                       // nbr d’échecs avant blocage
+});
+
+
 builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
 {
     o.TokenLifespan = TimeSpan.FromHours(2);

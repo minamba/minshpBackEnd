@@ -369,8 +369,37 @@ public class AccountController : ControllerBase
     {
         var u = await _userManager.FindByEmailAsync(dto.Email);
         if (u is null) return Unauthorized();
-        var res = await _signInManager.PasswordSignInAsync(u, dto.Password, isPersistent: true, lockoutOnFailure: false);
-        return res.Succeeded ? Ok(new { message = "logged-in" }) : Unauthorized();
+
+        // Déjà bloqué ?
+        if (await _userManager.IsLockedOutAsync(u))
+        {
+            return StatusCode(423, new
+            {
+                error = "ACCOUNT_LOCKED",
+                message = "Votre compte est temporairement bloqué. Réessayez plus tard."
+            });
+        }
+
+        var res = await _signInManager.PasswordSignInAsync(u, dto.Password, isPersistent: true, lockoutOnFailure: true);
+
+        if (res.Succeeded)
+        {
+            // reset le compteur d’échecs
+            await _userManager.ResetAccessFailedCountAsync(u);
+            return Ok(new { message = "logged-in" });
+        }
+
+        if (res.IsLockedOut)
+        {
+            return StatusCode(423, new
+            {
+                error = "ACCOUNT_LOCKED",
+                message = "Votre compte est temporairement bloqué suite à des tentatives infructueuses."
+            });
+        }
+
+        // (optionnel) res.RequiresTwoFactor, res.IsNotAllowed, etc.
+        return Unauthorized(new { error = "INVALID_CREDENTIALS", message = "Identifiants invalides." });
     }
 
     [HttpPost("logout")]
@@ -455,6 +484,84 @@ public class AccountController : ControllerBase
         // await foreach (var t in _tokenManager.FindBySubjectAsync(user.Id)) await _tokenManager.TryRevokeAsync(t);
 
         return Ok();
+    }
+
+
+
+    //Bloquer ou debloquer un compte utilisateur
+    [HttpPost("{id}/lock")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> LockUser([FromRoute] string id , CancellationToken ct, [FromQuery] int minutes = 99999999)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user is null) return NotFound();
+
+        // 3) Appelle ton API pour créer le Customer
+        var token = await GetClientCredentialsTokenAsync(ct);
+        if (!string.IsNullOrEmpty(token))
+        {
+
+            var api = ApiWithBearer(token);
+
+
+            if (!user.LockoutEnabled)
+            {
+                user.LockoutEnabled = true;
+                await _userManager.UpdateAsync(user);
+                // Bloque jusqu'à maintenant + X minutes
+                await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddMinutes(minutes));
+
+
+                //mise a jour API en desactivant l'utilisateur
+                var disable = new MinshpWebApp.Api.Request.CustomerRequest
+                {
+                    IdAspNetUser = id,
+                    Actif = false
+                };
+                var resp = await api.PutAsJsonAsync("customer", disable, ct);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var body = await resp.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("Customer disable failed : {Status} {Body}", resp.StatusCode, body);
+                }
+            }
+            else
+            {
+                user.LockoutEnabled = false;
+                await _userManager.UpdateAsync(user);
+                await _userManager.ResetAccessFailedCountAsync(user);
+
+
+                //mise a jour API en reactivant l'utilisateur
+                var disable = new MinshpWebApp.Api.Request.CustomerRequest
+                {
+                    IdAspNetUser = id,
+                    Actif = true
+                };
+                var resp = await api.PutAsJsonAsync("customer", disable, ct);
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var body = await resp.Content.ReadAsStringAsync(ct);
+                    _logger.LogWarning("Customer disable failed : {Status} {Body}", resp.StatusCode, body);
+                }
+            }
+        }
+
+
+        //await _userManager.SetLockoutEndDateAsync(user, null);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/unlock")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UnlockUser([FromRoute] string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user is null) return NotFound();
+
+        await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow);
+        await _userManager.ResetAccessFailedCountAsync(user);
+        return NoContent();
     }
 
 

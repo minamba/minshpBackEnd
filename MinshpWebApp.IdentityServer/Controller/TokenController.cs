@@ -36,6 +36,20 @@ public class TokenController : ControllerBase
             if (user is null || !await _userManager.CheckPasswordAsync(user, request.Password ?? ""))
                 return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
+            // Déjà bloqué ?
+            if (await _userManager.IsLockedOutAsync(user))
+                return InvalidGrant("ACCOUNT_LOCKED: Votre compte est temporairement bloqué.");
+
+            // Vérifie le mot de passe et incrémente les échecs (lockoutOnFailure: true)
+            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password ?? "", lockoutOnFailure: true);
+
+            if (result.IsLockedOut)
+                return InvalidGrant("ACCOUNT_LOCKED: Votre compte est temporairement bloqué suite à des tentatives infructueuses.");
+
+            if (!result.Succeeded)
+                return InvalidGrant("INVALID_CREDENTIALS");
+
+
             var identity = new ClaimsIdentity(
                 authenticationType: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                 nameType: OidcClaims.Name, roleType: OidcClaims.Role);
@@ -101,5 +115,16 @@ public class TokenController : ControllerBase
 
 
         throw new InvalidOperationException("Unsupported grant type.");
+    }
+
+    private ForbidResult InvalidGrant(string description)
+    {
+        var props = new AuthenticationProperties(new Dictionary<string, string?>
+        {
+            [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.InvalidGrant,
+            [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = description
+        });
+
+        return Forbid(props, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 }

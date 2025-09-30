@@ -59,8 +59,6 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 if (model.IdPromotionCode != null) SubCategoryToUpdate.IdPromotionCode = model.IdPromotionCode;
             }
-            else
-                SubCategoryToUpdate.IdPromotionCode = null;
 
 
             await _context.SaveChangesAsync();
