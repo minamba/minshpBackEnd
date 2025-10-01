@@ -95,7 +95,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Position = model.Position,
                 IdCategory = model.IdCategory,
                 IdSubCategory = model.IdSubCategory,
-                Display = model.Display
+                Display = true
             };
 
             _context.Images.Add(newImage);
@@ -103,15 +103,15 @@ namespace MinshpWebApp.Dal.Repositories
 
             return new Image()
             {
-                Id = model.Id,
-                Url = model.Url,
-                IdProduct = model.IdProduct,
-                Description = model.Description,
-                Title = model.Title,
-                Position = model.Position,
-                IdCategory = model.IdCategory,
-                IdSubCategory = model.IdSubCategory,
-                Display = model.Display
+                Id = newImage.Id,
+                Url = newImage.Url,
+                IdProduct = newImage.Id_product,
+                Description = newImage.Description,
+                Title = newImage.Title,
+                Position = newImage.Position,
+                IdCategory = newImage.IdCategory,
+                IdSubCategory = newImage.IdSubCategory,
+                Display = newImage.Display
             };
 
         }

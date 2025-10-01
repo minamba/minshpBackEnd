@@ -67,7 +67,7 @@ namespace MinshpWebApp.Api.Builders.impl
             var botToken = _config["TelegramAlertStock:BotToken"];
             var chatId = _config["TelegramAlertStock:GroupChatId"];
 
-            var message = $"💰 *Rupture de stock* :\n" +
+            var message = $"🙅‍ *Rupture de stock* :\n" +
                           $"- Marque : {request.Brand}\n" +
                           $"- Modèl : {request.Model}\n" +
                           $"- Date : {request.Date}\n";

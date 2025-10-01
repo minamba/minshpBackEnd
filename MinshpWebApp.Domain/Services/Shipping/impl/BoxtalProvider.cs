@@ -562,7 +562,7 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
         }
 
 
-        /* -------- RELAYS v3 EN VRAI JE NE SAIS PAS A QUOI SERT CETTE METHODE. TODO : VERIFIER AVANT DE LA CLEANER -------- */
+        /* -------- RELAYS v3 JE NE SAIS PAS A QUOI SERT CETTE METHODE. TODO : VERIFIER AVANT DE LA CLEANER -------- */
 
         // Recherche par CP/pays (structure simple), on tente de récupérer openingDays si présent
         public async Task<List<Relay>> GetRelaysAsync(string zip, string country, int limit = 20)

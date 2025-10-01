@@ -128,7 +128,7 @@ namespace MinshpWebApp.Dal.Repositories
                 IdPromotionCode = model.IdPromotionCode,
                 IdPackageProfil = model.IdPackageProfil,
                 IdSubCategory = model.IdSubCategory,
-                Display = model.Display
+                Display = false,
             };
 
             _context.Products.Add(newProduct);

@@ -80,7 +80,7 @@ namespace MinshpWebApp.Dal.Repositories
                 Description = model.Description,
                 Title = model.Title,
                 Position = model.Position,
-                Display = model.Display
+                Display = true
             };
 
             _context.Videos.Add(newVideo);
@@ -88,13 +88,13 @@ namespace MinshpWebApp.Dal.Repositories
 
             return new Video()
             {
-                Id = model.Id,
-                Url = model.Url,
-                IdProduct = model.IdProduct,
-                Description = model.Description,
-                Title = model.Title,
-                Position = model.Position,
-                Display = model.Display
+                Id = newVideo.Id,
+                Url = newVideo.Url,
+                IdProduct = newVideo.Id_product,
+                Description = newVideo.Description,
+                Title = newVideo.Title,
+                Position = newVideo.Position,
+                Display = newVideo.Display
             };
         }
 
