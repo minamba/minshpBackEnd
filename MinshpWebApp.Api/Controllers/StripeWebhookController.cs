@@ -20,6 +20,7 @@ using Stripe;
 using Stripe;
 using Stripe.Checkout;
 using Stripe.Checkout;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -315,8 +316,8 @@ namespace MinshpWebApp.Api.Controllers
                     if (order != null)
                     {
                         order.BoxtalShipmentId = ship.ShipmentId;
-                        order.Carrier = ship.CarrierCode;
-                        order.ServiceCode = ship.ServiceCode;
+                        order.Carrier = await GetCarrier(Enum.Parse<CarrierEnum>(ctxReq.OperatorCode));
+                        order.ServiceCode = ctxReq.ServiceCode;
                         await _orderRepo.UpdateOrdersAsync(order);
                     }
 
@@ -692,6 +693,19 @@ namespace MinshpWebApp.Api.Controllers
                     }
                 }
             }
+        }
+
+        private async Task<string> GetCarrier(CarrierEnum carrier)
+        {
+            var carrierName = carrier switch
+            {
+                CarrierEnum.MONR => "Mondial relay",
+                CarrierEnum.UPSE => "UPS",
+                CarrierEnum.POFR => "La poste",
+                CarrierEnum.CHRP => "Chronopost"
+            };
+
+            return carrierName;
         }
     }
 }

@@ -21,8 +21,8 @@
         //PARTIE SHIPPING
 
         public string? DeliveryMode { get; set; } = "home";   // "home" | "relay"
-        public string? Carrier { get; set; } = "";            // ex: "Chronopost"
-        public string? ServiceCode { get; set; } = "";        // code offre Boxtal
+        public string? Carrier { get; set; }            // ex: "Chronopost"
+        public string? ServiceCode { get; set; }        // code offre Boxtal
         public string? RelayId { get; set; }                 // id point relais
         public string? RelayLabel { get; set; }              // libellé point relais
         public string? BoxtalShipmentId { get; set; }        // id envoi Boxtal

@@ -88,23 +88,23 @@ namespace MinshpWebApp.Dal.Repositories
 
             return new Order()
             {
-                Id = model.Id,
-                Date = model.Date,
-                Status = model.Status,
-                CustomerId = model.CustomerId,
-                Amount = model.Amount,
-                PaymentMethod = model.PaymentMethod,
-                DeliveryAmount = model.DeliveryAmount,
+                Id = OrderToUpdate.Id,
+                Date = OrderToUpdate.Date,
+                Status = OrderToUpdate.Status,
+                CustomerId = OrderToUpdate.CustomerId,
+                Amount = OrderToUpdate.Amount,
+                PaymentMethod = OrderToUpdate.PaymentMethod,
+                DeliveryAmount = OrderToUpdate.DeliveryAmount,
 
-                TrackingNumber = model.TrackingNumber,
-                BoxtalShipmentId = model.BoxtalShipmentId,
-                DeliveryMode = model.DeliveryMode,
-                LabelUrl = model.LabelUrl,
-                Carrier = model.Carrier,
-                RelayLabel = model.RelayLabel,
-                RelayId = model.RelayId,
-                ServiceCode = model.ServiceCode,
-                TrackingLink = model.TrackingLink
+                TrackingNumber = OrderToUpdate.TrackingNumber,
+                BoxtalShipmentId = OrderToUpdate.BoxtalShipmentId,
+                DeliveryMode = OrderToUpdate.DeliveryMode,
+                LabelUrl = OrderToUpdate.LabelUrl,
+                Carrier = OrderToUpdate.Carrier,
+                RelayLabel = OrderToUpdate.RelayLabel,
+                RelayId = OrderToUpdate.RelayId,
+                ServiceCode = OrderToUpdate.ServiceCode,
+                TrackingLink = OrderToUpdate.TrackingLink
             };
         }
 
