@@ -130,7 +130,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 htmlContent = htmlContent.Replace("{{BILL_COUNTRY}}", billing.Country);
 
                 htmlContent = htmlContent.Replace("{{ORDER_LINK}}", "http://localhost:3000/account");
-                htmlContent = htmlContent.Replace("{{SUPPORT_EMAIL}}", "noreply@minshp.com");
+                htmlContent = htmlContent.Replace("{{SUPPORT_EMAIL}}", "support@minshp.com");
             }
             //POUR LA COMMANDE **********************************************************
 
@@ -144,7 +144,7 @@ namespace MinshpWebApp.Api.Builders.impl
             //POUR LA REGISTRATION ******************************************************
 
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Min's shop", "noreply@minshp.com"));
+            message.From.Add(new MailboxAddress("Min's shop", "ne-pas-repondre@minshp.com"));
             message.To.Add(new MailboxAddress("", recipient));
             message.Subject = subject.ToUpper();
 
@@ -161,7 +161,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 using var client = new MailKit.Net.Smtp.SmtpClient();
                 client.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 await client.ConnectAsync("smtp.hostinger.com", 587, false);
-                await client.AuthenticateAsync("noreply@minshp.com", "Cdjeneba19882025shp@");
+                await client.AuthenticateAsync("ne-pas-repondre@minshp.com", "Cdjeneba1988@");
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
 
@@ -187,7 +187,7 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
             var msg = new MimeMessage();
-            msg.From.Add(new MailboxAddress("Min's shop", "contact@minshp.com"));
+            msg.From.Add(new MailboxAddress("Min's shop", "ne-pas-repondre@minshp.com"));
             msg.To.Add(new MailboxAddress("", recipient));
             msg.Subject = "Réinitialisation de votre mot de passe";
 
@@ -199,7 +199,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 using var client = new MailKit.Net.Smtp.SmtpClient();
                 client.ServerCertificateValidationCallback = (s, c, h, e) => true;
                 await client.ConnectAsync("smtp.hostinger.com", 587, false);
-                await client.AuthenticateAsync("noreply@minshp.com", "Cdjeneba19882025shp@");
+                await client.AuthenticateAsync("ne-pas-repondre@minshp.com", "Cdjeneba1988@");
                 await client.SendAsync(msg);
                 await client.DisconnectAsync(true);
                 return "OK";
