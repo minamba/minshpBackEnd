@@ -34,6 +34,12 @@ if (builder.Environment.IsDevelopment())
 }
 
 
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
+
 // Activer les logs dans la console
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -78,18 +84,17 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // AuthN/AuthZ : l’API valide les tokens émis par ton IdentityServer OpenIddict
 // AuthN/AuthZ : valider les tokens émis par ton IdentityServer OpenIddict
+var issuer = builder.Configuration["Auth:Issuer"];
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
 });
 
-var pcIp = "192.168.1.63"; // ex. "192.168.1.23"
 
 builder.Services.AddOpenIddict()
     .AddValidation(options =>
     {
-        options.SetIssuer($"http://{pcIp}:5098");
-        //options.SetIssuer("https://localhost:7183"); // ← URL EXACTE de ton IdentityServer
+        options.SetIssuer(issuer);
         options.AddAudiences("api-resource");     // décommente si tu utilises une audience nommée
         options.UseSystemNetHttp();
         options.UseAspNetCore();
@@ -100,17 +105,13 @@ builder.Services.AddAuthorization();
 
 // CORS (déclare une policy nommée pour la réutiliser)
 
-
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? Array.Empty<string>();
 const string CorsPolicy = "WebCors";
-builder.Services.AddCors(o => o.AddPolicy(CorsPolicy, p =>
-        p.WithOrigins(
-        $"http://{pcIp}:3000",   // front vu par le téléphone
-        "http://localhost:3000", // front vu en local sur le PC
-        "http://localhost:5173", // si Vite
-        "https://bd158b87393d.ngrok.app"
-    )
+builder.Services.AddCors(opt => opt.AddPolicy(CorsPolicy, p =>
+    p.WithOrigins(corsOrigins)
      .AllowAnyHeader()
-     .AllowAnyMethod()));
+     .AllowAnyMethod()
+));
 
 
 
@@ -257,22 +258,22 @@ builder.Services.Configure<FormOptions>(options =>
 var app = builder.Build();
 
 //permet de voir que les users secrets sont bien lu
-if (app.Environment.IsDevelopment())
-{
-    var opt = app.Services.GetRequiredService<IOptions<BoxtalOptions>>().Value;
-    app.Logger.LogInformation(
-        "Boxtal loaded. BaseV3={BaseV3}, CallbackUrl={Callback}, SecretLen={Len}",
-        opt.BaseUrlV3,
-        opt.V3CallbackUrl,
-        opt.V3WebhookSecret?.Length ?? 0
-    );
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    var opt = app.Services.GetRequiredService<IOptions<BoxtalOptions>>().Value;
+//    app.Logger.LogInformation(
+//        "Boxtal loaded. BaseV3={BaseV3}, CallbackUrl={Callback}, SecretLen={Len}",
+//        opt.BaseUrlV3,
+//        opt.V3CallbackUrl,
+//        opt.V3WebhookSecret?.Length ?? 0
+//    );
+//}
 
 
 var stripe = new StripeClient(builder.Configuration["Stripe:SecretKey"]);
 var acctSvc = new AccountService(stripe);
 
-// 👉 récupère le compte courant sans fournir d'id
+ //👉 récupère le compte courant sans fournir d'id
 var acct = await acctSvc.GetSelfAsync();
 
 app.Logger.LogInformation("Stripe server is using Account={AccountId} Mode={Mode}",
@@ -282,11 +283,11 @@ app.Logger.LogInformation("Stripe server is using Account={AccountId} Mode={Mode
 
 
 //Logger 
-app.MapGet("/", (ILogger<Program> logger) =>
-{
-    logger.LogInformation("Une requête a été reçue !");
-    return "Hello World!";
-});
+//app.MapGet("/", (ILogger<Program> logger) =>
+//{
+//    logger.LogInformation("Une requête a été reçue !");
+//    return "Hello World!";
+//});
 
 
 // Configure the HTTP request pipeline.
@@ -299,12 +300,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles(); // pour wwwroot si besoin
 
-//app.UseCors(builder =>
-//    builder.WithOrigins("http://localhost:3000","https://bd158b87393d.ngrok.app")
-//           .AllowAnyHeader()
-//           .AllowAnyMethod()
-//);
-
+app.MapFallbackToFile("index.html"); // indispensable pour React Router
 app.UseCors(CorsPolicy);
 
 //app.UseHttpsRedirection();

@@ -8,6 +8,21 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+builder.Configuration
+    .AddJsonFile("appsettings.json", false, true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true)
+    .AddEnvironmentVariables();
+
+if (builder.Environment.IsDevelopment())
+    builder.Configuration.AddUserSecrets<Program>(optional: true);
+
+
+var issuerFromConfig = builder.Configuration["Auth:Issuer"];        // ex: http://192.168.1.63:5098 (dev) / https://minshp.com (prod)
+
+var spaRedirect = builder.Configuration["Spa:RedirectUri"];
+var spaPostLogout = builder.Configuration["Spa:PostLogoutUri"];
+
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -58,21 +73,29 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
 
 // Claims factory (pour inclure les rôles dans le principal)
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, CustomUserClaimsPrincipalFactory>();
+var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? Array.Empty<string>();
+//CORS — doit être AVANT Build()
+//var pcIp = "192.168.1.63";
+//builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
+//    p.WithOrigins(
+//        $"http://{pcIp}:3000",
+//        $"http://{pcIp}:5173",
+//        "http://localhost:3000",
+//        "https://localhost:3000",
+//        "http://localhost:5173",
+//        "https://localhost:5173"
+//    )
+//    .AllowAnyHeader()
+//    .AllowAnyMethod()
+//// .AllowCredentials() // pas nécessaire pour /connect/token
+//));
 
-// CORS — doit être AVANT Build()
-var pcIp = "192.168.1.63";
+
 builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
-    p.WithOrigins(
-        $"http://{pcIp}:3000",
-        $"http://{pcIp}:5173",
-        "http://localhost:3000",
-        "https://localhost:3000",
-        "http://localhost:5173",
-        "https://localhost:5173"
-    )
-    .AllowAnyHeader()
-    .AllowAnyMethod()
-// .AllowCredentials() // pas nécessaire pour /connect/token
+    p.WithOrigins(corsOrigins)
+     .AllowAnyHeader()
+     .AllowAnyMethod()
+     .AllowCredentials()
 ));
 
 
@@ -107,7 +130,7 @@ builder.Services.AddOpenIddict()
         o.SetUserInfoEndpointUris("/connect/userinfo");
         o.SetEndSessionEndpointUris("/connect/logout");
 
-        o.SetIssuer(new Uri($"http://{pcIp}:5098")); //pour y acceder sur mobile
+        o.SetIssuer(issuerFromConfig); //pour y acceder sur mobile
 
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowPasswordFlow();
