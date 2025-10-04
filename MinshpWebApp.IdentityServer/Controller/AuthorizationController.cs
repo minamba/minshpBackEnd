@@ -17,7 +17,7 @@ public class AuthorizationController : ControllerBase
     private readonly UserManager<AppUser> _userManager;
     public AuthorizationController(UserManager<AppUser> um) { _userManager = um; }
 
-    [HttpGet("~/connect/authorize")]
+    [HttpGet("~/api/auth/authorize")]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Authorize()
     {
@@ -54,7 +54,7 @@ public class AuthorizationController : ControllerBase
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
-    [HttpPost("~/connect/logout")]
+    [HttpPost("~/api/auth/logout")]
     [AllowAnonymous]
     public IActionResult LogoutEndpoint() => SignOut(IdentityConstants.ApplicationScheme);
 }

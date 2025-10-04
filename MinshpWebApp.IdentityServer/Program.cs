@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MinshpWebApp.IdentityServer.Authentication;
 using MinshpWebApp.IdentityServer.Claims;
@@ -125,10 +126,10 @@ builder.Services.AddOpenIddict()
      })
     .AddServer(o =>
     {
-        o.SetAuthorizationEndpointUris("/connect/authorize");
-        o.SetTokenEndpointUris("/connect/token");
-        o.SetUserInfoEndpointUris("/connect/userinfo");
-        o.SetEndSessionEndpointUris("/connect/logout");
+        o.SetAuthorizationEndpointUris("/api/auth/authorize");
+        o.SetTokenEndpointUris("/api/auth/token");
+        o.SetUserInfoEndpointUris("/api/auth/userinfo");
+        o.SetEndSessionEndpointUris("/api/auth/logout");
 
         o.SetIssuer(issuerFromConfig); //pour y acceder sur mobile
 
@@ -155,6 +156,11 @@ builder.Services.AddOpenIddict()
          .EnableEndSessionEndpointPassthrough()
          .DisableTransportSecurityRequirement(); // dev
 
+        // 🔥 IMPORTANT : Configuration pour les custom routes
+        o.IgnoreEndpointPermissions();
+        o.IgnoreGrantTypePermissions();
+        o.IgnoreScopePermissions();
+
         // destinations des claims
         o.AddEventHandler<OpenIddictServerEvents.ProcessSignInContext>(b =>
         {
@@ -171,6 +177,19 @@ builder.Services.AddOpenIddict()
             });
         });
     });
+
+
+
+// Dans Program.cs - Configuration adaptée LWS
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                              ForwardedHeaders.XForwardedProto;
+
+    // Important pour LWS
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 
 builder.Services.AddControllers();
@@ -198,8 +217,10 @@ using (var scope = app.Services.CreateScope())
         DisplayName = "React SPA",
         ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
         ClientType = OpenIddictConstants.ClientTypes.Public,
-        RedirectUris = { new Uri("http://localhost:5173/callback") },
-        PostLogoutRedirectUris = { new Uri("http://localhost:5173/") },
+        //RedirectUris = { new Uri("http://localhost:5173/callback") },
+        //PostLogoutRedirectUris = { new Uri("http://localhost:5173/") },
+        RedirectUris = { new Uri("https://minshp.com/callback") },
+        PostLogoutRedirectUris = { new Uri("https://minshp.com/") },
         Permissions =
         {
             OpenIddictConstants.Permissions.Endpoints.Authorization,

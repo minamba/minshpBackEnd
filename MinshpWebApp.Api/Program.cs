@@ -16,6 +16,13 @@ using Stripe;
 using System.Net.Http.Headers;
 using QuestPDF.Infrastructure; // n'oublie pa
 
+//authentification
+//using Microsoft.AspNetCore.Identity;
+//using MinshpWebApp.IdentityServer.Authentication; // AppUser, AuthDbContext
+//using MinshpWebApp.IdentityServer.Claims;         // CustomUserClaimsPrincipalFactory
+//using OpenIddict.Abstractions;
+//using static OpenIddict.Abstractions.OpenIddictConstants;
+
 
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
@@ -96,6 +103,8 @@ builder.Services.AddOpenIddict()
     {
         options.SetIssuer(issuer);
         options.AddAudiences("api-resource");     // décommente si tu utilises une audience nommée
+
+
         options.UseSystemNetHttp();
         options.UseAspNetCore();
     });

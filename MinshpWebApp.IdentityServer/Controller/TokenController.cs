@@ -24,7 +24,7 @@ public class TokenController : ControllerBase
         _userManager = um; _signInManager = sm;
     }
 
-    [HttpPost("~/connect/token")]
+    [HttpPost("~/api/auth/token")]
     public async Task<IActionResult> Exchange()
     {
         var request = HttpContext.GetOpenIddictServerRequest()

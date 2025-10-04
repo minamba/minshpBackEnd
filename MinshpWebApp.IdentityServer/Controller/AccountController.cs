@@ -583,7 +583,7 @@ public class AccountController : ControllerBase
             ["scope"] = "api"
         });
 
-        using var r = await idp.PostAsync("connect/token", form, ct);
+        using var r = await idp.PostAsync("api/auth/token", form, ct);
         var body = await r.Content.ReadAsStringAsync(ct);
         if (!r.IsSuccessStatusCode)
         {
