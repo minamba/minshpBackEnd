@@ -61,9 +61,9 @@ public partial class MinshpDatabaseContext : DbContext
     public virtual DbSet<Taxe> Taxes { get; set; }
     public virtual DbSet<Video> Videos { get; set; }
 
-//    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Server=.\\MSSQLSERVER2019;Database=minshpDB;User Id=minshpadmin;Password=m1nshp@dmin19882025;Encrypt=False;MultipleActiveResultSets=True;");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=localhost\\MSSQLSERVER2019;Database=minshpDB;User Id=minshpadmin;Password=mins19882025@;Encrypt=False;MultipleActiveResultSets=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -20,7 +20,6 @@ using OpenIddict.Server.AspNetCore;
 using OpenIddict.Server;
 using OpenIddict.Validation.AspNetCore;
 using OpenIddict.Validation;
-using OpenIddict.Validation.AspNetCore;
 using QuestPDF.Infrastructure; // n'oublie pa
 using Stripe;
 using System.Net.Http.Headers;
@@ -373,6 +372,15 @@ var app = builder.Build();
 //        opt.V3WebhookSecret?.Length ?? 0
 //    );
 //}
+
+
+using (var scope = app.Services.CreateScope())
+{
+    await scope.ServiceProvider.GetRequiredService<MinshpDatabaseContext>()
+        .Database.MigrateAsync();
+    await scope.ServiceProvider.GetRequiredService<MinshpWebApp.Api.Auth.Authentication.AuthDbContext>()
+        .Database.MigrateAsync();
+}
 
 async Task SeedRolesAsync(IServiceProvider sp)
 {
