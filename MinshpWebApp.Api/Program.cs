@@ -1,6 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http.Features;
+//authentification
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using MinshpWebApp.Api.Auth.Authentication; // AppUser, AuthDbContext
+using MinshpWebApp.Api.Auth.Claims;         // CustomUserClaimsPrincipalFactory
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Builders.impl;
 using MinshpWebApp.Api.Options;
@@ -11,17 +15,16 @@ using MinshpWebApp.Domain.Services;
 using MinshpWebApp.Domain.Services.impl;
 using MinshpWebApp.Domain.Services.Shipping;
 using MinshpWebApp.Domain.Services.Shipping.impl;
+using OpenIddict.Abstractions;
+using OpenIddict.Server.AspNetCore;
+using OpenIddict.Server;
 using OpenIddict.Validation.AspNetCore;
+using OpenIddict.Validation;
+using OpenIddict.Validation.AspNetCore;
+using QuestPDF.Infrastructure; // n'oublie pa
 using Stripe;
 using System.Net.Http.Headers;
-using QuestPDF.Infrastructure; // n'oublie pa
-
-//authentification
-//using Microsoft.AspNetCore.Identity;
-//using MinshpWebApp.IdentityServer.Authentication; // AppUser, AuthDbContext
-//using MinshpWebApp.IdentityServer.Claims;         // CustomUserClaimsPrincipalFactory
-//using OpenIddict.Abstractions;
-//using static OpenIddict.Abstractions.OpenIddictConstants;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 
 QuestPDF.Settings.License = LicenseType.Community;
@@ -85,6 +88,44 @@ builder.Services.AddDbContext<MinshpDatabaseContext>(opt =>
             sql.MigrationsAssembly("MinshpWebApp.Dal");
             sql.MigrationsHistoryTable("__EFMigrationsHistory_Business", "dbo");
         }));
+
+
+//************************************ PARTIE AUTHENTICATION ***************************************************************** 
+builder.Services.AddDbContext<MinshpWebApp.Api.Auth.Authentication.AuthDbContext>(opt =>
+    opt.UseSqlServer(
+        builder.Configuration.GetConnectionString("MainDb"),
+        sql =>
+        {
+            sql.MigrationsAssembly(typeof(MinshpWebApp.Api.Auth.Authentication.AuthDbContext).Assembly.FullName);
+            sql.MigrationsHistoryTable("__EFMigrationsHistory_Auth", "auth");
+        }));
+
+
+builder.Services.AddIdentity<AppUser, IdentityRole>(o =>
+{
+    o.Password.RequireNonAlphanumeric = false;
+    o.Password.RequireUppercase = false;
+    o.User.RequireUniqueEmail = false;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<MinshpWebApp.Api.Auth.Authentication.AuthDbContext>()
+.AddDefaultTokenProviders();
+
+builder.Services.Configure<IdentityOptions>(opts =>
+{
+    opts.Lockout.AllowedForNewUsers = true;
+    opts.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    opts.Lockout.MaxFailedAccessAttempts = 5;
+});
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
+{
+    o.TokenLifespan = TimeSpan.FromHours(2);
+});
+
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, CustomUserClaimsPrincipalFactory>();
+//************************************ PARTIE AUTHENTICATION ***************************************************************** 
+
 builder.Services.AddMvc();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -92,22 +133,77 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 // AuthN/AuthZ : l’API valide les tokens émis par ton IdentityServer OpenIddict
 // AuthN/AuthZ : valider les tokens émis par ton IdentityServer OpenIddict
 var issuer = builder.Configuration["Auth:Issuer"];
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-});
-
-
 builder.Services.AddOpenIddict()
-    .AddValidation(options =>
+    // Persistance OpenIddict dans AuthDbContext
+    .AddCore(o => o.UseEntityFrameworkCore().UseDbContext<MinshpWebApp.Api.Auth.Authentication.AuthDbContext>())
+
+    // Validation des tokens contre le serveur local
+    .AddValidation(o =>
     {
-        options.SetIssuer(issuer);
-        options.AddAudiences("api-resource");     // décommente si tu utilises une audience nommée
+        o.UseLocalServer();
+        o.UseAspNetCore();
+    })
 
+    // Serveur d'émission (endpoints REST)
+    .AddServer(o =>
+    {
+        // Endpoints (on garde exactement ceux de ton Identity)
+        o.SetAuthorizationEndpointUris("/api/auth/authorize");
+        o.SetTokenEndpointUris("/api/auth/token");
+        o.SetUserInfoEndpointUris("/api/auth/userinfo");
+        o.SetEndSessionEndpointUris("/api/auth/logout");
 
-        options.UseSystemNetHttp();
-        options.UseAspNetCore();
+        o.SetIssuer(new Uri(issuer)); // ex: https://minshp.com
+
+        o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
+        o.AllowPasswordFlow();
+        o.AllowRefreshTokenFlow();
+        o.AllowClientCredentialsFlow();
+
+        o.AcceptAnonymousClients();
+        o.DisableAccessTokenEncryption(); // OK dev
+
+        o.RegisterScopes(Scopes.OpenId, Scopes.Profile, Scopes.Roles, "api");
+
+        o.AddDevelopmentEncryptionCertificate()
+         .AddDevelopmentSigningCertificate();
+
+        o.UseAspNetCore()
+         .EnableAuthorizationEndpointPassthrough()
+         .EnableTokenEndpointPassthrough()
+         .EnableUserInfoEndpointPassthrough()
+         .EnableEndSessionEndpointPassthrough()
+         .DisableTransportSecurityRequirement(); // dev
+
+        // (Optionnel) si tu veux ignorer les permissions déclaratives
+        // o.IgnoreEndpointPermissions();
+        // o.IgnoreGrantTypePermissions();
+        // o.IgnoreScopePermissions();
+
+        // Destinations des claims
+        o.AddEventHandler<OpenIddictServerEvents.ProcessSignInContext>(b =>
+        {
+            b.UseInlineHandler(ctx =>
+            {
+                foreach (var claim in ctx.Principal!.Claims)
+                {
+                    var dest = new List<string> { Destinations.AccessToken };
+                    if (claim.Type is Claims.Subject or Claims.Name or Claims.Email or Claims.Role)
+                        dest.Add(Destinations.IdentityToken);
+                    claim.SetDestinations(dest);
+                }
+                return default;
+            });
+        });
     });
+
+// Schéma d’auth par défaut = validation OpenIddict
+builder.Services.AddAuthentication(o =>
+{
+    o.DefaultAuthenticateScheme =
+    o.DefaultChallengeScheme =
+    OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+});
 
 builder.Services.AddAuthorization();
 
@@ -278,6 +374,97 @@ var app = builder.Build();
 //    );
 //}
 
+async Task SeedRolesAsync(IServiceProvider sp)
+{
+    var roleMgr = sp.GetRequiredService<RoleManager<IdentityRole>>();
+    foreach (var r in new[] { "Admin", "Manager", "Customer" })
+        if (!await roleMgr.RoleExistsAsync(r))
+            await roleMgr.CreateAsync(new IdentityRole(r));
+}
+using (var scope = app.Services.CreateScope())
+{
+    await SeedRolesAsync(scope.ServiceProvider);
+
+    // client OpenIddict
+    var apps = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+    var client = await apps.FindByClientIdAsync("react-spa");
+    var descriptor = new OpenIddictApplicationDescriptor
+    {
+        ClientId = "react-spa",
+        DisplayName = "React SPA",
+        ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
+        ClientType = OpenIddictConstants.ClientTypes.Public,
+        //RedirectUris = { new Uri("http://localhost:5173/callback") },
+        //PostLogoutRedirectUris = { new Uri("http://localhost:5173/") },
+        RedirectUris = { new Uri("https://minshp.com/callback") },
+        PostLogoutRedirectUris = { new Uri("https://minshp.com/") },
+        Permissions =
+        {
+            OpenIddictConstants.Permissions.Endpoints.Authorization,
+            OpenIddictConstants.Permissions.Endpoints.Token,
+            OpenIddictConstants.Permissions.Endpoints.EndSession,
+            OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+            OpenIddictConstants.Permissions.GrantTypes.Password,
+            OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+            OpenIddictConstants.Permissions.ResponseTypes.Code,
+            OpenIddictConstants.Permissions.Scopes.Profile,
+             OpenIddictConstants.Permissions.Scopes.Roles,
+            OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+        },
+        Requirements = { OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange }
+    };
+    if (client is null) await apps.CreateAsync(descriptor);
+    else await apps.UpdateAsync(client, descriptor);
+
+
+    // --- CLIENT CONFIDENTIEL pour appels serveur-à-serveur ---
+    var svcClient = await apps.FindByClientIdAsync("minshp-api-client");
+    var confidential = new OpenIddictApplicationDescriptor
+    {
+        ClientId = "minshp-api-client",
+        ClientType = OpenIddictConstants.ClientTypes.Confidential,
+        ClientSecret = "super-secret-change-me", // en dev OK. En prod: Hash + secret manager.
+
+        Permissions =
+        {
+            // Endpoints
+            OpenIddictConstants.Permissions.Endpoints.Token,
+
+            // Grant
+            OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
+
+            // Scopes
+            OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+        }
+    };
+
+    if (svcClient is null) await apps.CreateAsync(confidential);
+    else await apps.UpdateAsync(svcClient, confidential);
+
+
+
+    var scopes = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
+    if (await scopes.FindByNameAsync("api") is null)
+    {
+        await scopes.CreateAsync(new OpenIddictScopeDescriptor
+        {
+            Name = "api",
+            DisplayName = "Access to Minshp API",
+            Resources = { "api-resource" }
+        });
+    }
+
+    // admin
+    var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+    var admin = await userMgr.FindByEmailAsync("minsceo@minshp.com");
+    if (admin is null)
+    {
+        admin = new AppUser { UserName = "mins@admin.com", Email = "minsceo@minshp.com", EmailConfirmed = true };
+        await userMgr.CreateAsync(admin, "cdjeneba19882025");
+        await userMgr.AddToRoleAsync(admin, "Admin");
+    }
+}
+
 
 var stripe = new StripeClient(builder.Configuration["Stripe:SecretKey"]);
 var acctSvc = new AccountService(stripe);
@@ -309,7 +496,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles(); // pour wwwroot si besoin
 
-app.MapFallbackToFile("index.html"); // indispensable pour React Router
+
 app.UseCors(CorsPolicy);
 
 //app.UseHttpsRedirection();
@@ -324,5 +511,6 @@ app.UseAuthorization();
 
 
 app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();

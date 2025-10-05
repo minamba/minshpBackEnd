@@ -102,47 +102,50 @@ builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
 
 
 // Pour que [Authorize] utilise la validation par défaut
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = OpenIddict.Validation.AspNetCore
-        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = OpenIddict.Validation.AspNetCore
-        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
-});
+//builder.Services.AddAuthentication(options =>
+//{
+//    options.DefaultAuthenticateScheme = OpenIddict.Validation.AspNetCore
+//        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+//    options.DefaultChallengeScheme = OpenIddict.Validation.AspNetCore
+//        .OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+//});
 
 
 
 
 // OpenIddict — AVANT Build()
-builder.Services.AddOpenIddict()
-    .AddCore(o => o.UseEntityFrameworkCore().UseDbContext<AuthDbContext>())
-    .AddValidation(o =>
-     {
-            // Même serveur (local) : réutilise les clés/signatures du serveur
-            o.UseLocalServer();
+// ===== OPENIDDICT : SERVER + VALIDATION =====
+var issuer = builder.Configuration["Auth:Issuer"]; // ex: https://minshp.com
 
-            // Branche la validation sur l’auth ASP.NET Core (schéma Bearer)
-            o.UseAspNetCore();
-     })
+builder.Services.AddOpenIddict()
+    // Persistance OpenIddict dans AuthDbContext
+    .AddCore(o => o.UseEntityFrameworkCore().UseDbContext<AuthDbContext>())
+
+    // Validation des tokens contre le serveur local
+    .AddValidation(o =>
+    {
+        o.UseLocalServer();
+        o.UseAspNetCore();
+    })
+
+    // Serveur d'émission (endpoints REST)
     .AddServer(o =>
     {
+        // Endpoints (on garde exactement ceux de ton Identity)
         o.SetAuthorizationEndpointUris("/api/auth/authorize");
         o.SetTokenEndpointUris("/api/auth/token");
         o.SetUserInfoEndpointUris("/api/auth/userinfo");
         o.SetEndSessionEndpointUris("/api/auth/logout");
 
-        o.SetIssuer(issuerFromConfig); //pour y acceder sur mobile
+        o.SetIssuer(new Uri(issuer)); // ex: https://minshp.com
 
         o.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
         o.AllowPasswordFlow();
         o.AllowRefreshTokenFlow();
-
-        // nécessaire pour récupérer un jeton technique dans Register()
         o.AllowClientCredentialsFlow();
 
-
         o.AcceptAnonymousClients();
-        o.DisableAccessTokenEncryption(); // dev
+        o.DisableAccessTokenEncryption(); // OK dev
 
         o.RegisterScopes(Scopes.OpenId, Scopes.Profile, Scopes.Roles, "api");
 
@@ -156,12 +159,12 @@ builder.Services.AddOpenIddict()
          .EnableEndSessionEndpointPassthrough()
          .DisableTransportSecurityRequirement(); // dev
 
-        // 🔥 IMPORTANT : Configuration pour les custom routes
-        o.IgnoreEndpointPermissions();
-        o.IgnoreGrantTypePermissions();
-        o.IgnoreScopePermissions();
+        // (Optionnel) si tu veux ignorer les permissions déclaratives
+        // o.IgnoreEndpointPermissions();
+        // o.IgnoreGrantTypePermissions();
+        // o.IgnoreScopePermissions();
 
-        // destinations des claims
+        // Destinations des claims
         o.AddEventHandler<OpenIddictServerEvents.ProcessSignInContext>(b =>
         {
             b.UseInlineHandler(ctx =>
@@ -177,6 +180,17 @@ builder.Services.AddOpenIddict()
             });
         });
     });
+
+
+// Schéma d’auth par défaut = validation OpenIddict
+builder.Services.AddAuthentication(o =>
+{
+    o.DefaultAuthenticateScheme =
+    o.DefaultChallengeScheme =
+    OpenIddict.Validation.AspNetCore.OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+});
+
+builder.Services.AddAuthorization();
 
 
 
