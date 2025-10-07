@@ -138,7 +138,33 @@ namespace MinshpWebApp.Api.Builders.impl
                 }
             }
 
+
+
+            if(promotionCodes != null)
+            {
+                var message = "";
+
+                foreach (var pc in promotionCodes)
+                {
+                    if (pc.GeneralCartAmount > 0)
+                    {
+                        if (pc.Name.ToLower().Contains("bienvenue"))
+                        {
+                            message = pc.GeneralCartAmount + "€ de réduction sur votre première commande avec le code " + pc.Name.ToUpper();
+                            promoMessages.Add(message);
+                        }
+                        else
+                        {
+                            message = pc.GeneralCartAmount + "€ de réduction sur votre panier global avec le code " + pc.Name.ToUpper();
+                            promoMessages.Add(message);
+                        }
+                    }
+                }
+            }
+
+
             promoMessages.Add("Envoi rapide sous 24h");
+            promoMessages.Add("Envoi uniquement en France métropolitaine");
 
             return promoMessages;
         }

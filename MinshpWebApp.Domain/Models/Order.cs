@@ -22,6 +22,8 @@ public partial class Order
     public int? CustomerId { get; set; }
     public decimal? DeliveryAmount { get; set; }
 
+    public int? CartDiscount { get; set; }
+
 
     //PARTIE SHIPPING
 

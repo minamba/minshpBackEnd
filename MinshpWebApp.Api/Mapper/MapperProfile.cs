@@ -186,6 +186,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.TrackingNumber, dest => dest.MapFrom(x => x.TrackingNumber))
               .ForMember(x => x.TrackingLink, dest => dest.MapFrom(x => x.TrackingLink))
               .ForMember(x => x.LabelUrl, dest => dest.MapFrom(x => x.LabelUrl))
+              .ForMember(x => x.CartDiscount, dest => dest.MapFrom(x => x.CartDiscount))
               .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
 
 
@@ -206,6 +207,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.TrackingNumber, dest => dest.MapFrom(x => x.TrackingNumber))
               .ForMember(x => x.TrackingLink, dest => dest.MapFrom(x => x.TrackingLink))
               .ForMember(x => x.LabelUrl, dest => dest.MapFrom(x => x.LabelUrl))
+              .ForMember(x => x.CartDiscount, dest => dest.MapFrom(x => x.CartDiscount))
               .ForMember(x => x.Status, dest => dest.MapFrom(x => x.Status));
 
 
@@ -295,6 +297,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
               .ForMember(x => x.Purcentage, dest => dest.MapFrom(x => x.Purcentage))
+              .ForMember(x => x.GeneralCartAmount, dest => dest.MapFrom(x => x.GeneralCartAmount))
               .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate))
               .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation));
@@ -304,6 +307,7 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
               .ForMember(x => x.Purcentage, dest => dest.MapFrom(x => x.Purcentage))
+              .ForMember(x => x.GeneralCartAmount, dest => dest.MapFrom(x => x.GeneralCartAmount))
               .ForMember(x => x.StartDate, dest => dest.MapFrom(x => x.StartDate))
               .ForMember(x => x.EndDate, dest => dest.MapFrom(x => x.EndDate))
               .ForMember(x => x.DateCreation, dest => dest.MapFrom(x => x.DateCreation));

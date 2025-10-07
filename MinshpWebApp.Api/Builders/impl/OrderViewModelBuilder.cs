@@ -140,7 +140,8 @@ namespace MinshpWebApp.Api.Builders.impl
                         RelayId = Order.RelayId,
                         RelayLabel = Order.RelayLabel,
                         ServiceCode = Order.ServiceCode,
-                        TrackingLink = Order.TrackingLink
+                        TrackingLink = Order.TrackingLink,
+                        CartDiscount = Order.CartDiscount
                 };
                     orderVmList.Add(ordervm);
                     ProductVmList = new List<ProductVIewModel>();
@@ -285,7 +286,8 @@ namespace MinshpWebApp.Api.Builders.impl
                     RelayId = order.RelayId,
                     RelayLabel = order.RelayLabel,
                     ServiceCode = order.ServiceCode,
-                    TrackingLink = order.TrackingLink
+                    TrackingLink = order.TrackingLink,
+                    CartDiscount = order.CartDiscount
                 };
 
                 vmList.Add(vm);

@@ -26,7 +26,7 @@ namespace MinshpWebApp.Api.Controllers
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> SendRegistrationMailAsync([FromBody] MailRequest request)
         {
-            var result = await _mailViewModelBuilder.SendMailRegistration(request.Customer.Email);
+            var result = await _mailViewModelBuilder.SendMailRegistration(request);
 
             if (result == null)
                 return null;

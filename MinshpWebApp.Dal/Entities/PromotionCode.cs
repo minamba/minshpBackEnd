@@ -19,5 +19,7 @@ public partial class PromotionCode
 
     public bool IsUsed { get; set; }
 
+    public int? GeneralCartAmount { get; set; }
+
     public virtual ICollection<CustomerPromotionCode> CustomerPromotionCodes { get; set; } = new List<CustomerPromotionCode>();
 }

@@ -46,8 +46,9 @@ namespace MinshpWebApp.Dal.Repositories
                 RelayLabel = p.RelayLabel,
                 RelayId = p.RelayId,
                 ServiceCode = p.ServiceCode,
-                TrackingLink = p.TrackingLink
-                
+                TrackingLink = p.TrackingLink,
+                CartDiscount = p.CartDiscount
+
             }).ToListAsync();
 
             return OrderEntities;
@@ -78,6 +79,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.TrackingNumber != null) OrderToUpdate.TrackingNumber = model.TrackingNumber;
             if (model.LabelUrl != null) OrderToUpdate.LabelUrl = model.LabelUrl;
             if (model.TrackingLink != null) OrderToUpdate.TrackingLink = model.TrackingLink;
+            if (model.CartDiscount != null) OrderToUpdate.CartDiscount = model.CartDiscount;
 
 
             //if (OrderToUpdate.TrackingNumber == null)
@@ -104,7 +106,8 @@ namespace MinshpWebApp.Dal.Repositories
                 RelayLabel = OrderToUpdate.RelayLabel,
                 RelayId = OrderToUpdate.RelayId,
                 ServiceCode = OrderToUpdate.ServiceCode,
-                TrackingLink = OrderToUpdate.TrackingLink
+                TrackingLink = OrderToUpdate.TrackingLink,
+                CartDiscount = OrderToUpdate.CartDiscount
             };
         }
 
@@ -179,7 +182,8 @@ namespace MinshpWebApp.Dal.Repositories
                 BoxtalShipmentId = orderToFind.BoxtalShipmentId,
                 TrackingNumber = orderToFind.TrackingNumber,
                 LabelUrl = orderToFind.LabelUrl,
-                TrackingLink = orderToFind.TrackingLink
+                TrackingLink = orderToFind.TrackingLink,
+                CartDiscount = orderToFind.CartDiscount
             };
 
             return order;
@@ -217,7 +221,8 @@ namespace MinshpWebApp.Dal.Repositories
                     BoxtalShipmentId = orderTofind.BoxtalShipmentId,
                     TrackingNumber = orderTofind.TrackingNumber,
                     LabelUrl = orderTofind.LabelUrl,
-                    TrackingLink = orderTofind.TrackingLink
+                    TrackingLink = orderTofind.TrackingLink,
+                    CartDiscount = orderTofind.CartDiscount
                 };
 
 
@@ -254,7 +259,8 @@ namespace MinshpWebApp.Dal.Repositories
                     RelayLabel = p.RelayLabel,
                     RelayId = p.RelayId,
                     ServiceCode = p.ServiceCode,
-                    TrackingLink = p.TrackingLink
+                    TrackingLink = p.TrackingLink,
+                    CartDiscount = p.CartDiscount
                 })
                 .ToListAsync();
 

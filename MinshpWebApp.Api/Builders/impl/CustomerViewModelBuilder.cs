@@ -39,7 +39,13 @@ namespace MinshpWebApp.Api.Builders.impl
             if (result != null)
             {
                 await _newLetterViewModelBuilder.AddNewLettersAsync(new NewLetterRequest { Mail = model.Email, Suscribe = true });
-                _mailViewModelBuilder.SendMailRegistration(model.Email);
+
+                var mailRequest = new MailRequest()
+                {
+                    Customer = model
+                };
+
+                _mailViewModelBuilder.SendMailRegistration(mailRequest);
             }
 
             return result;

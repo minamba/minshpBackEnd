@@ -17,6 +17,8 @@
 
         public decimal? DeliveryAmount { get; set; }
 
+        public int? CartDiscount { get; set; }
+
         public CustomerViewModel Customer { get; set; }
 
         public IEnumerable<ProductVIewModel> Products { get; set; }

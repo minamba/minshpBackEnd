@@ -6,7 +6,7 @@ namespace MinshpWebApp.Api.Builders
 {
     public interface IMailViewModelBuilder
     {
-        Task<string> SendMailRegistration(string mail);
+        Task<string> SendMailRegistration(MailRequest request);
 
         Task<string> SendMailPayment(string mail, List<Utils.InvoiceItem> items, CustomerViewModel customer, BillingAddress billing, DeliveryAddress delivery, Order order, decimal tva, decimal totalTaxes);
 

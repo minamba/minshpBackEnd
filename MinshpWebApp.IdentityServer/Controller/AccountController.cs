@@ -573,8 +573,8 @@ public class AccountController : ControllerBase
     {
         // Appel simple à /connect/token (IdentityServer) avec le client confidentiel
         var idp = _http.CreateClient(); // client ad hoc
-        idp.BaseAddress = new Uri("https://localhost:7183/"); // URL d’IdentityServer
-
+        //idp.BaseAddress = new Uri("https://localhost:7183/"); // URL d’IdentityServer
+        idp.BaseAddress = new Uri("https://auth.minshp.com/"); // URL d’IdentityServer
         var form = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "client_credentials",

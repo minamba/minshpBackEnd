@@ -173,6 +173,7 @@ namespace MinshpWebApp.Api.Controllers
                 int TotalproductPromotionPurcentage = 0;
                 decimal totalTTC = 0;
                 decimal BasePriceWithRemise = 0;
+                int cartDiscount = 0;
                 List<string> getTaxes = new List<string>();
                 List<string> taxes = new List<string>();
                 int countProductInCart = 0;
@@ -440,6 +441,17 @@ namespace MinshpWebApp.Api.Controllers
 
                                 totalTTC = (decimal)(totalHtWithTva + totalTaxes + ctxReq.DeliveryAmount);
                             }
+
+                            //Si il y a des remises sur le panier, je vais les chercher et les déduire du totalTTC
+                             cartDiscount = await GetCartDiscount(promotionCodes.ToList());
+
+                            if (cartDiscount > 0)
+                            {
+                                totalTTC = totalTTC - cartDiscount;
+
+                                //mise à jour de la commande, en mettant à jour la remise
+                                await _ordersBuilder.UpdateOrdersAsync(new OrderRequest() { Id = orderIdStr.Id, CartDiscount = cartDiscount }); 
+                            }
                         }
 
                         var it = new Utils.InvoiceItem
@@ -456,6 +468,18 @@ namespace MinshpWebApp.Api.Controllers
 
                         getTaxes.Clear();
                         taxes.Clear();
+                    }
+
+                    if (cartDiscount > 0)
+                    {
+                        var cartDiscountItem = new Utils.InvoiceItem
+                        {
+                            Description = "Remise panier",
+                            Reduction = (decimal)cartDiscount,
+                            TotalPriceItemProduct = (decimal)cartDiscount,
+                        };
+
+                         itemsInvoice.Add(cartDiscountItem);
                     }
 
                     var deliveryItem = new Utils.InvoiceItem
@@ -486,7 +510,7 @@ namespace MinshpWebApp.Api.Controllers
                         ShippedTo = $"{ctxReq.Shipment.ToAddress.Contact.Civility} {ctxReq.Shipment.ToAddress.Contact.LastName} {ctxReq.Shipment.ToAddress.Contact.FirstName}\n{ctxReq.Shipment.ToAddress.Location.Street}\n{ctxReq.Shipment.ToAddress.Location.PostalCode} {ctxReq.Shipment.ToAddress.Location.City}\n{ctxReq.Shipment.ToAddress.Location.CountryIsoCode}",
                         BilledTo = $"{cutomer.Civilite} {cutomer.LastName} {cutomer.FirstName}\n{billingAddress.Address}\n{billingAddress.PostalCode} {billingAddress.City}\n{billingAddress.Country}",
                         Items = itemsInvoice,
-                        TotalHT = (decimal)(totalHt + ctxReq.DeliveryAmount),
+                        TotalHT = (decimal)(totalHt + ctxReq.DeliveryAmount) - cartDiscount,
                         TVAPurcentage = (decimal)tvaPurcentage,
                         TVA = tvaAmount,
                         TotalTTC = totalTTC
@@ -504,9 +528,9 @@ namespace MinshpWebApp.Api.Controllers
                     //8 Mise à jour des stocks
                     await UpdateQuantities(itemsInvoice);
 
-
+                
                     //9 Envoie de l'e-mail
-                    await _mailViewModelBuilder.SendMailPayment("minamba.c@gmail.com", itemsInvoice, cutomer, billingAddress, deliveryAddress, orderIdStr, (decimal)tvaPurcentage, (decimal)totalTaxes);
+                    await _mailViewModelBuilder.SendMailPayment(cutomer.Email, itemsInvoice, cutomer, billingAddress, deliveryAddress, orderIdStr, (decimal)tvaPurcentage, (decimal)totalTaxes);
 
                     //10) nettoyage context cache
                     _cache.Remove(contextKey);
@@ -706,6 +730,21 @@ namespace MinshpWebApp.Api.Controllers
             };
 
             return carrierName;
+        }
+
+
+
+        private async Task<int> GetCartDiscount(List<Domain.Models.PromotionCode> promoCodes)
+        {
+            int totalDiscount = 0;
+
+            foreach(var pc in promoCodes)
+            {
+                if (pc.GeneralCartAmount > 0)
+                    totalDiscount += (int)pc.GeneralCartAmount;
+            }
+
+            return totalDiscount;
         }
     }
 }

@@ -31,6 +31,7 @@ namespace MinshpWebApp.Dal.Repositories
                 StartDate = p.StartDate,
                 EndDate = p.EndDate,
                 Purcentage = p.Purcentage,
+                GeneralCartAmount = p.GeneralCartAmount,
                 IsUsed = p.IsUsed,
             }).ToListAsync();
 
@@ -50,6 +51,7 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.StartDate != null) PromotionCodeToUpdate.StartDate = model.StartDate;
             if (model.EndDate != null) PromotionCodeToUpdate.EndDate = model.EndDate;
             if (model.Purcentage != null) PromotionCodeToUpdate.Purcentage = model.Purcentage;
+            if (model.GeneralCartAmount != null) PromotionCodeToUpdate.GeneralCartAmount = model.GeneralCartAmount;
             if (model.IsUsed != null) PromotionCodeToUpdate.IsUsed = model.IsUsed;
 
             await _context.SaveChangesAsync();
@@ -63,6 +65,7 @@ namespace MinshpWebApp.Dal.Repositories
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
                 Purcentage = model.Purcentage,
+                GeneralCartAmount = model.GeneralCartAmount,
                 IsUsed = model.IsUsed,
             };
         }
@@ -77,6 +80,7 @@ namespace MinshpWebApp.Dal.Repositories
                 StartDate = model.StartDate,
                 EndDate = model.EndDate,
                 Purcentage = model.Purcentage,
+                GeneralCartAmount = model.GeneralCartAmount,
                 IsUsed = model.IsUsed,
             };
 
@@ -91,6 +95,7 @@ namespace MinshpWebApp.Dal.Repositories
                 StartDate = newPromotionCode.StartDate,
                 EndDate = newPromotionCode.EndDate,
                 Purcentage = newPromotionCode.Purcentage,
+                GeneralCartAmount = newPromotionCode.GeneralCartAmount,
                 IsUsed = newPromotionCode.IsUsed,
             };
         }

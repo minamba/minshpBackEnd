@@ -38,6 +38,8 @@ public partial class Order
     public string? TrackingLink { get; set; }
     public string? LabelUrl { get; set; }                // URL étiquette
 
+    public int? CartDiscount { get; set; }
+
     public virtual Customer? Customer { get; set; }
 
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();

@@ -185,86 +185,96 @@ async Task SeedRolesAsync(IServiceProvider sp)
         if (!await roleMgr.RoleExistsAsync(r))
             await roleMgr.CreateAsync(new IdentityRole(r));
 }
-using (var scope = app.Services.CreateScope())
-{
-    await SeedRolesAsync(scope.ServiceProvider);
 
-    // client OpenIddict
-    var apps = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
-    var client = await apps.FindByClientIdAsync("react-spa");
-    var descriptor = new OpenIddictApplicationDescriptor
+try { 
+    using (var scope = app.Services.CreateScope())
     {
-        ClientId = "react-spa",
-        DisplayName = "React SPA",
-        ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
-        ClientType = OpenIddictConstants.ClientTypes.Public,
-        RedirectUris = { new Uri("http://localhost:5173/callback") },
-        PostLogoutRedirectUris = { new Uri("http://localhost:5173/") },
-        Permissions =
+        await SeedRolesAsync(scope.ServiceProvider);
+
+        // client OpenIddict
+        var apps = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+        var client = await apps.FindByClientIdAsync("react-spa");
+        var descriptor = new OpenIddictApplicationDescriptor
         {
-            OpenIddictConstants.Permissions.Endpoints.Authorization,
-            OpenIddictConstants.Permissions.Endpoints.Token,
-            OpenIddictConstants.Permissions.Endpoints.EndSession,
-            OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-            OpenIddictConstants.Permissions.GrantTypes.Password,
-            OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
-            OpenIddictConstants.Permissions.ResponseTypes.Code,
-            OpenIddictConstants.Permissions.Scopes.Profile,
-             OpenIddictConstants.Permissions.Scopes.Roles,
-            OpenIddictConstants.Permissions.Prefixes.Scope + "api"
-        },
-        Requirements = { OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange }
-    };
-    if (client is null) await apps.CreateAsync(descriptor);
-    else await apps.UpdateAsync(client, descriptor);
+            ClientId = "react-spa",
+            DisplayName = "React SPA",
+            ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
+            ClientType = OpenIddictConstants.ClientTypes.Public,
+            //RedirectUris = { new Uri("https://localhost:5173/callback") },
+            //PostLogoutRedirectUris = { new Uri("http://localhost:5173/") },
+            RedirectUris = { new Uri("https://minshp.com/callback") },
+            PostLogoutRedirectUris = { new Uri("https://minshp.com/") },
+
+            Permissions =
+            {
+                OpenIddictConstants.Permissions.Endpoints.Authorization,
+                OpenIddictConstants.Permissions.Endpoints.Token,
+                OpenIddictConstants.Permissions.Endpoints.EndSession,
+                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                OpenIddictConstants.Permissions.GrantTypes.Password,
+                OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                OpenIddictConstants.Permissions.ResponseTypes.Code,
+                OpenIddictConstants.Permissions.Scopes.Profile,
+                 OpenIddictConstants.Permissions.Scopes.Roles,
+                OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+            },
+            Requirements = { OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange }
+        };
+        if (client is null) await apps.CreateAsync(descriptor);
+        else await apps.UpdateAsync(client, descriptor);
 
 
-    // --- CLIENT CONFIDENTIEL pour appels serveur-à-serveur ---
-    var svcClient = await apps.FindByClientIdAsync("minshp-api-client");
-    var confidential = new OpenIddictApplicationDescriptor
-    {
-        ClientId = "minshp-api-client",
-        ClientType = OpenIddictConstants.ClientTypes.Confidential,
-        ClientSecret = "super-secret-change-me", // en dev OK. En prod: Hash + secret manager.
-
-        Permissions =
+        // --- CLIENT CONFIDENTIEL pour appels serveur-à-serveur ---
+        var svcClient = await apps.FindByClientIdAsync("minshp-api-client");
+        var confidential = new OpenIddictApplicationDescriptor
         {
-            // Endpoints
-            OpenIddictConstants.Permissions.Endpoints.Token,
+            ClientId = "minshp-api-client",
+            ClientType = OpenIddictConstants.ClientTypes.Confidential,
+            ClientSecret = "super-secret-change-me", // en dev OK. En prod: Hash + secret manager.
 
-            // Grant
-            OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
+            Permissions =
+            {
+                // Endpoints
+                OpenIddictConstants.Permissions.Endpoints.Token,
 
-            // Scopes
-            OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+                // Grant
+                OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
+
+                // Scopes
+                OpenIddictConstants.Permissions.Prefixes.Scope + "api"
+            }
+        };
+
+        if (svcClient is null) await apps.CreateAsync(confidential);
+        else await apps.UpdateAsync(svcClient, confidential);
+
+
+
+        var scopes = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
+        if (await scopes.FindByNameAsync("api") is null)
+        {
+            await scopes.CreateAsync(new OpenIddictScopeDescriptor
+            {
+                Name = "api",
+                DisplayName = "Access to Minshp API",
+                Resources = { "api-resource" }
+            });
         }
-    };
 
-    if (svcClient is null) await apps.CreateAsync(confidential);
-    else await apps.UpdateAsync(svcClient, confidential);
-
-
-
-    var scopes = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
-    if (await scopes.FindByNameAsync("api") is null)
-    {
-        await scopes.CreateAsync(new OpenIddictScopeDescriptor
+        // admin
+        var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+        var admin = await userMgr.FindByEmailAsync("minsceo@minshp.com");
+        if (admin is null)
         {
-            Name = "api",
-            DisplayName = "Access to Minshp API",
-            Resources = { "api-resource" }
-        });
+            admin = new AppUser { UserName = "mins@admin.com", Email = "minsceo@minshp.com", EmailConfirmed = true };
+            await userMgr.CreateAsync(admin, "cdjeneba19882025");
+            await userMgr.AddToRoleAsync(admin, "Admin");
+        }
     }
-
-    // admin
-    var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
-    var admin = await userMgr.FindByEmailAsync("minsceo@minshp.com");
-    if (admin is null)
-    {
-        admin = new AppUser { UserName = "mins@admin.com", Email = "minsceo@minshp.com", EmailConfirmed = true };
-        await userMgr.CreateAsync(admin, "cdjeneba19882025");
-        await userMgr.AddToRoleAsync(admin, "Admin");
-    }
+}
+catch(Exception ex)
+{
+    app.Logger.LogError(ex.Message);
 }
 
 // ------- pipeline (ordre important)

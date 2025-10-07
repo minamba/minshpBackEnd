@@ -17,6 +17,8 @@ namespace MinshpWebApp.Api.Builders.impl
         const string paymentFolder = "Payments";
         const string registrationFolder = "Registrations";
         const string resetFolder = "ForgotPassword";
+        private readonly IConfiguration _config;
+        private string _orderCallbackUrl;
 
 
 
@@ -31,28 +33,34 @@ namespace MinshpWebApp.Api.Builders.impl
         private string registrationSubject = "Confirmation d'enregistrement";
 
 
+
+        public MailViewModelBuilder(IConfiguration config)
+        {
+            _config = config;
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="recipient"></param>
         /// <returns></returns>
-        public async Task<string> SendMailRegistration(string mail)
+        public async Task<string> SendMailRegistration(MailRequest request)
         {
-            return await SendMail(mail, registrationFolder, registrationFile, registrationSubject, null, null ,null, null, null, null, null);
+            return await SendMail(request,request.Customer.Email, registrationFolder, registrationFile, registrationSubject, null, null ,null, null, null, null, null);
         }
 
 
         public async Task<string> SendMailPayment(string mail, List<Utils.InvoiceItem> items, CustomerViewModel customer, BillingAddress billing, DeliveryAddress delivery, Order order, decimal tva, decimal totalTaxes)
         {
             paymentSubject = paymentSubject;
-            return await SendMail(mail, paymentFolder, paymentFile, paymentSubject, items, customer,billing,delivery, order, tva, totalTaxes);
+            return await SendMail(null,mail, paymentFolder, paymentFile, paymentSubject, items, customer,billing,delivery, order, tva, totalTaxes);
         }
 
         public async Task<string> SendMailGroupRegistration(List<string> recipients)
         {
             foreach (var r in recipients)
             {
-                await SendMail(r, registrationFolder, registrationFile, registrationSubject, null, null, null, null, null,null, null);
+                await SendMail(null,r, registrationFolder, registrationFile, registrationSubject, null, null, null, null, null,null, null);
             }
 
             return "L'envoie des mails en masse s'est bien passé !";
@@ -61,12 +69,14 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
         //Cette methode sert pour tous les envois de mail sauf pour le reset password (mot de passe oublié) qui a sa propre méthode
-        private async Task<string> SendMail(string recipient, string folder, string fileName, string subject, List<Utils.InvoiceItem> items, CustomerViewModel customer, BillingAddress billing, DeliveryAddress delivery, Order order, decimal? tva, decimal? totalTaxes)
+        private async Task<string> SendMail(MailRequest request, string recipient, string folder, string fileName, string subject, List<Utils.InvoiceItem> items, CustomerViewModel customer, BillingAddress billing, DeliveryAddress delivery, Order order, decimal? tva, decimal? totalTaxes)
         {
             string basePath = AppContext.BaseDirectory;
             string filePath = Path.Combine(basePath, "Templates", folder, fileName);
             string htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
             decimal subTotal = 0;
+
+            _orderCallbackUrl = _config["Application:OrderCallbackUrl"];
 
             //POUR LA COMMANDE (les lignes produits) *************************************
             // culture pour le format monétaire (ex: "12,34 €")
@@ -129,7 +139,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 htmlContent = htmlContent.Replace("{{BILL_CITY}}", billing.City);
                 htmlContent = htmlContent.Replace("{{BILL_COUNTRY}}", billing.Country);
 
-                htmlContent = htmlContent.Replace("{{ORDER_LINK}}", "http://localhost:3000/account");
+                htmlContent = htmlContent.Replace("{{ORDER_LINK}}", _orderCallbackUrl);
                 htmlContent = htmlContent.Replace("{{SUPPORT_EMAIL}}", "support@minshp.com");
             }
             //POUR LA COMMANDE **********************************************************
@@ -139,8 +149,11 @@ namespace MinshpWebApp.Api.Builders.impl
             htmlContent = htmlContent.Replace("{{CURRENT_YEAR}}", DateTime.Now.Year.ToString());
             htmlContent = htmlContent.Replace("{{BASE_URL}}", "https://i.imgur.com/ub3X3gK.png");
             htmlContent = htmlContent.Replace("{{LOGIN_LINK}}", "http://localhost:3000/login");
-            htmlContent = htmlContent.Replace("{{FIRSTNAME}}", "Minamba");
-            htmlContent = htmlContent.Replace("{{LASTNAME}}", "Camara");
+            if (request != null)
+            {
+                htmlContent = htmlContent.Replace("{{FIRSTNAME}}", request.Customer.FirstName);
+                htmlContent = htmlContent.Replace("{{LASTNAME}}", request.Customer.LastName);
+            }
             //POUR LA REGISTRATION ******************************************************
 
             var message = new MimeMessage();
@@ -152,6 +165,7 @@ namespace MinshpWebApp.Api.Builders.impl
             {
                 HtmlBody = htmlContent
             };
+
 
             message.Body = bodyBuilder.ToMessageBody();
 

@@ -16,6 +16,8 @@
 
         public decimal? DeliveryAmount { get; set; }
 
+        public int? CartDiscount { get; set; }
+
 
 
         //PARTIE SHIPPING

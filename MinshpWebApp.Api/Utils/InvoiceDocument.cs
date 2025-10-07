@@ -55,7 +55,7 @@ namespace MinshpWebApp.Api.Utils
                     row.ConstantItem(140).Column(col =>
                     {
                         col.Item().Element(x =>
-                                x.Height(100).Image("wwwroot/images/logo.png", ImageScaling.FitHeight)
+                                x.Height(100).Image("wwwroot/Imgs/logo_facture.png", ImageScaling.FitHeight)
                             );
 
                     col.Item().PaddingTop(5).Text($"{SocietyName}").Bold();
