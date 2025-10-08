@@ -56,6 +56,28 @@ namespace MinshpWebApp.Api.Controllers
             return Ok(page);
         }
 
+        [Authorize]
+        [HttpGet("/ordersPagination/me")]
+        public async Task<IActionResult> GetMyOrdersPaginationAsync([FromQuery] PageRequest req, CancellationToken ct)
+        {
+            var aspNetUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(aspNetUserId)) return Unauthorized();
+
+            var customerId = await _orderViewModelBuilder.GetCustomerId(aspNetUserId);
+            if (customerId != null)
+            {
+                return Ok(new PageResult<OrderViewModel> { Items = Array.Empty<OrderViewModel>(), Page = req.Page, PageSize = req.PageSize, TotalCount = 0 });
+            }
+
+            // force côté serveur pour Account
+            req.Filter["CustomerId"] = customerId.ToString();
+
+            // relaye MinDate si présent : req.Filters["MinDate"] déjà mis par model binding si ton PageRequest le supporte
+
+            var page = await _orderViewModelBuilder.PageOrderIdsAsync(req, ct);
+            return Ok(page);
+        }
+
 
         [Authorize]
         [HttpPut("/order")]

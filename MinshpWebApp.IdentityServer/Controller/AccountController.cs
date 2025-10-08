@@ -1,19 +1,20 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Request;
 using MinshpWebApp.IdentityServer.Authentication;
 using MinshpWebApp.IdentityServer.Helper;
+using OpenIddict.Abstractions;
 using OpenIddict.Abstractions;
 using OpenIddict.Validation.AspNetCore;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
-using OpenIddict.Abstractions;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 
 namespace MinshpWebApp.IdentityServer.Controller;
@@ -27,6 +28,7 @@ public class AccountController : ControllerBase
     private readonly SignInManager<AppUser> _signInManager;
     private readonly IConfiguration _config;
     private readonly IHttpClientFactory _http;
+    private string _baseAddress;
 
     public AccountController(UserManager<AppUser> um, SignInManager<AppUser> sm, IHttpClientFactory http, ILogger<AccountController> logger, IConfiguration config)
     {
@@ -571,10 +573,12 @@ public class AccountController : ControllerBase
     // ---------- Helpers ----------
     private async Task<string?> GetClientCredentialsTokenAsync(CancellationToken ct)
     {
+
+        _baseAddress = _config["Application:ApiBaseUrl"];
         // Appel simple à /connect/token (IdentityServer) avec le client confidentiel
         var idp = _http.CreateClient(); // client ad hoc
         //idp.BaseAddress = new Uri("https://localhost:7183/"); // URL d’IdentityServer
-        idp.BaseAddress = new Uri("https://auth.minshp.com/"); // URL d’IdentityServer
+        idp.BaseAddress = new Uri(_baseAddress); // URL d’IdentityServer
         var form = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "client_credentials",

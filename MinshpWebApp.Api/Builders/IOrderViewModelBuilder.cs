@@ -1,6 +1,7 @@
 ﻿using MinshpWebApp.Api.Request;
 using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Domain.Models;
+using System.Threading.Tasks;
 
 namespace MinshpWebApp.Api.Builders
 {
@@ -16,5 +17,7 @@ namespace MinshpWebApp.Api.Builders
 
         Task<IEnumerable<Order>> GetOrdersByIdsAsync(IEnumerable<int> ids);
         Task<PageResult<OrderViewModel>> PageOrderIdsAsync(PageRequest req, CancellationToken ct = default);
+
+        Task<int> GetCustomerId(string idAspNetUser);
     }
 }

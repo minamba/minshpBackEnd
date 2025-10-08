@@ -288,6 +288,9 @@ namespace MinshpWebApp.Dal.Repositories
             {
                 ["OrderNumber"] = (qq, v) => string.IsNullOrWhiteSpace(v) ? qq : qq.Where(p => p.OrderNumber != null && p.OrderNumber.Equals(v, StringComparison.OrdinalIgnoreCase)),
                 ["Status"] = (qq, v) => string.IsNullOrWhiteSpace(v) ? qq : qq.Where(p => p.Status != null && p.Status.Equals(v, StringComparison.OrdinalIgnoreCase)),
+
+                // OPTIONNELS → s’appliquent seulement si fournis
+                ["CustomerId"] = (qq, v) => int.TryParse(v, out var id) ? qq.Where(p => p.CustomerId == id) : qq,
             };
 
             // On page d'abord sur les IDs (rapide + stable), tri par défaut

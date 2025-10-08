@@ -308,6 +308,12 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
 
+        public async Task<int> GetCustomerId(string idAspNetUser)
+        {
+
+            return (await _customerViewModelBuilder.GetCustomersAsync()).FirstOrDefault(c => c.IdAspNetUser == idAspNetUser).Id;
+        }
+
 
         private async Task<decimal?> CalculTotalAmount(IEnumerable<ProductVIewModel> lsproduct)
         {
