@@ -574,11 +574,11 @@ public class AccountController : ControllerBase
     private async Task<string?> GetClientCredentialsTokenAsync(CancellationToken ct)
     {
 
-        _baseAddress = _config["Application:ApiBaseUrl"];
+        var issuer = _config["Auth:Issuer"];
         // Appel simple à /connect/token (IdentityServer) avec le client confidentiel
         var idp = _http.CreateClient(); // client ad hoc
         //idp.BaseAddress = new Uri("https://localhost:7183/"); // URL d’IdentityServer
-        idp.BaseAddress = new Uri(_baseAddress); // URL d’IdentityServer
+        idp.BaseAddress = new Uri(issuer); // URL d’IdentityServer
         var form = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["grant_type"] = "client_credentials",

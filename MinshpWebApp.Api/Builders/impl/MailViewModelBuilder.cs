@@ -77,6 +77,7 @@ namespace MinshpWebApp.Api.Builders.impl
             decimal subTotal = 0;
 
             _orderCallbackUrl = _config["Application:OrderCallbackUrl"];
+            var baseUrl = _config["Stripe:FrontendBaseUrl"];
 
             //POUR LA COMMANDE (les lignes produits) *************************************
             // culture pour le format monétaire (ex: "12,34 €")
@@ -147,8 +148,8 @@ namespace MinshpWebApp.Api.Builders.impl
 
             //POUR LA REGISTRATION ******************************************************
             htmlContent = htmlContent.Replace("{{CURRENT_YEAR}}", DateTime.Now.Year.ToString());
-            htmlContent = htmlContent.Replace("{{BASE_URL}}", "https://i.imgur.com/ub3X3gK.png");
-            htmlContent = htmlContent.Replace("{{LOGIN_LINK}}", "http://localhost:3000/login");
+            htmlContent = htmlContent.Replace("{{BASE_URL}}", baseUrl+"/login");
+            htmlContent = htmlContent.Replace("{{LOGIN_LINK}}", "https://i.imgur.com/ub3X3gK.png");
             if (request != null)
             {
                 htmlContent = htmlContent.Replace("{{FIRSTNAME}}", request.Customer.FirstName);
@@ -197,7 +198,7 @@ namespace MinshpWebApp.Api.Builders.impl
             string htmlContent = await System.IO.File.ReadAllTextAsync(filePath);
             htmlContent = htmlContent.Replace("{{RESET_LINK}}", resetLink);
             htmlContent = htmlContent.Replace("{{CURRENT_YEAR}}", DateTime.Now.Year.ToString());
-            htmlContent = htmlContent.Replace("{{BASE_URL}}", "https://i.imgur.com/ub3X3gK.png");
+            htmlContent = htmlContent.Replace("{{LOGIN_LINK}}", "https://i.imgur.com/ub3X3gK.png");
 
 
             var msg = new MimeMessage();

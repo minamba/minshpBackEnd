@@ -60,26 +60,31 @@ namespace MinshpWebApp.Api.Builders.impl
         private async Task<List<string>> GetTaxeName(string idsTaxe)
         {
             string txs = idsTaxe;
+            List<string> taxes = new List<string>();
 
-            List<string> taxes = txs.Split(',')
-                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
-                                      .ToList();
-
-            List<string> finalTaxesNames = new List<string>();
-            Taxe tax = null;
-            var taxesLst  = await _taxeService.GetTaxesAsync();
-
-            foreach (var t in taxes)
+            if (txs != null)
             {
-                var number = int.Parse(t);
+                taxes = txs.Split(',')
+                                           .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                           .ToList();
 
-                tax = taxesLst.FirstOrDefault(t => t.Id == number);
-                //tax.Name = tax.Name.Split(':')[0].Trim();
-                finalTaxesNames.Add(tax.Name + ", ");
+                List<string> finalTaxesNames = new List<string>();
+                Taxe tax = null;
+                var taxesLst = await _taxeService.GetTaxesAsync();
 
+                foreach (var t in taxes)
+                {
+                    var number = int.Parse(t);
+
+                    tax = taxesLst.FirstOrDefault(t => t.Id == number);
+                    //tax.Name = tax.Name.Split(':')[0].Trim();
+                    finalTaxesNames.Add(tax.Name + ", ");
+
+                }
+
+                return finalTaxesNames;
             }
-
-            return finalTaxesNames;
+            return null;
         }
     }
 }

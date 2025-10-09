@@ -4,9 +4,28 @@ using MinshpWebApp.IdentityServer.Authentication;
 using MinshpWebApp.IdentityServer.Claims;
 using OpenIddict.Abstractions;
 using OpenIddict.Server;
+using Serilog;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+var logsDir = Path.Combine(AppContext.BaseDirectory, "logs");
+Directory.CreateDirectory(logsDir);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug() // ou Information en prod
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(Path.Combine(logsDir, "app-.log"),
+                  rollingInterval: RollingInterval.Day,
+                  retainedFileCountLimit: 14,
+                  shared: true)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+
 
 
 builder.Configuration
@@ -27,10 +46,14 @@ var spaPostLogout = builder.Configuration["Spa:PostLogoutUri"];
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+var apiBase = builder.Configuration["Application:ApiBaseUrl"]
+              ?? throw new InvalidOperationException("Application:ApiBaseUrl manquant");
+
 // URL de ton API (adapte si besoin)
 builder.Services.AddHttpClient("api", c =>
 {
-    c.BaseAddress = new Uri("https://localhost:7057/");
+    c.BaseAddress = new Uri(apiBase);
     c.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 });
 
@@ -74,25 +97,11 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
 // Claims factory (pour inclure les rôles dans le principal)
 builder.Services.AddScoped<IUserClaimsPrincipalFactory<AppUser>, CustomUserClaimsPrincipalFactory>();
 var corsOrigins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? Array.Empty<string>();
-//CORS — doit être AVANT Build()
-//var pcIp = "192.168.1.63";
-//builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
-//    p.WithOrigins(
-//        $"http://{pcIp}:3000",
-//        $"http://{pcIp}:5173",
-//        "http://localhost:3000",
-//        "https://localhost:3000",
-//        "http://localhost:5173",
-//        "https://localhost:5173"
-//    )
-//    .AllowAnyHeader()
-//    .AllowAnyMethod()
-//// .AllowCredentials() // pas nécessaire pour /connect/token
-//));
 
 
 builder.Services.AddCors(o => o.AddPolicy("WebCors", p =>
-    p.WithOrigins(corsOrigins)
+     p.WithOrigins(corsOrigins)
+    //p.SetIsOriginAllowed(_ => true) // pour tester uniquement
      .AllowAnyHeader()
      .AllowAnyMethod()
      .AllowCredentials()
@@ -288,6 +297,7 @@ app.UseRouting();
 app.UseCors("WebCors");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSerilogRequestLogging();
 
 // Swagger
 app.UseSwagger();

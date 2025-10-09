@@ -16,5 +16,7 @@ namespace MinshpWebApp.Api.Request
         public int? ContentCode { get; set; }
 
         public bool? Display { get; set; }
+
+        public int? IdImage { get; set; }
     }
 }

@@ -12,13 +12,31 @@ using MinshpWebApp.Domain.Services.impl;
 using MinshpWebApp.Domain.Services.Shipping;
 using MinshpWebApp.Domain.Services.Shipping.impl;
 using OpenIddict.Validation.AspNetCore;
+using QuestPDF.Infrastructure; // n'oublie pa
 using Stripe;
 using System.Net.Http.Headers;
-using QuestPDF.Infrastructure; // n'oublie pa
+using Serilog;
 
 
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
+
+
+
+var logsDir = Path.Combine(AppContext.BaseDirectory, "logs");
+Directory.CreateDirectory(logsDir);
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug() // ou Information en prod
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(Path.Combine(logsDir, "app-.log"),
+                  rollingInterval: RollingInterval.Day,
+                  retainedFileCountLimit: 14,
+                  shared: true)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 
 //La partie log
@@ -297,7 +315,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
+app.UseSerilogRequestLogging();
 app.UseStaticFiles(); // pour wwwroot si besoin
 
 app.MapFallbackToFile("index.html"); // indispensable pour React Router

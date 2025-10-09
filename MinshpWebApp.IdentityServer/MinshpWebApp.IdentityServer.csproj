@@ -25,6 +25,9 @@
 		<PackageReference Include="OpenIddict.Server.AspNetCore" Version="7.0.0" />
 		<PackageReference Include="OpenIddict.Validation.AspNetCore" Version="7.0.0" />
 		<PackageReference Include="QuestPDF" Version="2025.7.1" />
+		<PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
 		<PackageReference Include="Stripe.net" Version="49.0.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
 		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.6" />

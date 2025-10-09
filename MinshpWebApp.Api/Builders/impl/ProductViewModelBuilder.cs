@@ -298,6 +298,7 @@ namespace MinshpWebApp.Api.Builders.impl
             decimal? priceTtc = 0;
             MinshpWebApp.Domain.Models.SubCategory getFocusSubCategory = null;
             List<string> subCategoryTaxes = new List<string>();
+            List<Taxe> taxesList = new List<Taxe>();
             var texesFromDb = await _taxeService.GetTaxesAsync();
 
             var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
@@ -306,25 +307,33 @@ namespace MinshpWebApp.Api.Builders.impl
             {
                 getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idSubCategory);
 
-               subCategoryTaxes = getFocusSubCategory.IdTaxe.Split(',')
-                          .Select(x => x.Trim()) // Supprime les espaces éventuels
-                          .ToList();
+
+                if (getFocusSubCategory != null && string.IsNullOrEmpty(getFocusSubCategory.IdTaxe) == false)
+                {
+                    subCategoryTaxes = getFocusSubCategory.IdTaxe.Split(',')
+                               .Select(x => x.Trim()) // Supprime les espaces éventuels
+                               .ToList();
+                }
             }
 
 
-            List<string> categoryTaxes = getFocusCategory.IdTaxe.Split(',')
-                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
-                                      .ToList();
 
-            List<Taxe> taxesList = new List<Taxe>();
-
-            // j'ajoute les taxes de la category + TVA
-            foreach (var t in categoryTaxes) 
+            if (getFocusCategory != null && string.IsNullOrEmpty(getFocusCategory.IdTaxe) == false)
             {
-                var idTaxe = int.Parse(t);
-                var getTaxe = texesFromDb.FirstOrDefault(t => t.Id == idTaxe);
+                List<string> categoryTaxes = getFocusCategory.IdTaxe.Split(',')
+                                          .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                          .ToList();
 
-                taxesList.Add(getTaxe);
+                    taxesList = new List<Taxe>();
+
+                // j'ajoute les taxes de la category + TVA
+                foreach (var t in categoryTaxes)
+                {
+                    var idTaxe = int.Parse(t);
+                    var getTaxe = texesFromDb.FirstOrDefault(t => t.Id == idTaxe);
+
+                    taxesList.Add(getTaxe);
+                }
             }
 
 
@@ -667,23 +676,26 @@ namespace MinshpWebApp.Api.Builders.impl
             var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
             var getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idSubCategory);
 
-            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
-                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
-                                      .ToList();
-
- 
-            //TAXE DE BASE
-
-            foreach (var t in taxes)
+            if (getFocusCategory != null && string.IsNullOrEmpty(getFocusCategory.IdTaxe) == false)
             {
-                var idTaxe = int.Parse(t);
-                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+                List<string> taxes = getFocusCategory.IdTaxe.Split(',')
+                                          .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                          .ToList();
 
-                if(!getTaxe.Name.ToLower().Contains("tva"))
+
+                //TAXE DE BASE
+
+                foreach (var t in taxes)
                 {
-                    if(getTaxe.Name.ToLower().Contains("éco-participation"))
+                    var idTaxe = int.Parse(t);
+                    var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+
+                    if (!getTaxe.Name.ToLower().Contains("tva"))
                     {
-                        taxeEcoParticipation = "dont " + getTaxe.Name.Split(":")[0] + getTaxe.Amount.ToString() + "€";
+                        if (getTaxe.Name.ToLower().Contains("éco-participation"))
+                        {
+                            taxeEcoParticipation = "dont " + getTaxe.Name.Split(":")[0] + getTaxe.Amount.ToString() + "€";
+                        }
                     }
                 }
             }
@@ -691,7 +703,7 @@ namespace MinshpWebApp.Api.Builders.impl
             //TAXE COMPLEMENTAIRE (sous catégorie) : Cette va servir a recuperer les taxes (complémentaire) de la subCategory. On va faire une addition avec les taxes de la categorie. Les taxes de la catégorie parent est forcément appliquable sur l'enfant, mais l'inverse n'est pas vrai
             List<string> taxesSubCategory = new List<string>();
 
-            if (getFocusSubCategory != null)
+            if (getFocusSubCategory != null && string.IsNullOrEmpty(getFocusSubCategory.IdTaxe) == false)
             {
                 taxesSubCategory = getFocusSubCategory.IdTaxe.Split(',')
                                       .Select(x => x.Trim()) // Supprime les espaces éventuels
@@ -723,23 +735,30 @@ namespace MinshpWebApp.Api.Builders.impl
             var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
             var getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idSubCategory);
 
-            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
+
+
+
+            if (getFocusCategory != null && string.IsNullOrEmpty(getFocusCategory.IdTaxe) == false)
+            {
+
+                List<string> taxes = getFocusCategory.IdTaxe.Split(',')
                                       .Select(x => x.Trim()) // Supprime les espaces éventuels
                                       .ToList();
 
 
-            //TAXE DE BASE
+                //TAXE DE BASE
 
-            foreach (var t in taxes)
-            {
-                var idTaxe = int.Parse(t);
-                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
-
-                if (!getTaxe.Name.ToLower().Contains("tva"))
+                foreach (var t in taxes)
                 {
-                    if (getTaxe.Name.ToLower().Contains("éco-participation"))
+                    var idTaxe = int.Parse(t);
+                    var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+
+                    if (!getTaxe.Name.ToLower().Contains("tva"))
                     {
-                        taxeEcoParticipation =  getTaxe.Amount;
+                        if (getTaxe.Name.ToLower().Contains("éco-participation"))
+                        {
+                            taxeEcoParticipation = getTaxe.Amount;
+                        }
                     }
                 }
             }
@@ -747,7 +766,7 @@ namespace MinshpWebApp.Api.Builders.impl
             //TAXE COMPLEMENTAIRE (sous catégorie) : Cette va servir a recuperer les taxes (complémentaire) de la subCategory. On va faire une addition avec les taxes de la categorie. Les taxes de la catégorie parent est forcément appliquable sur l'enfant, mais l'inverse n'est pas vrai
             List<string> taxesSubCategory = new List<string>();
 
-            if (getFocusSubCategory != null)
+            if (getFocusSubCategory != null && string.IsNullOrEmpty(getFocusSubCategory.IdTaxe) == false)
             {
                 taxesSubCategory = getFocusSubCategory.IdTaxe.Split(',')
                                       .Select(x => x.Trim()) // Supprime les espaces éventuels
@@ -778,22 +797,31 @@ namespace MinshpWebApp.Api.Builders.impl
             string tva = null;
             var getFocusCategory = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
             var getFocusSubCategory = (await _subCategoryService.GetSubCategoriesAsync()).FirstOrDefault(c => c.Id == idCategory);
+            List<string> taxes = new List<string>();
 
-            List<string> taxes = getFocusCategory.IdTaxe.Split(',')
-                                      .Select(x => x.Trim()) // Supprime les espaces éventuels
-                                      .ToList();
+            if (getFocusCategory != null && string.IsNullOrEmpty(getFocusCategory.IdTaxe) == false)
+            {
+                 taxes = getFocusCategory.IdTaxe.Split(',')
+                                          .Select(x => x.Trim()) // Supprime les espaces éventuels
+                                          .ToList();
+
+            }
 
 
             //TAXE DE BASE
 
-            foreach (var t in taxes)
+            if (taxes.Count > 0)
             {
-                var idTaxe = int.Parse(t);
-                var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
 
-                if (getTaxe.Name.ToLower().Contains("tva"))
+                foreach (var t in taxes)
                 {
-                    return getTaxe.Purcentage;
+                    var idTaxe = int.Parse(t);
+                    var getTaxe = (await _taxeService.GetTaxesAsync()).FirstOrDefault(t => t.Id == idTaxe);
+
+                    if (getTaxe.Name.ToLower().Contains("tva"))
+                    {
+                        return getTaxe.Purcentage;
+                    }
                 }
             }
 

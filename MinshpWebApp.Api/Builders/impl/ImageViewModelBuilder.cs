@@ -40,15 +40,17 @@ namespace MinshpWebApp.Api.Builders.impl
         {
 
             var imageToGetForResetOldImage = (await _imageService.GetImagesAsync()).FirstOrDefault(c => c.IdCategory == model.IdCategory);
-            imageToGetForResetOldImage.IdCategory = null;
-            await _imageService.UpdateImagesAsync(imageToGetForResetOldImage);
+
+            if (imageToGetForResetOldImage != null)
+            {
+                imageToGetForResetOldImage.IdCategory = null;
+                await _imageService.UpdateImagesAsync(imageToGetForResetOldImage);
+            }
 
 
             var image = _mapper.Map<Image>(model);
-
-
-
             return await _imageService.UpdateImagesAsync(image);
+    
         }
     }
 }
