@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MinshpWebApp.Api.Request;
+using MinshpWebApp.Api.Utils;
 using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Domain.Models;
@@ -32,6 +33,9 @@ namespace MinshpWebApp.Api.Builders.impl
         public async Task<Customer> AddCustomersAsync(CustomerRequest model)
         {
             var customer = _mapper.Map<Customer>(model);
+
+            customer.FirstName = StringFormatting.Capitalize(model.FirstName);
+            customer.LastName = StringFormatting.Capitalize(model.LastName);
 
             var result = await _customerService.AddCustomersAsync(customer);
 
@@ -91,7 +95,9 @@ namespace MinshpWebApp.Api.Builders.impl
                     await _newLetterViewModelBuilder.UpdateNewLettersAsync(new NewLetterRequest { Id = newLetter.Id, Mail = model.Email, OldMAil= getCustomer.Email, Suscribe = model.Suscribe });
             }
          
-           
+            customer.FirstName = StringFormatting.Capitalize(model.FirstName);
+            customer.LastName = StringFormatting.Capitalize(model.LastName);
+
             return await _customerService.UpdateCustomersAsync(customer);
         }
 

@@ -26,6 +26,8 @@ var builder = WebApplication.CreateBuilder(args);
 var logsDir = Path.Combine(AppContext.BaseDirectory, "logs");
 Directory.CreateDirectory(logsDir);
 
+
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug() // ou Information en prod
     .Enrich.FromLogContext()

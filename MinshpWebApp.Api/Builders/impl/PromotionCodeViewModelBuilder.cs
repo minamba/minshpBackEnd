@@ -93,7 +93,7 @@ namespace MinshpWebApp.Api.Builders.impl
             }
 
 
-            if (getCategory != null)
+            if (getSubCategory != null)
             {
                 var subCategoryRequest = new SubCategoryRequest();
                 subCategoryRequest.Id = getCategory.Id;
@@ -111,11 +111,16 @@ namespace MinshpWebApp.Api.Builders.impl
 
             var list = _mapper.Map<IEnumerable<PromotionCodeViewModel>>(result);
 
+            var products = (await _productVm.GetProductsAsync());
+            var categories = (await _categoryVm.GetCategoriesAsync());
+            var subcategories = (await _subCategoryVm.GetSubCategoriesAsync());
+
+
             foreach (var item in list) 
             {
-                var getProudct = (await _productVm.GetProductsAsync()).FirstOrDefault(p => p.IdPromotionCode == item.Id);
-                var getCategory = (await _categoryVm.GetCategoriesAsync()).FirstOrDefault(p => p.IdPromotionCode == item.Id);
-                var getSubCategory = (await _subCategoryVm.GetSubCategoriesAsync()).FirstOrDefault(p => p.IdPromotionCode == item.Id);
+                var getProudct = products.FirstOrDefault(p => p.IdPromotionCode == item.Id);
+                var getCategory = categories.FirstOrDefault(p => p.IdPromotionCode == item.Id);
+                var getSubCategory = subcategories.FirstOrDefault(p => p.IdPromotionCode == item.Id);
                 item.Product = getProudct;
                 item.Category = getCategory;
                 item.SubCategory = getSubCategory;

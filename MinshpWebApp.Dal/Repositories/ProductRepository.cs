@@ -36,7 +36,7 @@ namespace MinshpWebApp.Dal.Repositories
                 .Select(p => new Product
             {
                 Id = p.Id,
-                Name = p.Name,
+                PreviewDescription = p.PreviewDescription,
                 Description = p.Description,
                 IdCategory = p.Id_Category,
                 Price = p.Price,
@@ -68,7 +68,7 @@ namespace MinshpWebApp.Dal.Repositories
             // On met à jour ses propriétés
             if (model.Description != null) ProductToUpdate.Description = model.Description;
             if (model.Price != null) ProductToUpdate.Price = model.Price;
-            if (model.Name != null) ProductToUpdate.Name = model.Name;
+            if (model.PreviewDescription != null) ProductToUpdate.PreviewDescription = model.PreviewDescription;
             if (model.Main != null) ProductToUpdate.Main = model.Main;
             if (model.IdCategory != null) ProductToUpdate.Id_Category = model.IdCategory;
             if (model.Brand != null) ProductToUpdate.Brand = model.Brand;
@@ -95,7 +95,7 @@ namespace MinshpWebApp.Dal.Repositories
             return new Product()
             { 
                 Id = model.Id,
-                Name = model.Name,
+                PreviewDescription = model.PreviewDescription,
                 Description = model.Description,
                 Price = model.Price,
                 IdCategory= model.IdCategory,
@@ -118,7 +118,7 @@ namespace MinshpWebApp.Dal.Repositories
             var newProduct = new Dal.Entities.Product
             {
                 Id = model.Id,
-                Name = model.Name,
+                PreviewDescription = model.PreviewDescription,
                 Description = model.Description,
                 Price = model.Price,
                 Id_Category = model.IdCategory,
@@ -150,7 +150,7 @@ namespace MinshpWebApp.Dal.Repositories
             return new Product() 
             {
                 Id = newStock.Id,
-                Name = model.Name,
+                PreviewDescription = model.PreviewDescription,
                 Description = model.Description,
                 Price = model.Price,
                 IdCategory = model.IdCategory,
@@ -192,7 +192,7 @@ namespace MinshpWebApp.Dal.Repositories
                 .Select(p => new Product
                 {
                     Id = p.Id,
-                    Name = p.Name,
+                    PreviewDescription = p.PreviewDescription,
                     Description = p.Description,
                     IdCategory = p.Id_Category,
                     Price = p.Price,
@@ -222,7 +222,7 @@ namespace MinshpWebApp.Dal.Repositories
             // champs de recherche génériques
             var search = new Expression<Func<Dal.Entities.Product, string?>>[]
             {
-        p => p.Name, p => p.Description, p => p.Brand, p => p.Model, p => p.Main.ToString()
+        p => p.PreviewDescription, p => p.Description, p => p.Brand, p => p.Model, p => p.Main.ToString()
             };
 
             // filtres génériques (clé = Filter.<Key> côté front)

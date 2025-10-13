@@ -10,12 +10,17 @@ namespace MinshpWebApp.Api.Builders.impl
     {
         private IMapper _mapper;
         private IProductFeatureService _productFeatureService;
+        private IFeatureService _featureService;
+        private ICategoryService _categoryService;
+        private IProductService _productService;
 
-
-        public ProductFeatureViewModelBuilder(IProductFeatureService productFeatureService, IMapper mapper)
+        public ProductFeatureViewModelBuilder(IProductFeatureService productFeatureService, IProductService productService, ICategoryService categoryService, IFeatureService featureService, IMapper mapper)
         {
             _mapper = mapper;
             _productFeatureService = productFeatureService;
+            _featureService = featureService;
+            _categoryService = categoryService;
+            _productService = productService;
         }
 
 
@@ -35,9 +40,33 @@ namespace MinshpWebApp.Api.Builders.impl
 
         public async Task<IEnumerable<ProductFeatureViewModel>> GetProductFeaturesAsync()
         {
-            var result = await _productFeatureService.GetProductFeaturesAsync();
+            var products = await _productService.GetProductsAsync();
+            var categories = await _categoryService.GetCategoriesAsync();
+            var features = await _featureService.GetFeaturesAsync();
 
-            return _mapper.Map<IEnumerable<ProductFeatureViewModel>>(result);
+            var result = await _productFeatureService.GetProductFeaturesAsync();
+ 
+            var finalResult =  _mapper.Map<IEnumerable<ProductFeatureViewModel>>(result);
+
+            foreach(var fr in finalResult)
+            {
+                var product = products.FirstOrDefault(p => p.Id == fr.IdProduct);
+                var category = categories.FirstOrDefault(c => c.Id == product.IdCategory);
+                var feature = features.FirstOrDefault(f => f.Id == fr.IdFeature);
+
+                fr.Feature = feature.Description;
+                fr.Category = category.Name;
+                fr.Feature = feature.Description;
+                fr.Product = product.Brand + " - " + product.Model;
+            }
+
+            finalResult.OrderBy(r => r.Category)
+                .ThenBy(r => r.Product)
+                .ThenBy(r => r.Feature);
+
+
+            return finalResult;
+        
         }
 
         public async Task<ProductFeature> UpdateProductFeaturesAsync(ProductFeatureRequest model)

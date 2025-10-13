@@ -23,7 +23,7 @@ namespace MinshpWebApp.Dal.Repositories
 
         public async Task<IEnumerable<PromotionCode>> GetPromotionCodesAsync()
         {
-            var PromotionCodeEntities = await _context.PromotionCodes.Select(p => new PromotionCode
+            var PromotionCodeEntities = await _context.PromotionCodes.AsNoTracking().Select(p => new PromotionCode
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -85,7 +85,7 @@ namespace MinshpWebApp.Dal.Repositories
             };
 
             _context.PromotionCodes.Add(newPromotionCode);
-            _context.SaveChanges();
+           await  _context.SaveChangesAsync();
 
             return new PromotionCode()
             {

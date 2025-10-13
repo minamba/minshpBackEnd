@@ -106,7 +106,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 var productVm = new ProductVIewModel()
                 {
                     Id = p.Id,
-                    Name = p.Name,
+                    PreviewDescription = p.PreviewDescription,
                     Description = p.Description,
                     Price = Math.Round((decimal)p.Price, 2),
                     PriceTtc = await GetPriceTtc(p.IdCategory, p.IdSubCategory, p.Price),
@@ -209,7 +209,7 @@ namespace MinshpWebApp.Api.Builders.impl
                 var vm = new ProductVIewModel
                 {
                     Id = p.Id,
-                    Name = p.Name,
+                    PreviewDescription = p.PreviewDescription,
                     Description = p.Description,
                     Price = Math.Round((decimal)(p.Price ?? 0), 2),
                     PriceTtc = await GetPriceTtc(p.IdCategory, p.IdSubCategory, p.Price),

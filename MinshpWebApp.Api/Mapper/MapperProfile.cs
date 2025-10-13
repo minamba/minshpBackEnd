@@ -13,7 +13,7 @@ namespace MinshpWebApp.Api.Mapper
         {
             CreateMap<ProductRequest, Product>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.PreviewDescription, dest => dest.MapFrom(x => x.PreviewDescription))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Stock, dest => dest.MapFrom(x => x.Stock))
               .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
@@ -29,7 +29,7 @@ namespace MinshpWebApp.Api.Mapper
 
             CreateMap<ProductDto, Product>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.PreviewDescription, dest => dest.MapFrom(x => x.PreviewDescription))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Stock, dest => dest.MapFrom(x => x.Stock))
               .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
@@ -46,7 +46,7 @@ namespace MinshpWebApp.Api.Mapper
 
             CreateMap<ProductDto, ProductVIewModel>()
               .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-              .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+              .ForMember(x => x.PreviewDescription, dest => dest.MapFrom(x => x.PreviewDescription))
               .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
               .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
               .ForMember(x => x.Model, dest => dest.MapFrom(x => x.Model))

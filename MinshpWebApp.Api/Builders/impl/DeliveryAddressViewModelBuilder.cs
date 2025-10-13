@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using MinshpWebApp.Api.Request;
+using MinshpWebApp.Api.Utils;
 using MinshpWebApp.Api.ViewModels;
+using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
 
@@ -17,14 +19,18 @@ namespace MinshpWebApp.Api.Builders.impl
             _deliveryAddressService = deliveryAddressService;
         }
 
-        public async Task<DeliveryAddress> AddDeliveryAddresssAsync(DeliveryAddressRequest model)
+        public async Task<Domain.Models.DeliveryAddress> AddDeliveryAddresssAsync(DeliveryAddressRequest model)
         {
             var counter = (await _deliveryAddressService.GetDeliveryAddressesAsync()).Where(p => p.IdCustomer == model.IdCustomer).Count();
 
             if (counter == 0)
                 model.Favorite = true;
 
-            return await _deliveryAddressService.AddDeliveryAddresssAsync(_mapper.Map<DeliveryAddress>(model));
+
+            model.FirstName = StringFormatting.Capitalize(model.FirstName);
+            model.LastName = StringFormatting.Capitalize(model.LastName);
+
+            return await _deliveryAddressService.AddDeliveryAddresssAsync(_mapper.Map<Domain.Models.DeliveryAddress>(model));
         }
 
         public async Task<bool> DeleteDeliveryAddresssAsync(int idDeliveryAddress)
@@ -39,7 +45,7 @@ namespace MinshpWebApp.Api.Builders.impl
             return _mapper.Map<IEnumerable<DeliveryAddressViewModel>>(result);
         }
 
-        public async Task<DeliveryAddress> UpdateDeliveryAddressAsync(DeliveryAddressRequest model)
+        public async Task<Domain.Models.DeliveryAddress> UpdateDeliveryAddressAsync(DeliveryAddressRequest model)
         {
 
             if (model.Favorite == true)
@@ -51,12 +57,16 @@ namespace MinshpWebApp.Api.Builders.impl
                     if (d.Id != model.Id && d.IdCustomer == model.IdCustomer)
                     {
                         d.Favorite = false;
-                        await _deliveryAddressService.UpdateDeliveryAddressAsync(_mapper.Map<DeliveryAddress>(d));
+                        await _deliveryAddressService.UpdateDeliveryAddressAsync(_mapper.Map<Domain.Models.DeliveryAddress>(d));
                     }
                 }
             }
 
-            var _deliveryAddress = _mapper.Map<DeliveryAddress>(model);
+            var _deliveryAddress = _mapper.Map<Domain.Models.DeliveryAddress>(model);
+
+            _deliveryAddress.FirstName = StringFormatting.Capitalize(model.FirstName);
+            _deliveryAddress.LastName = StringFormatting.Capitalize(model.LastName);
+
             var result = await _deliveryAddressService.UpdateDeliveryAddressAsync(_deliveryAddress);
 
             return result;

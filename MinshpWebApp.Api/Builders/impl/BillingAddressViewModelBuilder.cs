@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MinshpWebApp.Api.Request;
+using MinshpWebApp.Api.Utils;
 using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;

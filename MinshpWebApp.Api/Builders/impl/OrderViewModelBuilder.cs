@@ -220,7 +220,7 @@ namespace MinshpWebApp.Api.Builders.impl
                     var prod = new ProductVIewModel
                     {
                         Id = p.Id,
-                        Name = p.Name,
+                        PreviewDescription = p.PreviewDescription,
                         Brand = p.Brand,
                         Model = p.Model,
                         Description = p.Description,

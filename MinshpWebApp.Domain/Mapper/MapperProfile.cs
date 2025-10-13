@@ -12,7 +12,7 @@ namespace MinshpWebApp.Domain.Mapper
         {
             CreateMap<Product, ProductDto>()
                .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
-               .ForMember(x => x.Name, dest => dest.MapFrom(x => x.Name))
+               .ForMember(x => x.PreviewDescription, dest => dest.MapFrom(x => x.PreviewDescription))
                .ForMember(x => x.Description, dest => dest.MapFrom(x => x.Description))
                .ForMember(x => x.Price, dest => dest.MapFrom(x => x.Price))
                .ForMember(x => x.Main, dest => dest.MapFrom(x => x.Main))
