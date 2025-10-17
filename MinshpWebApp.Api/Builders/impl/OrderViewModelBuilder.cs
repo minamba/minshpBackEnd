@@ -105,20 +105,20 @@ namespace MinshpWebApp.Api.Builders.impl
 
 
                 //mis a jour des differentes informations de tracking et du status, dans le cas ou ça n'a pas pu etre recupéré lors de la creation de commande
-                if (Order != null && Order.BoxtalShipmentId != null)
-                {
-                    var tracking = await _shippingProvider.GetShippingTrackingAsync(Order.BoxtalShipmentId);
+                //if (Order != null && Order.BoxtalShipmentId != null)
+                //{
+                //    var tracking = await _shippingProvider.GetShippingTrackingAsync(Order.BoxtalShipmentId);
 
-                    if (tracking != null)
-                    {
-                        var trackingStatus = TrackingStatus.GetTrackingStatus(tracking.Status);
+                //    if (tracking != null)
+                //    {
+                //        var trackingStatus = TrackingStatus.GetTrackingStatus(tracking.Status);
 
-                         Order.TrackingNumber = tracking.TrackingNumber;
-                         Order.TrackingLink = tracking.PackageTrackingUrl;
-                         Order.Status = trackingStatus;
-                         _orderService.UpdateOrdersAsync(Order);
-                    }
-                }
+                //         Order.TrackingNumber = tracking.TrackingNumber;
+                //         Order.TrackingLink = tracking.PackageTrackingUrl;
+                //         Order.Status = trackingStatus;
+                //         _orderService.UpdateOrdersAsync(Order);
+                //    }
+                //}
 
 
                 var ordervm = new OrderViewModel
@@ -252,19 +252,19 @@ namespace MinshpWebApp.Api.Builders.impl
 
                 // tracking identique à ta version non-paginée
 
-                if (order != null && order.BoxtalShipmentId != null)
-                {
-                    var tracking = await _shippingProvider.GetShippingTrackingAsync(order.BoxtalShipmentId);
-                    if (tracking != null)
-                    {
-                        var trackingStatus = TrackingStatus.GetTrackingStatus(tracking.Status);
+                //if (order != null && order.BoxtalShipmentId != null)
+                //{
+                //    var tracking = await _shippingProvider.GetShippingTrackingAsync(order.BoxtalShipmentId);
+                //    if (tracking != null)
+                //    {
+                //        var trackingStatus = TrackingStatus.GetTrackingStatus(tracking.Status);
    
-                        order.TrackingNumber = tracking.TrackingNumber;
-                        order.TrackingLink = tracking.PackageTrackingUrl;
-                        order.Status = trackingStatus;
-                        await _orderService.UpdateOrdersAsync(order); // ct si dispo
-                    }
-                }
+                //        order.TrackingNumber = tracking.TrackingNumber;
+                //        order.TrackingLink = tracking.PackageTrackingUrl;
+                //        order.Status = trackingStatus;
+                //        await _orderService.UpdateOrdersAsync(order); // ct si dispo
+                //    }
+                //}
                 
 
                 var vm = new OrderViewModel

@@ -5,6 +5,7 @@ using MinshpWebApp.Dal.Entities;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Services;
 using Category = MinshpWebApp.Domain.Models.Category;
+using Image = MinshpWebApp.Domain.Models.Image;
 
 namespace MinshpWebApp.Api.Builders.impl
 {
@@ -14,14 +15,16 @@ namespace MinshpWebApp.Api.Builders.impl
         private ICategoryService _categoryService;
         private ITaxeService _taxeService;
         private IPromotionCodeService _promotionCodeService;
+        private IImageService _imageService;
 
 
-        public CategoryViewModelBuilder(ICategoryService categoryService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IMapper mapper)
+        public CategoryViewModelBuilder(ICategoryService categoryService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IImageService imageService, IMapper mapper)
         {
             _mapper = mapper;
             _categoryService = categoryService;
             _taxeService = taxeService;
             _promotionCodeService = promotionCodeService;
+            _imageService = imageService;
         }
 
         public async Task<Category> AddCategorysAsync(CategoryRequest model)
@@ -53,6 +56,27 @@ namespace MinshpWebApp.Api.Builders.impl
 
         public async Task<Domain.Models.Category> UpdateCategorysAsync(CategoryRequest model)
         {
+            var imageToReinitializeToNull = (await _imageService.GetImagesAsync()).Where(i => i.IdCategory == model.Id).ToList();
+
+            if (imageToReinitializeToNull != null)
+            {
+
+                foreach (var i in imageToReinitializeToNull)
+                {
+                    var image = new Image()
+                    {
+                        Id = i.Id,
+                        IdCategory = null,
+                        ComeFromCategory = true
+                    };
+
+
+                    await _imageService.UpdateImagesAsync(image);
+                }
+            }
+
+            await _imageService.UpdateImagesAsync(new Image() { Id = (int)model.IdImage, IdCategory = model.Id, ComeFromCategory = true });
+
             return await _categoryService.UpdateCategorysAsync(_mapper.Map<Category>(model));
         }
 

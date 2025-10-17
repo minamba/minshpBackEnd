@@ -257,7 +257,7 @@ namespace MinshpWebApp.Api.Mapper
             CreateMap<ProductFeatureRequest, ProductFeature>()
                .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
                .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct))
-               .ForMember(x => x.IdFeature, dest => dest.MapFrom(x => x.Id_feature));
+               .ForMember(x => x.IdFeature, dest => dest.MapFrom(x => x.IdFeature));
 
 
 

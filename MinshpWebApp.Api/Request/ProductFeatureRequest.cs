@@ -6,6 +6,6 @@
 
         public int? IdProduct { get; set; }
 
-        public int? Id_feature { get; set; }
+        public int? IdFeature { get; set; }
     }
 }

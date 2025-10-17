@@ -1,5 +1,7 @@
 ﻿namespace MinshpWebApp.Api.Utils
 {
+
+    /////////////////////CETTE N'EST PLUS UTILE AVEC LA V3 CAR JE RECUPERE L'URL DIRECTEMENT DANS LE ENDPOINT TODO : CLEANER ////////////////////// 
     public static class TrackingLink
     {
         /// <summary>

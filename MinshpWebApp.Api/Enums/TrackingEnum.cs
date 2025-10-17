@@ -11,6 +11,7 @@ namespace MinshpWebApp.Api.Enums
         OUT_FOR_DELIVERY,
         FAILED_ATTEMPT,
         REACHED_DELIVERY_PICKUP_POINT,
-        DELIVERED
+        DELIVERED,
+        PENDING
     }
 }

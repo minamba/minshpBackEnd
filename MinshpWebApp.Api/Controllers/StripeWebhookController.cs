@@ -319,6 +319,9 @@ namespace MinshpWebApp.Api.Controllers
                         order.BoxtalShipmentId = ship.ShipmentId;
                         order.Carrier = await GetCarrier(Enum.Parse<CarrierEnum>(ctxReq.OperatorCode));
                         order.ServiceCode = ctxReq.ServiceCode;
+                        order.Status = TrackingStatus.GetTrackingStatus(ship.Status);
+                        order.TrackingNumber = ship.TrackingNumber;
+                        order.LabelUrl = ship.LabelUrl;
                         await _orderRepo.UpdateOrdersAsync(order);
                     }
 

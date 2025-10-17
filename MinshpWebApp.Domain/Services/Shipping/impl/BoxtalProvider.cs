@@ -925,7 +925,7 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
                     }
                 },
 
-                externalId = srcShipment.ExternalId,
+                externalId = cmd.ExternalId,
 
                 fromAddress = new
                 {
@@ -1023,9 +1023,6 @@ namespace MinshpWebApp.Domain.Services.Shipping.impl
             var result = BoxtalResponseParser.MapShipmentResultV3(text);
             return result;
         }
-
-
-
 
 
         ///* -------- CREATE SHIPMENT v1 -------- */

@@ -20,4 +20,8 @@ public partial class Image
     public bool? Display { get; set; }
     public int? IdCategory { get; set; }
     public int? IdSubCategory { get; set; }
+
+    public bool ComeFromCategory { get; set; }
+
+    public bool ComeFromSubCategory { get; set; }
 }

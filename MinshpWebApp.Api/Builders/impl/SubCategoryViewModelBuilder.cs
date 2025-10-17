@@ -13,14 +13,16 @@ namespace MinshpWebApp.Api.Builders.impl
         private ISubCategoryService _subCategoryService;
         private ITaxeService _taxeService;
         private IPromotionCodeService _promotionCodeService;
+        private IImageService _imageService;
 
 
-        public SubCategoryViewModelBuilder(ISubCategoryService subCategoryService, IMapper mapper, IPromotionCodeService promotionCodeService, ITaxeService taxeService)
+        public SubCategoryViewModelBuilder(ISubCategoryService subCategoryService, IMapper mapper, IPromotionCodeService promotionCodeService, IImageService imageService , ITaxeService taxeService)
         {
             _mapper = mapper;
             _subCategoryService = subCategoryService;
             _promotionCodeService = promotionCodeService;
             _taxeService = taxeService;
+            _imageService = imageService;
         }
 
         public async Task<SubCategory> AddSubCategorysAsync(SubCategoryRequest model)
@@ -53,6 +55,23 @@ namespace MinshpWebApp.Api.Builders.impl
 
         public async Task<Domain.Models.SubCategory> UpdateSubCategorysAsync(SubCategoryRequest model)
         {
+
+            var imageToReinitializeToNull = (await _imageService.GetImagesAsync()).Where(i => i.IdCategory == model.Id);
+
+            foreach (var i in imageToReinitializeToNull)
+            {
+                var image = new Image()
+                {
+                    Id = i.Id,
+                    IdSubCategory = null,
+                    ComeFromSubCategory = true
+                };
+
+                await _imageService.UpdateImagesAsync(image);
+            }
+
+            await _imageService.UpdateImagesAsync(new Image() {Id = (int)model.IdImage, IdSubCategory = model.Id, ComeFromSubCategory = true});
+
             return await _subCategoryService.UpdateSubCategorysAsync(_mapper.Map<SubCategory>(model));
         }
 

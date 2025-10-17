@@ -25,7 +25,7 @@ namespace MinshpWebApp.Domain.Models
     public class SubscriptionContent
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; } = string.Empty;
+        public long Id { get; set; }
 
         // L'API peut renvoyer "appId" ou "appID" : avec System.Text.Json en mode
         // PropertyNameCaseInsensitive = true, "AppId" couvrira les deux.

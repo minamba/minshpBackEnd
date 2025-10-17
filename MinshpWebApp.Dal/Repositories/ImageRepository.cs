@@ -54,18 +54,27 @@ namespace MinshpWebApp.Dal.Repositories
             if (model.IdProduct != null) ImageToUpdate.Id_product = model.IdProduct;
             if (model.Position != null) ImageToUpdate.Position = model.Position;
             if (model.Display != null) ImageToUpdate.Display = model.Display;
-            if (model.IdCategory != null)
+
+            if (model.ComeFromCategory == true)
+            {
                 ImageToUpdate.IdCategory = model.IdCategory;
+            }
             else
-                ImageToUpdate.IdCategory = null;
+            {
+                if (model.IdCategory != null) ImageToUpdate.IdCategory = model.IdCategory;
+            }
 
 
-            if (model.IdSubCategory != null)
+            if (model.ComeFromSubCategory == true)
+            {
                 ImageToUpdate.IdSubCategory = model.IdSubCategory;
+            }
             else
-                ImageToUpdate.IdSubCategory = null;
+            {
+                if (model.IdSubCategory != null) ImageToUpdate.IdSubCategory = model.IdSubCategory;
+            }
 
-            await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
 
             return new Image()

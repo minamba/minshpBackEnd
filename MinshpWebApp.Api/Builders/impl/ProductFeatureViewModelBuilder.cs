@@ -48,16 +48,19 @@ namespace MinshpWebApp.Api.Builders.impl
  
             var finalResult =  _mapper.Map<IEnumerable<ProductFeatureViewModel>>(result);
 
-            foreach(var fr in finalResult)
+            foreach (var fr in finalResult)
             {
                 var product = products.FirstOrDefault(p => p.Id == fr.IdProduct);
                 var category = categories.FirstOrDefault(c => c.Id == product.IdCategory);
                 var feature = features.FirstOrDefault(f => f.Id == fr.IdFeature);
 
-                fr.Feature = feature.Description;
-                fr.Category = category.Name;
-                fr.Feature = feature.Description;
-                fr.Product = product.Brand + " - " + product.Model;
+                if (feature != null)
+                { 
+                    fr.Feature = feature.Description;
+                    fr.Category = category.Name;
+                    fr.Feature = feature.Description;
+                    fr.Product = product.Brand + " - " + product.Model;
+                }
             }
 
             finalResult.OrderBy(r => r.Category)

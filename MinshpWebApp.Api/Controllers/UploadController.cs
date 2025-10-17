@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Enums;
 using MinshpWebApp.Api.Request;
+using MinshpWebApp.Api.Utils; // <<— Helper (Slugify, EnsureBrandModelFolder, etc.)
 using MinshpWebApp.Domain.Models;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Net;
@@ -18,20 +19,23 @@ namespace MinshpWebApp.Api.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly IImageViewModelBuilder _imageViewModelBuilder;
         private readonly IVideoViewModelBuilder _videoViewModelBuilder;
+        private readonly IProductViewModelBuilder _productViewModelBuilder;
 
-        const string images = "images";
-        const string videos = "videos";
-        const string add = "add";
-        const string update = "update";
+        private const string Images = "images";
+        private const string Videos = "videos";
+        private const string Add = "add";
+        private const string Update = "update";
 
         public UploadController(
             IWebHostEnvironment env,
             IVideoViewModelBuilder videoViewModelBuilder,
-            IImageViewModelBuilder imageViewModelBuilder)
+            IImageViewModelBuilder imageViewModelBuilder,
+            IProductViewModelBuilder productViewModelBuilder)
         {
             _env = env;
             _videoViewModelBuilder = videoViewModelBuilder;
             _imageViewModelBuilder = imageViewModelBuilder;
+            _productViewModelBuilder = productViewModelBuilder;
         }
 
         [RequestSizeLimit(524_288_000)]
@@ -41,29 +45,29 @@ namespace MinshpWebApp.Api.Controllers
         [SwaggerResponse((int)HttpStatusCode.InternalServerError, Description = "An unexpected error occurred")]
         public async Task<IActionResult> UploadDocument([FromForm] UploadRequest request)
         {
-            // Validation des enums
+            // ---- 1) Validation des enums
             if (!Enum.TryParse<MediasType>(request.Type, true, out var mediaType))
                 return BadRequest("Type invalide. Utilise IMAGE, VIDEO, SOUND.");
 
             if (!Enum.TryParse<UploadType>(request.TypeUpload, true, out var uploadType))
                 return BadRequest("Type upload invalide. Utilise ADD, UPDATE.");
 
-            // Dossiers cibles
-            var folder = mediaType switch
+            // ---- 2) Dossier racine cible
+            var baseFolder = mediaType switch
             {
-                MediasType.IMAGE => images,
-                MediasType.VIDEO => videos,
-                _ => images
+                MediasType.IMAGE => Images,
+                MediasType.VIDEO => Videos,
+                _ => Images
             };
 
             var requestType = uploadType switch
             {
-                UploadType.UPLOAD => update,
-                UploadType.ADD => add,
-                _ => add
+                UploadType.UPLOAD => Update, // garde ta logique existante
+                UploadType.ADD => Add,
+                _ => Add
             };
 
-            // Si ADD, on attend un fichier (sinon c'est juste une création "métadonnée")
+            // ---- 3) Si ADD, on attend un fichier (sinon c'est juste une création "métadonnée")
             if (uploadType == UploadType.ADD)
             {
                 if (request.File == null)
@@ -73,73 +77,71 @@ namespace MinshpWebApp.Api.Controllers
                     return BadRequest("Fichier non fourni.");
             }
 
-            string fileName = null;
-            string relativePath = null;  // <<— ce qui sera SAUVEGARDÉ EN BASE
-            string absoluteUrl = null;   // <<— ce qui sera RETOURNÉ AU FRONT (optionnel)
+            string? relativePath = null;  // <<— à SAUVEGARDER en base
+            string? absoluteUrl = null;   // <<— retournée au front
 
+            // ---- 4) Upload physique si un fichier est posté (ADD ou UPDATE avec fichier)
             if (request.File != null)
             {
-                // Nom de fichier sécurisé (garde l'extension)
-                var originalName = Path.GetFileName(request.File.FileName);
-                var safeName = string.Concat(
-                    Path.GetFileNameWithoutExtension(originalName)
-                        .Replace(" ", "_")
-                        .Replace("..", "_")
-                        .Replace("/", "_")
-                        .Replace("\\", "_"),
-                    Path.GetExtension(originalName)
-                );
+                // 4.a) Nom de fichier safe
+                var safeName = FileUploadHelper.MakeSafeFileName(request.File.FileName);
 
-                // (Option) éviter collisions : ajoute un timestamp si existe déjà
-                var uploadsFolder = Path.Combine(_env.WebRootPath, folder);
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
+                // 4.b) Dossier final : brand-model si brand & model fournis, sinon dossier racine (images/videos)
+                string targetAbsFolder;
+                string targetRelFolder;
 
-                fileName = safeName;
-                var fullPath = Path.Combine(uploadsFolder, fileName);
-                if (System.IO.File.Exists(fullPath))
+
+                var product = (await _productViewModelBuilder.GetProductsAsync()).FirstOrDefault(p => p.Id == request.IdProduct);
+
+                if (!string.IsNullOrWhiteSpace(product.Brand) && !string.IsNullOrWhiteSpace(product.Model))
                 {
-                    var stem = Path.GetFileNameWithoutExtension(safeName);
-                    var ext = Path.GetExtension(safeName);
-                    fileName = $"{stem}_{DateTime.UtcNow:yyyyMMddHHmmssfff}{ext}";
-                    fullPath = Path.Combine(uploadsFolder, fileName);
+                    (targetAbsFolder, targetRelFolder) =
+                        FileUploadHelper.EnsureBrandModelFolder(_env, baseFolder, product.Brand!, product.Model!);
+                }
+                else
+                {
+                    targetRelFolder = baseFolder;
+                    targetAbsFolder = Path.Combine(_env.WebRootPath, targetRelFolder);
+                    if (!Directory.Exists(targetAbsFolder))
+                        Directory.CreateDirectory(targetAbsFolder);
                 }
 
-                // Sauvegarde physique
+                // 4.c) Évite les collisions
+                var (finalFileName, fullPath) = FileUploadHelper.GetNonCollidingPath(targetAbsFolder, safeName);
+
+                // 4.d) Sauvegarde
                 using (var stream = new FileStream(fullPath, FileMode.Create))
                 {
                     await request.File.CopyToAsync(stream);
                 }
 
-                // ✅ Chemin RELATIF à stocker en base
-                relativePath = $"{folder}/{fileName}";
-
-                // ✅ URL ABSOLUE (pour la réponse seulement)
+                // 4.e) Chemins de sortie
+                relativePath = $"{targetRelFolder}/{finalFileName}".Replace("\\", "/");
                 absoluteUrl = $"{Request.Scheme}://{Request.Host}/{relativePath}";
             }
 
-            // Enregistrement en base : on envoie le CHEMIN RELATIF
-            if (folder == images)
+            // ---- 5) Enregistrement en base avec le CHEMIN RELATIF
+            if (baseFolder == Images)
             {
-                if (requestType == add)
+                if (requestType == Add)
                 {
                     await _imageViewModelBuilder.AddImagesAsync(new ImageRequest
                     {
                         Description = request.Description,
-                        Url = relativePath, // <<— RELATIF
+                        Url = relativePath, // peut être null si "création sans upload"
                         IdProduct = request.IdProduct,
                         Title = request.Title,
                         Position = request.Position,
                         Display = request.Display
                     });
                 }
-                else
+                else // update
                 {
                     await _imageViewModelBuilder.UpdateImagesAsync(new ImageRequest
                     {
                         Id = request.Id,
                         Description = request.Description,
-                        Url = relativePath, // <<— RELATIF (ou laisse null si tu ne remplaces pas le fichier)
+                        Url = relativePath, // laisse null si pas de nouveau fichier
                         IdProduct = request.IdProduct,
                         Title = request.Title,
                         Position = request.Position,
@@ -149,25 +151,25 @@ namespace MinshpWebApp.Api.Controllers
             }
             else // videos
             {
-                if (requestType == add)
+                if (requestType == Add)
                 {
                     await _videoViewModelBuilder.AddVideoAsync(new VideoRequest
                     {
                         Description = request.Description,
-                        Url = relativePath, // <<— RELATIF
+                        Url = relativePath,
                         IdProduct = request.IdProduct,
                         Title = request.Title,
                         Position = request.Position,
                         Display = request.Display
                     });
                 }
-                else
+                else // update
                 {
                     await _videoViewModelBuilder.UpdateVideoAsync(new VideoRequest
                     {
                         Id = request.Id,
                         Description = request.Description,
-                        Url = relativePath, // <<— RELATIF
+                        Url = relativePath, // null si pas de nouveau fichier
                         IdProduct = request.IdProduct,
                         Title = request.Title,
                         Position = request.Position,
@@ -176,11 +178,11 @@ namespace MinshpWebApp.Api.Controllers
                 }
             }
 
-            // Réponse : on peut renvoyer les deux pour le front
+            // ---- 6) Réponse front
             return Ok(new
             {
-                path = relativePath,   // à stocker/utiliser côté front si tu préfères
-                url = absoluteUrl      // pratique pour affichage immédiat
+                path = relativePath, // à stocker côté front si besoin
+                url = absoluteUrl    // pratique pour prévisualiser
             });
         }
     }

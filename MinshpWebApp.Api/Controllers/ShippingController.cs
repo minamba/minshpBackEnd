@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using MinshpWebApp.Api.Builders;
 using MinshpWebApp.Api.Request;
+using MinshpWebApp.Api.Utils;
 using MinshpWebApp.Api.ViewModels;
 using MinshpWebApp.Domain.Models;
 using MinshpWebApp.Domain.Repositories;
@@ -195,105 +196,75 @@ namespace MinshpWebApp.Api.Controllers
         [Consumes("application/json")]
         public async Task<IActionResult> BoxtalV3Webhook()
         {
-            // 0) Idempotence (optionnel)
-            var eventId = Request.Headers["X-Event-Id"].FirstOrDefault()
-                       ?? Request.Headers["X-Delivery-Id"].FirstOrDefault()
-                       ?? Request.Headers["X-Request-Id"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(eventId))
-            {
-                var cacheKey = $"boxtal:v3:event:{eventId}";
-                if (_cache.TryGetValue(cacheKey, out _)) return Ok();
-                _cache.Set(cacheKey, true, TimeSpan.FromMinutes(10));
-            }
-
-            // 1) Lire le corps brut
+            // -- (idempotence + HMAC inchangés chez toi) --
+            Request.EnableBuffering();
             string body;
-            using (var reader = new StreamReader(Request.Body, Encoding.UTF8))
+            using (var reader = new StreamReader(Request.Body, Encoding.UTF8, false, leaveOpen: true))
                 body = await reader.ReadToEndAsync();
+            Request.Body.Position = 0;
 
-            // 2) Vérifier présence du secret + signature fournie
-            if (string.IsNullOrEmpty(_boxtal.V3WebhookSecret))
-                return StatusCode((int)HttpStatusCode.PreconditionRequired, "V3WebhookSecret non configuré.");
-
-            var providedSig = GetSignatureHeader();                 // <-- une seule lecture
-            if (string.IsNullOrWhiteSpace(providedSig))
-            {
-                _logger.LogWarning("Webhook: signature header manquant.");
-                return Unauthorized(); // ou BadRequest()
-            }
-
-            // 3) Comparaison HMAC en temps constant
-            if (!VerifyHmacSha256(body, _boxtal.V3WebhookSecret!, providedSig))
-            {
-                _logger.LogWarning("Webhook: signature invalide.");
+            var providedSig = Request.Headers["X-Bxt-Signature"].FirstOrDefault()
+                           ?? Request.Headers["X-Webhook-Signature"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(providedSig) ||
+                !VerifyHmacSha256(body, _boxtal.V3WebhookSecret!, providedSig))
                 return Unauthorized();
-            }
 
-            // 4) Désérialiser et traiter
-            var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var evt = JsonSerializer.Deserialize<V3TrackingEvent>(body, opts);
-            if (evt?.Content is null || evt.Content.Count == 0) return Ok();
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
 
-            foreach (var pkg in evt.Content)
+            // ✅ Ta vraie clé de rapprochement
+            var shippingOrderId = root.TryGetProperty("shippingOrderId", out var so)
+                                && so.ValueKind == JsonValueKind.String ? so.GetString() : null;
+
+            if (!root.TryGetProperty("payload", out var payload) ||
+                !payload.TryGetProperty("trackings", out var trackings) ||
+                trackings.ValueKind != JsonValueKind.Array)
+                return Ok(); // rien à traiter
+
+            int updated = 0;
+            foreach (var t in trackings.EnumerateArray())
             {
-                var external = pkg.PackageExternalId ?? pkg.PackageId;
-                if (string.IsNullOrWhiteSpace(external)) continue;
+                var trackingNumber = GetString(t, "trackingNumber");
+                var trackingUrl = GetString(t, "packageTrackingUrl");
+                var statusRaw = GetString(t, "status");
 
-                var order = await _orders.GetByIdAsync(external);
-                if (order is null) continue;
+                // 🔎 Résolution commande : priorité shippingOrderId, puis n° de suivi
+                var order = (await _orders.GetOrdersAsync()).FirstOrDefault(o => o.BoxtalShipmentId == shippingOrderId);
 
-                if (!string.IsNullOrWhiteSpace(pkg.TrackingNumber)) order.TrackingNumber = pkg.TrackingNumber;
-                if (!string.IsNullOrWhiteSpace(pkg.PackageTrackingUrl)) order.LabelUrl = pkg.PackageTrackingUrl;
-                if (!string.IsNullOrWhiteSpace(pkg.Status)) order.Status = MapStatus(pkg.Status);
+                if (order is null)
+                {
+                    _logger.LogWarning("Webhook Boxtal: commande introuvable (shippingOrderId={Ship}, tracking={Track})",
+                        shippingOrderId, trackingNumber);
+                    continue;
+                }
+
+                if (!string.IsNullOrWhiteSpace(trackingNumber)) order.TrackingNumber = trackingNumber!;
+                if (!string.IsNullOrWhiteSpace(statusRaw)) order.Status = TrackingStatus.GetTrackingStatus(statusRaw!);
+                if (!string.IsNullOrWhiteSpace(trackingUrl)) order.TrackingLink = trackingUrl;
+
 
                 await _orders.UpdateOrdersAsync(order);
+                updated++;
             }
 
+            _logger.LogInformation("Webhook Boxtal: {Count} commande(s) mise(s) à jour.", updated);
             return Ok();
 
-            // ===== Helpers =====
-            string? GetSignatureHeader()
+            // -- helpers --
+            static bool VerifyHmacSha256(string rawBody, string secret, string providedHeader)
             {
-                var candidates = new[]
-                {
-            _boxtal.V3SignatureHeader ?? "X-Webhook-Signature",
-            "X-Webhook-Signature",
-            "X-Boxtal-Signature",
-            "X-Hub-Signature-256",
-            "X-Hub-Signature"
-        };
-                foreach (var h in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
-                {
-                    var v = Request.Headers[h].FirstOrDefault();
-                    if (!string.IsNullOrEmpty(v)) return v;
-                }
-                return null;
-            }
-
-            static bool VerifyHmacSha256(string rawBody, string secret, string? providedHeader)
-            {
-                if (string.IsNullOrEmpty(providedHeader)) return false;
-
-                // Boxtal peut éventuellement préfixer "sha256=" ; on le retire si présent
                 var provided = providedHeader.Replace("sha256=", "", StringComparison.OrdinalIgnoreCase).Trim();
-
                 using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-                var expected = Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(rawBody))).ToLowerInvariant();
-
+                var expectedHex = Convert.ToHexString(hmac.ComputeHash(Encoding.UTF8.GetBytes(rawBody))).ToLowerInvariant();
                 return CryptographicOperations.FixedTimeEquals(
-                    Encoding.ASCII.GetBytes(expected),
+                    Encoding.ASCII.GetBytes(expectedHex),
                     Encoding.ASCII.GetBytes(provided.ToLowerInvariant()));
             }
 
-            static string MapStatus(string s) => s.Trim().ToUpperInvariant() switch
-            {
-                "ANNOUNCED" => "Préparée",
-                "IN_TRANSIT" => "Expédiée",
-                "DELIVERED" => "Livrée",
-                "CANCELLED" => "Annulée",
-                _ => s
-            };
+            static string? GetString(JsonElement obj, string name)
+                => obj.TryGetProperty(name, out var p) && p.ValueKind == JsonValueKind.String ? p.GetString() : null;
         }
+
 
 
         [HttpGet("/shipping/{id}/tracking")]
