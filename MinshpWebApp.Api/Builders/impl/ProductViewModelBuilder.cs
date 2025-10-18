@@ -30,12 +30,13 @@ namespace MinshpWebApp.Api.Builders.impl
         private ITaxeService _taxeService;
         private IPromotionCodeService _promotionCodeService;
         private IPackageProfilService _packageProfilService;
+        private ICustomerRateService _customerRateService;
 
         const string soonOutOfStock = "Bientôt en rupture";
         const string inStock = "En stock";
         const string outOfStock = "En rupture";
 
-        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, ISubCategoryService subCategoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IPackageProfilService packageProfilService, IMapper mapper)
+        public ProductViewModelBuilder(IProductService productService, ICategoryService categoryService, ISubCategoryService subCategoryService, IFeatureService featureService, IImageService imageService, IPromotionService promotionService, IVideoService videoService, IProductFeatureService productFeature, IStockService stockService, ITaxeService taxeService, IPromotionCodeService promotionCodeService, IPackageProfilService packageProfilService, ICustomerRateService customerRateService, IMapper mapper)
         {
             _productService = productService;
             _categoryService = categoryService;
@@ -49,6 +50,7 @@ namespace MinshpWebApp.Api.Builders.impl
             _promotionCodeService = promotionCodeService;
             _packageProfilService = packageProfilService;
             _subCategoryService = subCategoryService;
+            _customerRateService = customerRateService;
             _mapper = mapper;
                
         }
@@ -136,7 +138,9 @@ namespace MinshpWebApp.Api.Builders.impl
                     IdSubCategory = p.IdSubCategory,
                     Display = p.Display,
                     CategoryVm = categoryVm,
-                    SubCategoryVm = subCategoryVm
+                    SubCategoryVm = subCategoryVm,
+                    Rate = await GetProductRate(p.Id),
+                    NumberRate = await GetNumberRate(p.Id)
                 };
 
 
@@ -240,7 +244,8 @@ namespace MinshpWebApp.Api.Builders.impl
                     Display = p.Display,
                     CategoryVm = categoryVm,
                     SubCategoryVm = subCategoryVm,
-
+                    Rate = await GetProductRate(p.Id),     
+                    NumberRate = await GetNumberRate(p.Id)
 
 
                 };
@@ -926,6 +931,33 @@ namespace MinshpWebApp.Api.Builders.impl
                 containedCode = (await _categoryService.GetCategoriesAsync()).FirstOrDefault(c => c.Id == product.IdCategory).ContentCode.ToString();
 
             return containedCode;
+        }
+
+
+        private async Task<decimal?> GetProductRate(int idProduct)
+        {
+            var customerRates = (await _customerRateService.GetCustomerRatesAsync()).Where(p => p.IdProduct == idProduct);
+            int count = customerRates.Count();
+            decimal rate = 0;
+
+            if (customerRates != null)
+            {
+                foreach (var cr in customerRates)
+                {
+                    rate += (decimal)cr.Rate;
+                }
+            }
+
+            if(count != 0)
+                rate = rate / count;
+
+            return rate;
+        }
+
+
+        private async Task<int?> GetNumberRate(int idProduct)
+        {
+            return (await _customerRateService.GetCustomerRatesAsync()).Where(p => p.IdProduct == idProduct).Count();
         }
 
         public Task<IEnumerable<ProductVIewModel>> GetProductsByIdsAsync(IEnumerable<int> ids)

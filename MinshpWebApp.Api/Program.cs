@@ -160,6 +160,7 @@ builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<ICustomerPromotionCodeRepository, CustomerPromotionCodeRepository>();
 builder.Services.AddScoped<INewLetterRepository, NewLetterRepository>();
+builder.Services.AddScoped<ICustomerRateRepository, CustomerRateRepository>();
 
 
 //scoped services
@@ -187,6 +188,7 @@ builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<ICustomerPromotionCodeService, CustomerPromotionCodeService>();
 builder.Services.AddScoped<INewLetterService, NewLetterService>();
+builder.Services.AddScoped<ICustomerRateService, CustomerRateService>();
 
 
 
@@ -219,6 +221,7 @@ builder.Services.AddScoped<IRoleViewModelBuilder, RoleViewModelBuilder>();
 builder.Services.AddScoped<ICustomerPromotionCodeViewModelBuilder, CustomerPromotionCodeViewModelBuilder>();
 builder.Services.AddScoped<ITelegramViewModelBuilder, TelegramViewModelBuilder>();
 builder.Services.AddScoped<INewLetterViewModelBuilder, NewLetterViewModelBuilder>();
+builder.Services.AddScoped<ICustomerRateViewModelBuilder, CustomerRateViewModelBuilder>();
 
 
 

@@ -54,6 +54,8 @@ public partial class MinshpDatabaseContext : DbContext
 
     public virtual DbSet<PromotionCode> PromotionCodes { get; set; }
 
+    public virtual DbSet<CustomerRate> CustomerRates { get; set; }
+
     public virtual DbSet<Stock> Stocks { get; set; }
 
     public virtual DbSet<SubCategory> SubCategories { get; set; }
@@ -222,6 +224,24 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasForeignKey(d => d.IdPromotion)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_Customer_promotion_code_Promotion_code");
+        });
+
+
+        modelBuilder.Entity<CustomerRate>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_Rate");
+
+            entity.ToTable("CustomerRate");
+
+            entity.HasOne(d => d.IdCustomerNavigation).WithMany(p => p.CustomerRates)
+                .HasForeignKey(d => d.IdCustomer)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_CustomerRate_Customer");
+
+            entity.HasOne(d => d.IdProductNavigation).WithMany(p => p.CustomerRates)
+                .HasForeignKey(d => d.IdProduct)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_CustomerRate_Product");
         });
 
 
@@ -503,6 +523,10 @@ public partial class MinshpDatabaseContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("Start_date");
         });
+
+
+
+
 
 
         modelBuilder.Entity<Stock>(entity =>

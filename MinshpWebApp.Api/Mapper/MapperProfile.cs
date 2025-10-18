@@ -577,6 +577,25 @@ namespace MinshpWebApp.Api.Mapper
               .ForMember(x => x.OldMAil, dest => dest.MapFrom(x => x.OldMAil))
               .ForMember(x => x.Suscribe, dest => dest.MapFrom(x => x.Suscribe));
 
+
+            CreateMap<CustomerRate, CustomerRateViewModel>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct))
+              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
+              .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
+              .ForMember(x => x.Rate, dest => dest.MapFrom(x => x.Rate))
+              .ForMember(x => x.CreationDate, dest => dest.MapFrom(x => x.CreationDate))
+              .ForMember(x => x.ModificationDate, dest => dest.MapFrom(x => x.ModificationDate))
+              .ForMember(x => x.Message, dest => dest.MapFrom(x => x.Message));
+
+
+            CreateMap<CustomerRateRequest, CustomerRate>()
+              .ForMember(x => x.Id, dest => dest.MapFrom(x => x.Id))
+              .ForMember(x => x.IdProduct, dest => dest.MapFrom(x => x.IdProduct))
+              .ForMember(x => x.IdCustomer, dest => dest.MapFrom(x => x.IdCustomer))
+              .ForMember(x => x.Title, dest => dest.MapFrom(x => x.Title))
+              .ForMember(x => x.Rate, dest => dest.MapFrom(x => x.Rate))
+              .ForMember(x => x.Message, dest => dest.MapFrom(x => x.Message));
         }
     }
 }

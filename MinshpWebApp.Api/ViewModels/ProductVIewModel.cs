@@ -30,6 +30,10 @@
         public int? IdPackageProfil { get; set; }
         public string? ContainedCode { get; set; }
 
+        public decimal? Rate { get; set; }
+
+        public int? NumberRate { get; set; }
+
         public bool? Display { get; set; }
 
         public int? IdSubCategory { get; set; }
