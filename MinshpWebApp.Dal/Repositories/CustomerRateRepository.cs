@@ -42,6 +42,9 @@ namespace MinshpWebApp.Dal.Repositories
 
         public async Task<CustomerRate> UpdateCustomerRateAsync(CustomerRate model)
         {
+            if (model.Rate == 0)
+                model.Rate = 1;
+
             var CustomerRateToUpdate = await _context.CustomerRates.FirstOrDefaultAsync(u => u.Id == model.Id);
 
             if (CustomerRateToUpdate == null)
@@ -72,6 +75,11 @@ namespace MinshpWebApp.Dal.Repositories
 
         public async Task<CustomerRate> AddCustomerRateAsync(Domain.Models.CustomerRate model)
         {
+
+            if (model.Rate == 0)
+                model.Rate = 1;
+
+
             var newCustomerRate = new Dal.Entities.CustomerRate
             {
                 IdCustomer = model.IdCustomer,

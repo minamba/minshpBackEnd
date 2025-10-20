@@ -83,5 +83,32 @@ namespace MinshpWebApp.Api.Builders.impl
 
             return await _httpClient.PostAsync(url, new FormUrlEncodedContent(payload));
         }
+
+
+
+
+        public async Task<HttpResponseMessage> SendReviewMessage(TelegramRequest request)
+        {
+            var botToken = _config["TelegramReview:BotToken"];
+            var chatId = _config["TelegramReview:GroupChatId"];
+
+            var message = $"✏️ *Nouvel avis client* :\n" +
+                          $"- Marque : {request.Brand}\n" +
+                          $"- Modèl : {request.Model}\n" +
+                          $"- Date : {request.Date}\n"+
+                          $"- Avis : {request.Review}\n";
+
+
+            var url = $"https://api.telegram.org/bot{botToken}/sendMessage";
+
+            var payload = new Dictionary<string, string>
+        {
+            { "chat_id", chatId },
+            { "text", message },
+            { "parse_mode", "Markdown" }
+        };
+
+            return await _httpClient.PostAsync(url, new FormUrlEncodedContent(payload));
+        }
     }
 }

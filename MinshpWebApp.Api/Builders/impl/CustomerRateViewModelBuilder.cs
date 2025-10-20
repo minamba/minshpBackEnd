@@ -13,20 +13,48 @@ namespace MinshpWebApp.Api.Builders.impl
         private ICustomerRateService _CustomerRateService;
         private ICustomerViewModelBuilder _CustomerViewModelBuilder;
         private IProductViewModelBuilder _ProductViewModelBuilder;
+        private ITelegramViewModelBuilder _telegramViewModelBuilder;
+        private IOrderViewModelBuilder _orderViewModelBuilder;
+        private IOrderCustomerProductViewModelBuilder _orderCustomerProductViewModelBuilder;
 
 
-        public CustomerRateViewModelBuilder(ICustomerRateService CustomerRateService, ICustomerViewModelBuilder CustomerViewModelBuilder, IProductViewModelBuilder ProductViewModelBuilder, IMapper mapper)
+
+        public CustomerRateViewModelBuilder(ICustomerRateService CustomerRateService, ICustomerViewModelBuilder CustomerViewModelBuilder, IProductViewModelBuilder ProductViewModelBuilder, IOrderViewModelBuilder orderViewModelBuilder, IOrderCustomerProductViewModelBuilder orderCustomerProductViewModelBuilder, ITelegramViewModelBuilder telegramViewModelBuilder, IMapper mapper)
         {
             _mapper = mapper;
             _CustomerRateService = CustomerRateService;
             _CustomerViewModelBuilder = CustomerViewModelBuilder;
             _ProductViewModelBuilder = ProductViewModelBuilder;
+            _orderViewModelBuilder = orderViewModelBuilder;
+            _orderCustomerProductViewModelBuilder = orderCustomerProductViewModelBuilder;
+            _telegramViewModelBuilder = telegramViewModelBuilder;
         }
 
         public async Task<CustomerRate> AddCustomerRateAsync(CustomerRateRequest model)
         {
             var newCustomerRate = _mapper.Map<CustomerRate>(model);
-            return await _CustomerRateService.AddCustomerRateAsync(newCustomerRate);
+            var customer = (await _CustomerViewModelBuilder.GetCustomersAsync()).FirstOrDefault(c => c.Id == model.IdCustomer);
+            var product = (await _ProductViewModelBuilder.GetProductsAsync()).FirstOrDefault(p => p.Id == model.IdProduct);
+
+
+            var result = await _CustomerRateService.AddCustomerRateAsync(newCustomerRate);
+
+
+            if(result != null)
+            {
+                var telgramRequest = new TelegramRequest()
+                {
+                    Mail = customer.Email,
+                    Brand = product.Brand,
+                    Model = product.Model,
+                    Review = model.Message,
+                    Date = DateTime.Now.ToString("dd/MM/yyyy"),
+                };
+
+                await _telegramViewModelBuilder.SendReviewMessage(telgramRequest);
+            }
+
+            return result;
         }
 
 
@@ -41,14 +69,19 @@ namespace MinshpWebApp.Api.Builders.impl
             var CustomerRates = await _CustomerRateService.GetCustomerRatesAsync();
             var customers = await _CustomerViewModelBuilder.GetCustomersAsync();
             var products =  await _ProductViewModelBuilder.GetProductsAsync();
+            //var orders = await _orderViewModelBuilder.GetOrdersAsync();
+            //var ordersCustomerProduct = await _orderCustomerProductViewModelBuilder.GetOrderCustomerProductsAsync();
+
 
             var result = _mapper.Map<IEnumerable<CustomerRateViewModel>>(CustomerRates);
 
             foreach(var r in result)
             {
-                r.customer = customers.FirstOrDefault(c => c.Id == r.IdCustomer);
-                r.product = products.FirstOrDefault(p => p.Id == r.IdProduct);
+                    r.customer = customers.FirstOrDefault(c => c.Id == r.IdCustomer);
+                    r.product = products.FirstOrDefault(p => p.Id == r.IdProduct);
             }
+
+            result.OrderByDescending(x => x.CreationDate).ToList();
 
             return result;
         }

@@ -18,6 +18,8 @@
 
         public DateTime? ModificationDate { get; set; }
 
+        public  DateTime? OrderDate { get; set; }
+
         public CustomerViewModel customer { get; set; }
         public ProductVIewModel product { get; set; }
 
